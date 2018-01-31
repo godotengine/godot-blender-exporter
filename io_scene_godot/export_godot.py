@@ -436,7 +436,7 @@ class GodotExporter:
                     continue
                 float_values = "Vector2Array("
                 first=","                
-                for v in vertices:
+                for v in s.vertices:
                     try:
                         float_values += " {}, {}".format(v.uv[i].x, v.uv[i].y)+first
                     except:
