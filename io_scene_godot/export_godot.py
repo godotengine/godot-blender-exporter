@@ -76,7 +76,7 @@ def strmtx(mtx):
     s = ""
     for x in range(3):
         for y in range(3):
-            if (x != 0 or y != 0):
+            if x != 0 or y != 0:
                 s += ", "
             s += "{} ".format(mtx[x][y])
 
@@ -122,6 +122,8 @@ def to_color(rgba):
         a,
     )
 
+AXIS_CORRECT = Matrix.Rotation(math.radians(-90), 4, 'X')
+
 # When writing to the file using the nodetemplate, a lookup of datatypes
 # is done in this file
 CONVERSIONS = {
@@ -136,7 +138,7 @@ class SectionHeading:
         self._type = section_type
         for key in kwargs:
             self.__dict__[key] = kwargs[key]
-        
+
     def generate_prop_list(self):
         out_str = ''
         attribs = vars(self)
@@ -147,11 +149,11 @@ class SectionHeading:
             converter = CONVERSIONS.get(type(val))
             if converter is not None:
                 val = converter(val)
-            
+
             # Extra wrapper for str's
             if type(val) == str:
                 val = '"{}"'.format(val)
-            
+
             out_str += ' {}={}'.format(var, val)
 
         return out_str
@@ -193,7 +195,7 @@ class NodeTemplate:
 class GodotExporter:
 
     def validate_id(self, d):
-        if (d.find("id-") == 0):
+        if d.find("id-") == 0:
             return "z{}".format(d)
         return d
 
@@ -253,7 +255,7 @@ class GodotExporter:
             self.weights = []
 
     def writel(self, section, indent, text):
-        if (not (section in self.sections)):
+        if section not in self.sections:
             self.sections[section] = []
         line = "{}{}".format(indent * "\t", text)
         self.sections[section].append(line)
@@ -292,11 +294,10 @@ class GodotExporter:
             return material_id
 
         material_id = str(self.new_resource_id())
-        self.material_cache[material]=material_id
+        self.material_cache[material] = material_id
 
-        self.writel(S_INTERNAL_RES,0,'\n[sub_resource type="SpatialMaterial" id='+material_id+']\n')
+        self.writel(S_INTERNAL_RES, 0, '\n[sub_resource type="SpatialMaterial" id=' + material_id + ']\n')
         return material_id
-
 
     class Surface:
         def __init__(self):
@@ -310,13 +311,12 @@ class GodotExporter:
                             "RENDER")  # TODO: Review
         self.temp_meshes.add(mesh)
 
-        if (True): # Triangulate, always
+        if True:  # Triangulate, always
             bm = bmesh.new()
             bm.from_mesh(mesh)
             bmesh.ops.triangulate(bm, faces=bm.faces)
             bm.to_mesh(mesh)
             bm.free()
-
 
         surfaces = []
         material_to_surface = {}
@@ -328,14 +328,13 @@ class GodotExporter:
             si = self.skeleton_info[armature]
 
         # TODO: Implement automatic tangent detection
-        has_tangents = True # always use tangents, we are grown up now.
+        has_tangents = True  # always use tangents, we are grown up now.
 
         has_colors = len(mesh.vertex_colors)
-        mat_assign = []
 
         uv_layer_count = len(mesh.uv_textures)
-        if (uv_layer_count>2):
-            uv_layer_count=2
+        if uv_layer_count > 2:
+            uv_layer_count = 2
 
         if has_tangents and len(mesh.uv_textures):
             try:
@@ -352,13 +351,12 @@ class GodotExporter:
             mesh.calc_normals_split()
             has_tangents = False
 
-
         for fi in range(len(mesh.polygons)):
             f = mesh.polygons[fi]
 
-            if not (f.material_index in material_to_surface):
+            if f.material_index not in material_to_surface:
                 material_to_surface[f.material_index] = len(surfaces)
-                surfaces.append( self.Surface() )
+                surfaces.append(self.Surface())
 
                 try:
                     # TODO: Review, understand why it throws
@@ -366,13 +364,11 @@ class GodotExporter:
                 except:
                     mat = None
 
-                if (mat is not None):
-                     ret_materials.append(self.export_material(
+                if mat is not None:
+                    ret_materials.append(self.export_material(
                         mat, mesh.show_double_sided))
                 else:
-                     ret_materials.append(None)
-
-
+                    ret_materials.append(None)
 
             surface = surfaces[material_to_surface[f.material_index]]
             vi = []
@@ -388,13 +384,13 @@ class GodotExporter:
                 for xt in mesh.uv_layers:
                     v.uv.append(Vector(xt.data[loop_index].uv))
 
-                if (has_colors):
+                if has_colors:
                     v.color = Vector(
                         mesh.vertex_colors[0].data[loop_index].color)
 
                 v.normal = fix_vertex(Vector(ml.normal))
 
-                if (has_tangents):
+                if has_tangents:
                     v.tangent = fix_vertex(Vector(ml.tangent))
                     v.bitangent = fix_vertex(Vector(ml.bitangent))
 
@@ -406,14 +402,14 @@ class GodotExporter:
                             continue
                         name = node.vertex_groups[vg.group].name
 
-                        if (name in si["bone_index"]):
+                        if name in si["bone_index"]:
                             # TODO: Try using 0.0001 since Blender uses
                             #       zero weight
-                            if (vg.weight > 0.001):
+                            if vg.weight > 0.001:
                                 v.bones.append(si["bone_index"][name])
                                 v.weights.append(vg.weight)
                                 wsum += vg.weight
-                    if (wsum == 0.0):
+                    if wsum == 0.0:
                         if not self.wrongvtx_report:
                             self.operator.report(
                                 {"WARNING"},
@@ -430,7 +426,7 @@ class GodotExporter:
                 tup = v.get_tup()
                 idx = 0
                 # Do not optmize if using shapekeys
-                if (skeyindex == -1 and tup in surface.vertex_map):
+                if skeyindex == -1 and tup in surface.vertex_map:
                     idx = surface.vertex_map[tup]
                 else:
                     idx = len(surface.vertices)
@@ -439,75 +435,73 @@ class GodotExporter:
 
                 vi.append(idx)
 
-            if (len(vi) > 2):  # Only triangles and above
+            if len(vi) > 2:  # Only triangles and above
                 surface.indices.append(vi)
 
-
         for s in surfaces:
-            surface_lines=[]
+            surface_lines = []
 
-            #Vertices
+            # Vertices
             float_values = "Vector3Array("
-            first=""
+            first = ""
             for v in s.vertices:
                 float_values += first+" {}, {}, {}".format(
                     v.vertex.x, v.vertex.y, v.vertex.z)
-                first=","
-            float_values+="),"
+                first = ","
+            float_values += "),"
             surface_lines.append(float_values)
 
             # Normals Array
             float_values = "Vector3Array("
-            first=""
+            first = ""
             for v in s.vertices:
                 float_values += first+" {}, {}, {}".format(
                     v.normal.x, v.normal.y, v.normal.z)
-                first=","
-            float_values+="),"
+                first = ","
+            float_values += "),"
             surface_lines.append(float_values)
 
-
-            if (has_tangents):
+            if has_tangents:
                 float_values = "FloatArray("
-                first=""
+                first = ""
                 for v in s.vertices:
                     cr = [(v.normal.y * v.tangent.z) - (v.normal.z * v.tangent.y),
-                (v.normal.z * v.tangent.x) - (v.normal.x * v.tangent.z),
-                (v.normal.x * v.tangent.y) - (v.normal.y * v.tangent.x)]
+                          (v.normal.z * v.tangent.x) - (v.normal.x * v.tangent.z),
+                          (v.normal.x * v.tangent.y) - (v.normal.y * v.tangent.x)]
                     dp = cr[0]*v.bitangent.x + cr[1]*v.bitangent.y + cr[2]*v.bitangent.z
-                    if (dp>0):
-                        dp=1.0
+                    if dp > 0:
+                        dp = 1.0
                     else:
-                        dp=-1.0
+                        dp = -1.0
 
                     float_values += first+" {}, {}, {}, {}".format(
-                        v.tangent.x, v.tangent.y, v.tangent.z,dp)
-                    first=","
-                float_values+="),"
+                        v.tangent.x, v.tangent.y, v.tangent.z, dp)
+                    first = ","
+                float_values += "),"
                 surface_lines.append(float_values)
             else:
                 surface_lines.append("null, ; No Tangents")
 
             # Color Arrays
-            if (has_colors):
+            if has_colors:
                 float_values = "ColorArray("
-                first=""
+                first = ""
                 for v in s.vertices:
                     float_values += first+" {}, {}, {}".format(
                         v.color.x, v.color.y, v.color.z)
-                    first=","
-                float_values+="),"
+                    first = ","
+                float_values += "),"
                 surface_lines.append(float_values)
             else:
                 surface_lines.append("null, ; No Colors")
 
             # UV Arrays
             for i in range(2):
-                if (i >= uv_layer_count):
+                if i >= uv_layer_count:
                     surface_lines.append("null, ; No UV"+str(i+1))
                     continue
                 float_values = "Vector2Array("
-                first=","
+                first = ","
                 for v in s.vertices:
                     try:
                         float_values += " {}, {}".format(v.uv[i].x, v.uv[i].y)+first
@@ -515,91 +509,85 @@ class GodotExporter:
                         # TODO: Review, understand better the multi-uv-layer API
                         float_values += " 0, 0 "
 
-                    first=""
-                float_values+="),"
+                    first = ""
+                float_values += "),"
                 surface_lines.append(float_values)
 
             # Bones and Weights
             # Export armature data (if armature exists)
-            if (armature is not None):
+            if armature is not None:
                 # Skin Weights!
                 float_values = "FloatArray("
                 float_valuesw = "FloatArray("
-                first=True
+                first = True
                 for v in s.vertices:
                     skin_weights_total += len(v.weights)
                     w = []
                     for i in len(v.bones):
-                        w += (v.bones[i],v.weights[i])
+                        w += (v.bones[i], v.weights[i])
 
-                    w = sorted( w, key=lambda x: -x[1])
+                    w = sorted(w, key=lambda x: -x[1])
                     totalw = 0.0
                     for x in w:
-                        totalw+=x[1]
-                    if (totalw==0.0):
-                        totalw=0.000000001
-
+                        totalw += x[1]
+                    if totalw == 0.0:
+                        totalw = 0.000000001
 
                     for i in range(4):
-                        if (i>0):
-                            float_values+=","
-                            float_valuesw+=","
-                        if (i<len(w)):
-                            float_values+=" {}".format(w[i][0])
-                            float_valuesw+=" {}".format(w[i][1]/totalw)
+                        if i > 0:
+                            float_values += ","
+                            float_valuesw += ","
+                        if i < len(w):
+                            float_values += " {}".format(w[i][0])
+                            float_valuesw += " {}".format(w[i][1]/totalw)
                         else:
-                            float_values+=" 0"
-                            float_valuesw+=" 0.0"
+                            float_values += " 0"
+                            float_valuesw += " 0.0"
 
-                    if (not first):
-                            float_values+=","
-                            float_valuesw+=","
+                    if not first:
+                            float_values += ","
+                            float_valuesw += ","
                     else:
-                        first=False
+                        first = False
 
-                float_values+="),"
+                float_values += "),"
                 surface_lines.append(float_values)
-                float_valuesw+="),"
+                float_valuesw += "),"
                 surface_lines.append(float_valuesw)
 
             else:
                 surface_lines.append("null, ; No Bones")
                 surface_lines.append("null, ; No Weights")
 
-
             # Indices
             int_values = "IntArray("
-            first=""
+            first = ""
             for v in s.indices:
-                int_values += first+" {}, {}, {} ".format(v[0],v[2],v[1]) #flip order as godot uses front is clockwise
-                first=","
+                # flip order as godot uses front is clockwise
+                int_values += first+" {}, {}, {} ".format(v[0], v[2], v[1])
+                first = ","
 
-            int_values+="),"
+            int_values += "),"
             surface_lines.append(int_values)
             mesh_lines.append(surface_lines)
-
 
     def export_mesh(self, node, armature=None, skeyindex=-1, skel_source=None,
                     custom_name=None):
         mesh = node.data
 
-        if (node.data in self.mesh_cache):
+        if node.data in self.mesh_cache:
             return self.mesh_cache[mesh]
 
-        morph_target_arrays=[]
-        morph_target_names= []
+        morph_target_arrays = []
+        morph_target_names = []
 
         if (mesh.shape_keys is not None and len(
                 mesh.shape_keys.key_blocks)):
             values = []
-            morph_targets = []
-            md = None
             for k in range(0, len(mesh.shape_keys.key_blocks)):
                 shape = node.data.shape_keys.key_blocks[k]
                 values += [shape.value]
-                shape.value = 0
-
-            mid = self.new_id("morph")
+                shape.value = 0.0
 
             for k in range(0, len(mesh.shape_keys.key_blocks)):
                 shape = node.data.shape_keys.key_blocks[k]
@@ -619,7 +607,6 @@ class GodotExporter:
                 morph_target_names.append(shape.name)
                 morph_target_arrays.append(morph_target_lines)
 
-                morph_targ
                 node.data = p
                 node.data.update()
                 shape.value = 0.0
@@ -627,46 +614,39 @@ class GodotExporter:
             node.show_only_shape_key = False
             node.active_shape_key_index = 0
 
-
-
         mesh_lines = []
         mesh_materials = []
         self.make_arrays(node, armature, mesh_lines, mesh_materials)
 
         mesh_id = str(self.new_resource_id())
-        self.mesh_cache[mesh]=mesh_id
+        self.mesh_cache[mesh] = mesh_id
 
-        self.writel(S_INTERNAL_RES,0,'\n[sub_resource type="ArrayMesh" id='+mesh_id+']\n')
-
-
+        self.writel(S_INTERNAL_RES, 0, '\n[sub_resource type="ArrayMesh" id='+mesh_id+']\n')
 
         for i in range(len(mesh_lines)):
-            pfx = "surfaces/"+str(i)+"/"
-            self.writel(S_INTERNAL_RES,0,"surfaces/"+str(i)+"={")
-            if (mesh_materials[i]!=None):
-                self.writel(S_INTERNAL_RES,1,"\"material\":SubResource("+str(mesh_materials[i])+"),")
-            self.writel(S_INTERNAL_RES,1,"\"primitive\":4,")
-            self.writel(S_INTERNAL_RES,1,"\"arrays\":[")
+            self.writel(S_INTERNAL_RES, 0, "surfaces/" + str(i) + "={")
+            if mesh_materials[i] is not None:
+                self.writel(S_INTERNAL_RES, 1, "\"material\":SubResource(" + str(mesh_materials[i])+"),")
+            self.writel(S_INTERNAL_RES, 1, "\"primitive\":4,")
+            self.writel(S_INTERNAL_RES, 1, "\"arrays\":[")
             for sline in mesh_lines[i]:
-                self.writel(S_INTERNAL_RES,2,sline)
-            self.writel(S_INTERNAL_RES,1,"],")
-            self.writel(S_INTERNAL_RES,1,"\"morph_arrays\":[]")
-            self.writel(S_INTERNAL_RES,0,"}")
+                self.writel(S_INTERNAL_RES, 2, sline)
+            self.writel(S_INTERNAL_RES, 1, "],")
+            self.writel(S_INTERNAL_RES, 1, "\"morph_arrays\":[]")
+            self.writel(S_INTERNAL_RES, 0, "}")
 
         return mesh_id
 
     def export_mesh_node(self, node, parent_path):
-        if (node.data is None):
+        if node.data is None:
             return
 
         mesh_node = NodeTemplate(node.name, "MeshInstance", parent_path)
         armature = None
         armcount = 0
         for n in node.modifiers:
-            if (n.type == "ARMATURE"):
+            if n.type == "ARMATURE":
                 armcount += 1
-
-        #self.writel(S_NODES,0, '\n[node name="'+node.name+'" type="MeshInstance" parent="'+parent_path+'"]\n')
 
         """ Armature should happen just by direct relationship, since godot supports it the same way as Blender now
         if (node.parent is not None):
@@ -690,11 +670,11 @@ class GodotExporter:
                 "an armature. This is unsupported.".format(node.name))
         """
 
-        if (node.data.shape_keys is not None):
+        if node.data.shape_keys is not None:
             sk = node.data.shape_keys
-            if (sk.animation_data):
+            if sk.animation_data:
                 for d in sk.animation_data.drivers:
-                    if (d.driver):
+                    if d.driver:
                         for v in d.driver.variables:
                             for t in v.targets:
                                 if (t.id is not None and
@@ -706,12 +686,13 @@ class GodotExporter:
 
         mesh_node.mesh = "SubResource({})".format(meshdata)
         mesh_node.transform = node.matrix_local
-        self.writel(S_NODES,0, mesh_node.to_string())
+        self.writel(S_NODES, 0, mesh_node.to_string())
 
-        close_controller = False
 
         """
         Rest of armature/morph stuff
+        close_controller = False
+
         if ("skin_id" in meshdata):
             close_controller = True
             self.writel(
@@ -834,7 +815,7 @@ class GodotExporter:
                         self.action_constraints.append(x.action)
     """
     def export_camera_node(self, node, parent_path):
-        if (node.data is None):
+        if node.data is None:
             return
 
         cam_node = NodeTemplate(node.name, "Camera", parent_path)
@@ -843,25 +824,23 @@ class GodotExporter:
         cam_node.far = camera.clip_end
         cam_node.near = camera.clip_start
 
-        if (camera.type == "PERSP"):
+        if camera.type == "PERSP":
             cam_node.projection = 0
             cam_node.fov = math.degrees(camera.angle)
         else:
             cam_node.projection = 1
             cam_node.size = camera.ortho_scale * 0.5
 
-        #self.writel(S_NODES,0, '\n[node name="'+node.name+'" type="Camera" parent="'+parent_path+'"]\n')
-        cam_node.transform = node.matrix_local * Matrix.Rotation(math.radians(-90), 4, 'X')
-        self.writel(S_NODES,0,cam_node.to_string())
-
+        cam_node.transform = node.matrix_local * AXIS_CORRECT
+        self.writel(S_NODES, 0, cam_node.to_string())
 
     def export_lamp_node(self, node, parent_path):
-        if (node.data is None):
+        if node.data is None:
             return
 
         light = node.data
 
-        if (light.type == "POINT"):
+        if light.type == "POINT":
             light_node = NodeTemplate(node.name, "OmniLight", parent_path)
             light_node.omni_range = light.distance
             light_node.shadow_enabled = light.shadow_method != "NOSHADOW"
@@ -869,7 +848,7 @@ class GodotExporter:
             if not light.use_sphere:
                 print("WARNING: Ranged light without sphere enabled: {}".format(node.name))
 
-        elif (light.type == "SPOT"):
+        elif light.type == "SPOT":
             light_node = NodeTemplate(node.name, "SpotLight", parent_path)
             light_node.spot_range = light.distance
             light_node.spot_angle = math.degrees(light.spot_size/2)
@@ -887,13 +866,12 @@ class GodotExporter:
 
         # Properties common to all lights
         light_node.light_color = Color(light.color)
-        light_node.transform = node.matrix_local * Matrix.Rotation(math.radians(-90), 4, 'X')
+        light_node.transform = node.matrix_local * AXIS_CORRECT
         light_node.light_negative = light.use_negative
         light_node.light_specular = 1.0 if light.use_specular else 0.0
         light_node.light_energy = light.energy
 
-        self.writel(S_NODES,0,light_node.to_string())
-
+        self.writel(S_NODES, 0, light_node.to_string())
 
     def export_empty_node(self, node, parent_path):
         empty_node = NodeTemplate(node.name, "Spatial", parent_path)
@@ -1073,34 +1051,32 @@ class GodotExporter:
     """
 
     def export_node(self, node, parent_path):
-        if (node not in self.valid_nodes):
+        if node not in self.valid_nodes:
             return
-
 
         prev_node = bpy.context.scene.objects.active
         bpy.context.scene.objects.active = node
 
         node_name = node.name
 
-
-        if (node.type == "MESH"):
+        if node.type == "MESH":
             self.export_mesh_node(node, parent_path)
 
-        #elif (node.type == "CURVE"):
+        # elif (node.type == "CURVE"):
         #    self.export_curve_node(node, il)
-        #elif (node.type == "ARMATURE"):
+        # elif (node.type == "ARMATURE"):
         #    self.export_armature_node(node, il, node_name, parent_path)
-        elif (node.type == "CAMERA"):
+        elif node.type == "CAMERA":
             self.export_camera_node(node, parent_path)
-        elif (node.type == "LAMP"):
+        elif node.type == "LAMP":
             self.export_lamp_node(node, parent_path)
-        elif (node.type == "EMPTY"):
+        elif node.type == "EMPTY":
             self.export_empty_node(node, parent_path)
         else:
             print("WARNING: Unknown object type. Treating as empty: {}".format(node.name))
             self.export_empty_node(node, parent_path)
 
-        if (parent_path=="."):
+        if parent_path == ".":
             parent_path = node_name
         else:
             parent_path = parent_path+"/"+node_name
@@ -1111,19 +1087,19 @@ class GodotExporter:
         bpy.context.scene.objects.active = prev_node
 
     def is_node_valid(self, node):
-        if (node.type not in self.config["object_types"]):
+        if node.type not in self.config["object_types"]:
             return False
 
-        if (self.config["use_active_layers"]):
+        if self.config["use_active_layers"]:
             valid = False
             for i in range(20):
-                if (node.layers[i] and self.scene.layers[i]):
+                if node.layers[i] and self.scene.layers[i]:
                     valid = True
                     break
-            if (not valid):
+            if not valid:
                 return False
 
-        if (self.config["use_export_selected"] and not node.select):
+        if self.config["use_export_selected"] and not node.select:
             return False
 
         return True
@@ -1133,22 +1109,21 @@ class GodotExporter:
         print("exporting scene "+str(len(self.scene.objects)))
         for obj in self.scene.objects:
             print("OBJ: "+obj.name)
-            if (obj in self.valid_nodes):
+            if obj in self.valid_nodes:
                 continue
-            if (self.is_node_valid(obj)):
+            if self.is_node_valid(obj):
                 n = obj
-                while (n is not None):
-                    if (n not in self.valid_nodes):
+                while n is not None:
+                    if n not in self.valid_nodes:
                         self.valid_nodes.append(n)
                         print("VALID: "+n.name)
                     n = n.parent
 
-        self.writel(S_NODES,0, '\n[node name="scene" type="Spatial"]\n')
+        self.writel(S_NODES, 0, '\n[node name="scene" type="Spatial"]\n')
 
         for obj in self.scene.objects:
-            if (obj in self.valid_nodes and obj.parent is None):
-                self.export_node(obj,".")
-
+            if obj in self.valid_nodes and obj.parent is None:
+                self.export_node(obj, ".")
 
     """
     def export_animation_transform_channel(self, target, keys, matrices=True):
@@ -1475,7 +1450,7 @@ class GodotExporter:
         self.export_scene()
         self.purge_empty_nodes()
 
-        #if (self.config["use_anim"]):
+        # if (self.config["use_anim"]):
         #    self.export_animations()
 
         try:
@@ -1483,16 +1458,16 @@ class GodotExporter:
         except:
             return False
 
-        # TODO count nodes and resources written for proper steps, though 
+        # TODO count nodes and resources written for proper steps, though
         # this is kinda useless on import anyway
         master_heading = SectionHeading("gd_scene", load_steps=1, format=2)
         out_file.write(bytes(master_heading.to_string(), "UTF-8"))
 
-        if (S_EXTERNAL_RES in self.sections):
+        if S_EXTERNAL_RES in self.sections:
             for external in self.sections[S_EXTERNAL_RES]:
                 out_file.write(bytes(external + "\n", "UTF-8"))
 
-        if (S_INTERNAL_RES in self.sections):
+        if S_INTERNAL_RES in self.sections:
             for internal in self.sections[S_INTERNAL_RES]:
                 out_file.write(bytes(internal + "\n", "UTF-8"))
 
@@ -1501,11 +1476,12 @@ class GodotExporter:
 
         return True
 
-    __slots__ = ("operator", "scene", "last_res_id", "last_ext_res_id",  "sections",
-                 "path", "mesh_cache", "curve_cache", "material_cache",
-                 "image_cache", "skeleton_info", "config", "valid_nodes",
-                 "armature_for_morph", "used_bones", "wrongvtx_report",
-                 "skeletons", "action_constraints", "temp_meshes")
+    __slots__ = ("operator", "scene", "last_res_id", "last_ext_res_id",
+                 "sections", "path", "mesh_cache", "curve_cache",
+                 "material_cache", "image_cache", "skeleton_info", "config",
+                 "valid_nodes", "armature_for_morph", "used_bones",
+                 "wrongvtx_report", "skeletons", "action_constraints",
+                 "temp_meshes")
 
     def __init__(self, path, kwargs, operator):
         self.operator = operator
