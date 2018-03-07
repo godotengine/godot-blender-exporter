@@ -25,14 +25,12 @@ http://www.godotengine.org
 """
 
 import os
-import time
 import math
-import shutil
 import bpy
 import bmesh
-from mathutils import Vector, Matrix
+from mathutils import Vector, Matrix, Color
 
-#sections (in this order)
+# sections (in this order)
 S_EXTERNAL_RES = 0
 S_INTERNAL_RES = 1
 S_NODES = 2
@@ -49,41 +47,42 @@ def snap_tup(tup):
 
 
 def fix_matrix(mtx):
-    
+
     tr = Matrix(mtx)
     up_axis = 2
-    
+
     for i in range(3):
         tr[1][i], tr[up_axis][i] = tr[up_axis][i], tr[1][i]
     for i in range(3):
         tr[i][1], tr[i][up_axis] = tr[i][up_axis], tr[i][1]
-                   
-    tr[1][3], tr[up_axis][3] = tr[up_axis][3], tr[1][3] 
 
-    tr[up_axis][0] = -tr[up_axis][0];
-    tr[up_axis][1] = -tr[up_axis][1];
-    tr[0][up_axis] = -tr[0][up_axis];
-    tr[1][up_axis] = -tr[1][up_axis];
+    tr[1][3], tr[up_axis][3] = tr[up_axis][3], tr[1][3]
+
+    tr[up_axis][0] = -tr[up_axis][0]
+    tr[up_axis][1] = -tr[up_axis][1]
+    tr[0][up_axis] = -tr[0][up_axis]
+    tr[1][up_axis] = -tr[1][up_axis]
     tr[up_axis][3] = -tr[up_axis][3]
-    
+
     return tr
 
+
 def fix_vertex(vtx):
-    return Vector((vtx.x,vtx.z,-vtx.y))
-    
+    return Vector((vtx.x, vtx.z, -vtx.y))
+
 
 def strmtx(mtx):
     mtx = fix_matrix(mtx)
     s = ""
     for x in range(3):
         for y in range(3):
-            if (x!=0 or y!=0):
-                s+=", "
+            if (x != 0 or y != 0):
+                s += ", "
             s += "{} ".format(mtx[x][y])
-            
+
     for x in range(3):
         s += ",{} ".format(mtx[x][3])
-    
+
     s = "Transform( {} )".format(s)
     return s
 
@@ -114,13 +113,89 @@ def strarr(arr):
     return s
 
 
+def to_color(rgba):
+    a = 1.0 if len(rgba) < 4 else rgba[3]
+    return "Color( {}, {}, {}, {} )".format(
+        rgba[0],
+        rgba[1],
+        rgba[2],
+        a,
+    )
+
+# When writing to the file using the nodetemplate, a lookup of datatypes
+# is done in this file
+CONVERSIONS = {
+    bool: lambda x: 'true' if x else 'false',
+    Matrix: strmtx,
+    Color: to_color
+}
+
+
+class SectionHeading:
+    def __init__(self, section_type, **kwargs):
+        self._type = section_type
+        for key in kwargs:
+            self.__dict__[key] = kwargs[key]
+        
+    def generate_prop_list(self):
+        out_str = ''
+        attribs = vars(self)
+        for var in attribs:
+            if var.startswith('_'):
+                continue  # Ignore hidden variables
+            val = attribs[var]
+            converter = CONVERSIONS.get(type(val))
+            if converter is not None:
+                val = converter(val)
+            
+            # Extra wrapper for str's
+            if type(val) == str:
+                val = '"{}"'.format(val)
+            
+            out_str += ' {}={}'.format(var, val)
+
+        return out_str
+
+    def to_string(self):
+        return '[{} {}]\n'.format(self._type, self.generate_prop_list())
+
+
+class NodeTemplate:
+    def __init__(self, name, node_type, parent_path):
+        self._heading = SectionHeading(
+            "node",
+            name=name,
+            type=node_type,
+            parent=parent_path,
+        )
+
+    def generate_prop_list(self):
+        out_str = ''
+        attribs = vars(self)
+        for var in attribs:
+            if var.startswith('_'):
+                continue  # Ignore hidden variables
+            val = attribs[var]
+            converter = CONVERSIONS.get(type(val))
+            if converter is not None:
+                val = converter(val)
+            out_str += '\n{} = {}'.format(var, val)
+
+        return out_str
+
+    def to_string(self):
+        return '{}\n{}\n\n'.format(
+            self._heading.to_string(),
+            self.generate_prop_list()
+        )
+
+
 class GodotExporter:
 
     def validate_id(self, d):
         if (d.find("id-") == 0):
             return "z{}".format(d)
         return d
-
 
     def new_resource_id(self):
         self.last_res_id += 1
@@ -189,9 +264,6 @@ class GodotExporter:
             if not (len(v) == 2 and v[0][1:] == v[1][2:]):
                 sections[k] = v
         self.sections = sections
-        
-    def to_color(self,color):
-        return "Color( {}, {}, {}, 1.0 )".format(color[0],color[1],color[2])
 
     def export_image(self, image):
         img_id = self.image_cache.get(image)
@@ -205,13 +277,13 @@ class GodotExporter:
         try:
             imgpath = os.path.relpath(imgpath, os.path.dirname(self.path)).replace("\\", "/")
         except:
-            # TODO: Review, not sure why it fails
+            # TODO: Review, not sure why it fails - maybe try bpy.paths.abspath
             pass
 
         imgid = str(self.new_external_resource_id())
 
-        self.image_cache[image]=imgid
-        self.writel(S_EXTERNAL_RES, 0,'[ext_resource path="'+imgpath+'" type="Texture" id='+imgid+']')
+        self.image_cache[image] = imgid
+        self.writel(S_EXTERNAL_RES, 0, '[ext_resource path="' + imgpath + '" type="Texture" id=' + imgid + ']')
         return imgid
 
     def export_material(self, material, double_sided_hint=True):
@@ -221,7 +293,7 @@ class GodotExporter:
 
         material_id = str(self.new_resource_id())
         self.material_cache[material]=material_id
-        
+
         self.writel(S_INTERNAL_RES,0,'\n[sub_resource type="SpatialMaterial" id='+material_id+']\n')
         return material_id
 
@@ -231,13 +303,13 @@ class GodotExporter:
             self.vertices = []
             self.vertex_map = {}
             self.indices = []
-    
+
     def make_arrays(self, node, armature, mesh_lines, ret_materials, skeyindex=-1):
-        
+
         mesh = node.to_mesh(self.scene, self.config["use_mesh_modifiers"],
                             "RENDER")  # TODO: Review
         self.temp_meshes.add(mesh)
-        
+
         if (True): # Triangulate, always
             bm = bmesh.new()
             bm.from_mesh(mesh)
@@ -245,7 +317,7 @@ class GodotExporter:
             bm.to_mesh(mesh)
             bm.free()
 
-    
+
         surfaces = []
         material_to_surface = {}
 
@@ -264,7 +336,7 @@ class GodotExporter:
         uv_layer_count = len(mesh.uv_textures)
         if (uv_layer_count>2):
             uv_layer_count=2
-            
+
         if has_tangents and len(mesh.uv_textures):
             try:
                 mesh.calc_tangents()
@@ -279,7 +351,7 @@ class GodotExporter:
         else:
             mesh.calc_normals_split()
             has_tangents = False
-            
+
 
         for fi in range(len(mesh.polygons)):
             f = mesh.polygons[fi]
@@ -299,8 +371,8 @@ class GodotExporter:
                         mat, mesh.show_double_sided))
                 else:
                      ret_materials.append(None)
-                    
-               
+
+
 
             surface = surfaces[material_to_surface[f.material_index]]
             vi = []
@@ -370,12 +442,12 @@ class GodotExporter:
             if (len(vi) > 2):  # Only triangles and above
                 surface.indices.append(vi)
 
-       
+
         for s in surfaces:
             surface_lines=[]
-                        
+
             #Vertices
-            float_values = "Vector3Array("   
+            float_values = "Vector3Array("
             first=""
             for v in s.vertices:
                 float_values += first+" {}, {}, {}".format(
@@ -383,7 +455,7 @@ class GodotExporter:
                 first=","
             float_values+="),"
             surface_lines.append(float_values)
-            
+
             # Normals Array
             float_values = "Vector3Array("
             first=""
@@ -393,7 +465,7 @@ class GodotExporter:
                 first=","
             float_values+="),"
             surface_lines.append(float_values)
-                
+
 
             if (has_tangents):
                 float_values = "FloatArray("
@@ -415,7 +487,7 @@ class GodotExporter:
                 surface_lines.append(float_values)
             else:
                 surface_lines.append("null, ; No Tangents")
-                
+
             # Color Arrays
             if (has_colors):
                 float_values = "ColorArray("
@@ -435,14 +507,14 @@ class GodotExporter:
                     surface_lines.append("null, ; No UV"+str(i+1))
                     continue
                 float_values = "Vector2Array("
-                first=","                
+                first=","
                 for v in s.vertices:
                     try:
                         float_values += " {}, {}".format(v.uv[i].x, v.uv[i].y)+first
                     except:
                         # TODO: Review, understand better the multi-uv-layer API
                         float_values += " 0, 0 "
-                        
+
                     first=""
                 float_values+="),"
                 surface_lines.append(float_values)
@@ -459,15 +531,15 @@ class GodotExporter:
                     w = []
                     for i in len(v.bones):
                         w += (v.bones[i],v.weights[i])
-                        
+
                     w = sorted( w, key=lambda x: -x[1])
                     totalw = 0.0
                     for x in w:
                         totalw+=x[1]
                     if (totalw==0.0):
                         totalw=0.000000001
-                    
-                        
+
+
                     for i in range(4):
                         if (i>0):
                             float_values+=","
@@ -476,7 +548,7 @@ class GodotExporter:
                             float_values+=" {}".format(w[i][0])
                             float_valuesw+=" {}".format(w[i][1]/totalw)
                         else:
-                            float_values+=" 0" 
+                            float_values+=" 0"
                             float_valuesw+=" 0.0"
 
                     if (not first):
@@ -493,27 +565,27 @@ class GodotExporter:
             else:
                 surface_lines.append("null, ; No Bones")
                 surface_lines.append("null, ; No Weights")
-    
-    
+
+
             # Indices
             int_values = "IntArray("
-            first=""            
+            first=""
             for v in s.indices:
                 int_values += first+" {}, {}, {} ".format(v[0],v[2],v[1]) #flip order as godot uses front is clockwise
                 first=","
-                
+
             int_values+="),"
             surface_lines.append(int_values)
             mesh_lines.append(surface_lines)
-       
-    
+
+
     def export_mesh(self, node, armature=None, skeyindex=-1, skel_source=None,
                     custom_name=None):
         mesh = node.data
 
         if (node.data in self.mesh_cache):
             return self.mesh_cache[mesh]
-        
+
         morph_target_arrays=[]
         morph_target_names= []
 
@@ -540,23 +612,23 @@ class GodotExporter:
                 self.temp_meshes.add(v)
                 node.data = v
                 node.data.update()
-                
+
                 morph_target_lines = []
                 md = self.make_arrays(node, None, morph_target_lines, [], k)
-                    
+
                 morph_target_names.append(shape.name)
                 morph_target_arrays.append(morph_target_lines)
-                
+
                 morph_targ
                 node.data = p
                 node.data.update()
                 shape.value = 0.0
-                
+
             node.show_only_shape_key = False
             node.active_shape_key_index = 0
-            
-        
-        
+
+
+
         mesh_lines = []
         mesh_materials = []
         self.make_arrays(node, armature, mesh_lines, mesh_materials)
@@ -565,9 +637,9 @@ class GodotExporter:
         self.mesh_cache[mesh]=mesh_id
 
         self.writel(S_INTERNAL_RES,0,'\n[sub_resource type="ArrayMesh" id='+mesh_id+']\n')
-        
-        
-        
+
+
+
         for i in range(len(mesh_lines)):
             pfx = "surfaces/"+str(i)+"/"
             self.writel(S_INTERNAL_RES,0,"surfaces/"+str(i)+"={")
@@ -578,22 +650,23 @@ class GodotExporter:
             for sline in mesh_lines[i]:
                 self.writel(S_INTERNAL_RES,2,sline)
             self.writel(S_INTERNAL_RES,1,"],")
-            self.writel(S_INTERNAL_RES,1,"\"morph_arrays\":[]")            
+            self.writel(S_INTERNAL_RES,1,"\"morph_arrays\":[]")
             self.writel(S_INTERNAL_RES,0,"}")
-                
+
         return mesh_id
 
     def export_mesh_node(self, node, parent_path):
         if (node.data is None):
             return
 
+        mesh_node = NodeTemplate(node.name, "MeshInstance", parent_path)
         armature = None
         armcount = 0
         for n in node.modifiers:
             if (n.type == "ARMATURE"):
                 armcount += 1
 
-        self.writel(S_NODES,0, '\n[node name="'+node.name+'" type="MeshInstance" parent="'+parent_path+'"]\n')
+        #self.writel(S_NODES,0, '\n[node name="'+node.name+'" type="MeshInstance" parent="'+parent_path+'"]\n')
 
         """ Armature should happen just by direct relationship, since godot supports it the same way as Blender now
         if (node.parent is not None):
@@ -609,7 +682,7 @@ class GodotExporter:
                         {"WARNING"}, "Object \"{}\" is child "
                         "of an armature, but has no armature modifier.".format(
                             node.name))
-        
+
         if (armcount > 0 and not armature):
             self.operator.report(
                 {"WARNING"},
@@ -630,9 +703,11 @@ class GodotExporter:
                                         node] = self.scene.objects[t.id.name]
 
         meshdata = self.export_mesh(node, armature)
-        
-        self.writel(S_NODES,0, 'mesh=SubResource('+str(meshdata)+")")
-        
+
+        mesh_node.mesh = "SubResource({})".format(meshdata)
+        mesh_node.transform = node.matrix_local
+        self.writel(S_NODES,0, mesh_node.to_string())
+
         close_controller = False
 
         """
@@ -671,7 +746,7 @@ class GodotExporter:
         else:
             self.writel(S_NODES, il, "</instance_geometry>")
         """
-        
+
     """
     def export_armature_bone(self, bone, il, si):
         is_ctrl_bone = (
@@ -762,21 +837,23 @@ class GodotExporter:
         if (node.data is None):
             return
 
-        self.writel(S_NODES,0, '\n[node name="'+node.name+'" type="Camera" parent="'+parent_path+'"]\n')
+        cam_node = NodeTemplate(node.name, "Camera", parent_path)
         camera = node.data
-  
+
+        cam_node.far = camera.clip_end
+        cam_node.near = camera.clip_start
+
         if (camera.type == "PERSP"):
-            self.writel(S_NODES,0, "projection=0")
-            self.writel(S_NODES,0, "fov="+str(math.degrees(camera.angle)))
-            self.writel(S_NODES,0, "far="+str(math.degrees(camera.clip_end)))
-            self.writel(S_NODES,0, "near="+str(math.degrees(camera.clip_start)))
-            
+            cam_node.projection = 0
+            cam_node.fov = math.degrees(camera.angle)
         else:
-            self.writel(S_NODES,0, "projection=1")
-            self.writel(S_NODES,0, "size="+str(math.degrees(camera.ortho_scale * 0.5)))
-            self.writel(S_NODES,0, "far="+str(math.degrees(camera.clip_end)))
-            self.writel(S_NODES,0, "near="+str(math.degrees(camera.clip_start)))
-            
+            cam_node.projection = 1
+            cam_node.size = camera.ortho_scale * 0.5
+
+        #self.writel(S_NODES,0, '\n[node name="'+node.name+'" type="Camera" parent="'+parent_path+'"]\n')
+        cam_node.transform = node.matrix_local * Matrix.Rotation(math.radians(-90), 4, 'X')
+        self.writel(S_NODES,0,cam_node.to_string())
+
 
     def export_lamp_node(self, node, parent_path):
         if (node.data is None):
@@ -785,25 +862,43 @@ class GodotExporter:
         light = node.data
 
         if (light.type == "POINT"):
-            self.writel(S_NODES,0, '\n[node name="'+node.name+'" type="OmniLight" parent="'+parent_path+'"]\n')
+            light_node = NodeTemplate(node.name, "OmniLight", parent_path)
+            light_node.omni_range = light.distance
+            light_node.shadow_enabled = light.shadow_method != "NOSHADOW"
 
-            self.writel(S_NODES, 0,"light_color="+self.to_color(light.color))
-            if (light.use_sphere):
-                self.writel(S_NODES, "omni_range={}".format(strarr(light.distance)))
+            if not light.use_sphere:
+                print("WARNING: Ranged light without sphere enabled: {}".format(node.name))
 
         elif (light.type == "SPOT"):
-            self.writel(S_NODES,0, '\n[node name="'+node.name+'" type="SpotLight" parent="'+parent_path+'"]\n')
+            light_node = NodeTemplate(node.name, "SpotLight", parent_path)
+            light_node.spot_range = light.distance
+            light_node.spot_angle = math.degrees(light.spot_size/2)
+            light_node.spot_angle_attenuation = light.spot_blend
+            light_node.shadow_enabled = light.shadow_method != "NOSHADOW"
 
-            self.writel(S_NODES,0, "light_color="+self.to_color(light.color))
-            
-        else:  # Write a sun lamp for everything else (not supported)
-            self.writel(S_NODES,0, '\n[node name="'+node.name+'" type="DirectionalLight" parent="'+parent_path+'"]\n')
-            self.writel(S_NODES,0, "light_color="+self.to_color(light.color))
-            
+            if not light.use_sphere:
+                print("WARNING: Ranged light without sphere enabled: {}".format(node.name))
+
+        elif light.type == "SUN":
+            light_node = NodeTemplate(node.name, "DirectionalLight", parent_path)
+            light_node.shadow_enabled = light.shadow_method != "NOSHADOW"
+        else:
+            print("WARNING: Unknown light type. Use Point, Spot or Sun: {}".format(node.name))
+
+        # Properties common to all lights
+        light_node.light_color = Color(light.color)
+        light_node.transform = node.matrix_local * Matrix.Rotation(math.radians(-90), 4, 'X')
+        light_node.light_negative = light.use_negative
+        light_node.light_specular = 1.0 if light.use_specular else 0.0
+        light_node.light_energy = light.energy
+
+        self.writel(S_NODES,0,light_node.to_string())
 
 
-    def export_empty_node(self, node, il, parent_path):
-        self.writel(S_NODES, '\n[node name="'+node.name+'" type="Position3D" parent="'+parent_path+'"]\n')
+    def export_empty_node(self, node, parent_path):
+        empty_node = NodeTemplate(node.name, "Spatial", parent_path)
+        empty_node.transform = node.matrix_local
+        self.writel(S_NODES, 0, empty_node.to_string())
 
     """
     def export_curve(self, curve):
@@ -981,17 +1076,18 @@ class GodotExporter:
         if (node not in self.valid_nodes):
             return
 
-        
+
         prev_node = bpy.context.scene.objects.active
         bpy.context.scene.objects.active = node
-        
+
         node_name = node.name
-        
+
 
         if (node.type == "MESH"):
             self.export_mesh_node(node, parent_path)
+
         #elif (node.type == "CURVE"):
-        #    self.export_curve_node(node, il)        
+        #    self.export_curve_node(node, il)
         #elif (node.type == "ARMATURE"):
         #    self.export_armature_node(node, il, node_name, parent_path)
         elif (node.type == "CAMERA"):
@@ -1001,17 +1097,14 @@ class GodotExporter:
         elif (node.type == "EMPTY"):
             self.export_empty_node(node, parent_path)
         else:
-            self.writel(S_NODES,0, '\n[node name="'+node.name+'" type="Spatial" parent="'+parent_path+'"]\n')
-            
-
-        self.writel(
-            S_NODES, 0, "transform="+strmtx(node.matrix_local))
+            print("WARNING: Unknown object type. Treating as empty: {}".format(node.name))
+            self.export_empty_node(node, parent_path)
 
         if (parent_path=="."):
             parent_path = node_name
         else:
             parent_path = parent_path+"/"+node_name
-            
+
         for x in node.children:
             self.export_node(x, parent_path)
 
@@ -1037,7 +1130,7 @@ class GodotExporter:
 
     def export_scene(self):
 
-        print("esporting scene "+str(len(self.scene.objects)))
+        print("exporting scene "+str(len(self.scene.objects)))
         for obj in self.scene.objects:
             print("OBJ: "+obj.name)
             if (obj in self.valid_nodes):
@@ -1050,7 +1143,7 @@ class GodotExporter:
                         print("VALID: "+n.name)
                     n = n.parent
 
-        self.writel(S_NODES,0, '\n[node name="scene" type="Spatial"]\n')            
+        self.writel(S_NODES,0, '\n[node name="scene" type="Spatial"]\n')
 
         for obj in self.scene.objects:
             if (obj in self.valid_nodes and obj.parent is None):
@@ -1386,23 +1479,25 @@ class GodotExporter:
         #    self.export_animations()
 
         try:
-            f = open(self.path, "wb")
+            out_file = open(self.path, "wb")
         except:
             return False
 
-
-        f.write(bytes("[gd_scene load_steps=1 format=2]\n\n", "UTF-8")) # TOODO count nodes and resources written for proper steps, though this is kinda useless on import anyway
+        # TODO count nodes and resources written for proper steps, though 
+        # this is kinda useless on import anyway
+        master_heading = SectionHeading("gd_scene", load_steps=1, format=2)
+        out_file.write(bytes(master_heading.to_string(), "UTF-8"))
 
         if (S_EXTERNAL_RES in self.sections):
-            for l in self.sections[S_EXTERNAL_RES]:
-                f.write(bytes(l + "\n", "UTF-8"))
+            for external in self.sections[S_EXTERNAL_RES]:
+                out_file.write(bytes(external + "\n", "UTF-8"))
 
         if (S_INTERNAL_RES in self.sections):
-            for l in self.sections[S_INTERNAL_RES]:
-                f.write(bytes(l + "\n", "UTF-8"))
+            for internal in self.sections[S_INTERNAL_RES]:
+                out_file.write(bytes(internal + "\n", "UTF-8"))
 
-        for l in self.sections[S_NODES]:
-            f.write(bytes(l + "\n", "UTF-8"))
+        for node in self.sections[S_NODES]:
+            out_file.write(bytes(node + "\n", "UTF-8"))
 
         return True
 
