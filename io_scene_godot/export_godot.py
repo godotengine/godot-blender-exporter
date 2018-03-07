@@ -30,6 +30,8 @@ import bpy
 import bmesh
 from mathutils import Vector, Matrix, Color
 
+from .encoders import CONVERSIONS
+
 # sections (in this order)
 S_EXTERNAL_RES = 0
 S_INTERNAL_RES = 1
@@ -38,99 +40,14 @@ S_NODES = 2
 CMP_EPSILON = 0.0001
 
 
-def snap_tup(tup):
-    ret = ()
-    for x in tup:
-        ret += (x - math.fmod(x, 0.0001), )
-
-    return tup
-
-
-def fix_matrix(mtx):
-
-    tr = Matrix(mtx)
-    up_axis = 2
-
-    for i in range(3):
-        tr[1][i], tr[up_axis][i] = tr[up_axis][i], tr[1][i]
-    for i in range(3):
-        tr[i][1], tr[i][up_axis] = tr[i][up_axis], tr[i][1]
-
-    tr[1][3], tr[up_axis][3] = tr[up_axis][3], tr[1][3]
-
-    tr[up_axis][0] = -tr[up_axis][0]
-    tr[up_axis][1] = -tr[up_axis][1]
-    tr[0][up_axis] = -tr[0][up_axis]
-    tr[1][up_axis] = -tr[1][up_axis]
-    tr[up_axis][3] = -tr[up_axis][3]
-
-    return tr
+# Used to correct spotlights and cameras, which in blender are Z-forwards and
+# in Godot are Y-forwards
+AXIS_CORRECT = Matrix.Rotation(math.radians(-90), 4, 'X')
 
 
 def fix_vertex(vtx):
+    """Changes a single position vector from y-up to z-up"""
     return Vector((vtx.x, vtx.z, -vtx.y))
-
-
-def strmtx(mtx):
-    mtx = fix_matrix(mtx)
-    s = ""
-    for x in range(3):
-        for y in range(3):
-            if x != 0 or y != 0:
-                s += ", "
-            s += "{} ".format(mtx[x][y])
-
-    for x in range(3):
-        s += ",{} ".format(mtx[x][3])
-
-    s = "Transform( {} )".format(s)
-    return s
-
-
-def numarr(a, mult=1.0):
-    s = " "
-    for x in a:
-        s += " {}".format(x * mult)
-    s += " "
-    return s
-
-
-def numarr_alpha(a, mult=1.0):
-    s = " "
-    for x in a:
-        s += " {}".format(x * mult)
-    if len(a) == 3:
-        s += " 1.0"
-    s += " "
-    return s
-
-
-def strarr(arr):
-    s = " "
-    for x in arr:
-        s += " {}".format(x)
-    s += " "
-    return s
-
-
-def to_color(rgba):
-    a = 1.0 if len(rgba) < 4 else rgba[3]
-    return "Color( {}, {}, {}, {} )".format(
-        rgba[0],
-        rgba[1],
-        rgba[2],
-        a,
-    )
-
-AXIS_CORRECT = Matrix.Rotation(math.radians(-90), 4, 'X')
-
-# When writing to the file using the nodetemplate, a lookup of datatypes
-# is done in this file
-CONVERSIONS = {
-    bool: lambda x: 'true' if x else 'false',
-    Matrix: strmtx,
-    Color: to_color
-}
 
 
 class SectionHeading:
@@ -775,7 +692,7 @@ class GodotExporter:
         if (is_ctrl_bone is False):
             self.writel(
                 S_NODES, il, "<matrix sid=\"transform\">{}</matrix>".format(
-                    strmtx(xform)))
+                    mat4_to_string(xform)))
 
         for c in bone.children:
             self.export_armature_bone(c, il, si)
@@ -1137,7 +1054,7 @@ class GodotExporter:
         for k in keys:
             source_frames += " {}".format(k[0])
             if (matrices):
-                source_transforms += " {}".format(strmtx(k[1]))
+                source_transforms += " {}".format(mat4_to_string(k[1]))
             else:
                 source_transforms += " {}".format(k[1])
 
