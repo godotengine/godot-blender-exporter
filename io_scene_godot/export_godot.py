@@ -109,6 +109,21 @@ class NodeTemplate:
         )
 
 
+class Array(list):
+    def __init__(self, prefix, seperator=', ', suffix=')', values=()):
+        self.prefix = prefix
+        self.seperator = seperator
+        self.suffix = suffix
+        super().__init__(values)
+        
+    def to_string(self):
+        return "{}{}{}".format(
+            self.prefix, 
+            self.seperator.join([str(v) for v in self]), 
+            self.suffix
+        )
+        
+
 class GodotExporter:
 
     def validate_id(self, d):
@@ -355,80 +370,51 @@ class GodotExporter:
             if len(vi) > 2:  # Only triangles and above
                 surface.indices.append(vi)
 
+        def calc_tangent_dp(vert):
+            cr = v.normal.cross(v.tangent)
+            dp = cr.dot(v.bitangent)
+            return 1.0 if dp > 0.0 else -1.0
+        
+
         for s in surfaces:
             surface_lines = []
 
             # Vertices
-            float_values = "Vector3Array("
-            first = ""
-            for v in s.vertices:
-                float_values += first+" {}, {}, {}".format(
-                    v.vertex.x, v.vertex.y, v.vertex.z)
-                first = ","
-            float_values += "),"
-            surface_lines.append(float_values)
+            position_vals = Array("Vector3Array(", ", ", "),")
+            [position_vals.extend(list(v.vertex)) for v in s.vertices]
+            surface_lines.append(position_vals.to_string())
 
             # Normals Array
-            float_values = "Vector3Array("
-            first = ""
-            for v in s.vertices:
-                float_values += first+" {}, {}, {}".format(
-                    v.normal.x, v.normal.y, v.normal.z)
-                first = ","
-            float_values += "),"
-            surface_lines.append(float_values)
+            normal_vals = Array("Vector3Array(", ", ", "),")
+            [normal_vals.extend(list(v.normal)) for v in s.vertices]
+            surface_lines.append(normal_vals.to_string())
 
             if has_tangents:
-                float_values = "FloatArray("
-                first = ""
+                tangent_vals = Array("FloatArray(", ", ", "),")
                 for v in s.vertices:
-                    cr = [(v.normal.y * v.tangent.z) - (v.normal.z * v.tangent.y),
-                          (v.normal.z * v.tangent.x) - (v.normal.x * v.tangent.z),
-                          (v.normal.x * v.tangent.y) - (v.normal.y * v.tangent.x)]
-                    dp = cr[0]*v.bitangent.x + cr[1]*v.bitangent.y + cr[2]*v.bitangent.z
-                    if dp > 0:
-                        dp = 1.0
-                    else:
-                        dp = -1.0
-
-                    float_values += first+" {}, {}, {}, {}".format(
-                        v.tangent.x, v.tangent.y, v.tangent.z, dp)
-                    first = ","
-                float_values += "),"
-                surface_lines.append(float_values)
+                    tangent_vals.extend(list(v.tangent) + [calc_tangent_dp(v)])
+                surface_lines.append(tangent_vals.to_string())
             else:
                 surface_lines.append("null, ; No Tangents")
 
             # Color Arrays
             if has_colors:
-                float_values = "ColorArray("
-                first = ""
-                for v in s.vertices:
-                    float_values += first+" {}, {}, {}".format(
-                        v.color.x, v.color.y, v.color.z)
-                    first = ","
-                float_values += "),"
-                surface_lines.append(float_values)
+                color_vals = Array("ColorArray(", ", ", "),")
+                [color_vals.extend(list(v.color)+[1.0]) for v in s.vertices]
+                surface_lines.append(color_vals.to_string())
             else:
                 surface_lines.append("null, ; No Colors")
 
             # UV Arrays
-            for i in range(2):
+            for i in range(2):  # Godot always expects two arrays for UV's
                 if i >= uv_layer_count:
+                    # but if there aren't enough in blender, make one of them into null
                     surface_lines.append("null, ; No UV"+str(i+1))
                     continue
-                float_values = "Vector2Array("
-                first = ","
+                uv_vals = Array("Vector2Array(", ", ", "),")
                 for v in s.vertices:
-                    try:
-                        float_values += " {}, {}".format(v.uv[i].x, v.uv[i].y)+first
-                    except:
-                        # TODO: Review, understand better the multi-uv-layer API
-                        float_values += " 0, 0 "
-
-                    first = ""
-                float_values += "),"
-                surface_lines.append(float_values)
+                    uv_vals.extend([v.uv[i].x, -v.uv[i].y])
+                surface_lines.append(uv_vals.to_string())
 
             # Bones and Weights
             # Export armature data (if armature exists)
@@ -476,16 +462,13 @@ class GodotExporter:
                 surface_lines.append("null, ; No Bones")
                 surface_lines.append("null, ; No Weights")
 
-            # Indices
-            int_values = "IntArray("
-            first = ""
-            for v in s.indices:
-                # flip order as godot uses front is clockwise
-                int_values += first+" {}, {}, {} ".format(v[0], v[2], v[1])
-                first = ","
-
-            int_values += "),"
-            surface_lines.append(int_values)
+            # Indices- each face is made of 3 verts, and these are the indices
+            # in the vertex arrays. The backface is computed from the winding
+            # order, hence v[2] before v[1]
+            int_values = Array("IntArray(", ", ", "),")
+            [int_values.extend([v[0], v[2], v[1]]) for v in s.indices]
+            surface_lines.append(int_values.to_string())
+            
             mesh_lines.append(surface_lines)
 
     def export_mesh(self, node, armature=None, skeyindex=-1, skel_source=None,
@@ -769,7 +752,7 @@ class GodotExporter:
             light_node = NodeTemplate(node.name, "SpotLight", parent_path)
             light_node.spot_range = light.distance
             light_node.spot_angle = math.degrees(light.spot_size/2)
-            light_node.spot_angle_attenuation = light.spot_blend
+            light_node.spot_angle_attenuation = 0.2/(light.spot_blend + 0.01)
             light_node.shadow_enabled = light.shadow_method != "NOSHADOW"
 
             if not light.use_sphere:
