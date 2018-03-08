@@ -55,11 +55,19 @@ def color_to_string(rgba):
         rgba[2],
         a,
     )
+    
+def vector_to_string(vec):
+    elements = list(vec)
+    return "Vector{}({})".format(
+        len(elements), 
+        ", ".join(str(e) for e in elements)
+    )
 
 
 # Finds the correct conversion function for a datatype
 CONVERSIONS = {
     bool: lambda x: 'true' if x else 'false',
     mathutils.Matrix: mat4_to_string,
-    mathutils.Color: color_to_string
+    mathutils.Color: color_to_string,
+    mathutils.Vector: vector_to_string,
 }

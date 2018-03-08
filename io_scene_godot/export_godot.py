@@ -61,9 +61,10 @@ class GodotExporter:
             logging.warning("Unknown object type. Treating as empty: %s", node.name)
             exporter = converters.export_empty_node
             
-        if node.type == "MESH":
-            converters.export_mesh_node(self.escn_file, node, parent_path)
-
+        if node.rigid_body is not None:
+            parent_path = converters.export_physics_properties(self.escn_file, node, parent_path)
+        
+        
         exporter(self.escn_file, node, parent_path)
 
         if parent_path == ".":
@@ -100,7 +101,7 @@ class GodotExporter:
         self.escn_file.add_node(
             structures.SectionHeading("node", type="Spatial", name=self.scene.name)
         )
-        print("Exporting scene: {}".format(self.scene.name))
+        logging.info("Exporting scene: {}".format(self.scene.name))
 
         # Decide what objects to export
         for obj in self.scene.objects:

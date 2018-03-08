@@ -49,6 +49,7 @@ class ESCNFile:
         index = len(self.external_resources) - 1
         item._heading.id = index
         self._external_hashes[hashable] = index
+        return index
 
     def get_internal_resource(self, hashable):
         """Searches for existing internal resources, and returns their
@@ -183,13 +184,31 @@ class InternalResource():
             id=None,  # This is overwritten by ESCN_File.add_external_resource
             type=resource_type
         )
-        self.contents = ''
+        
+        # This string is dumped verbatim, so can be used it the key=value isn't ideal
+        self.contents = ''  
+        
+    def generate_prop_list(self):
+        """Generate key/value pairs from the attributes of the node"""
+        out_str = ''
+        attribs = vars(self)
+        for var in attribs:
+            if var.startswith('_') or var == 'contents':
+                continue  # Ignore hidden variables
+            val = attribs[var]
+            converter = CONVERSIONS.get(type(val))
+            if converter is not None:
+                val = converter(val)
+            out_str += '\n{} = {}'.format(var, val)
+
+        return out_str
 
     def to_string(self):
         """Serialize the node for writing to the file"""
-        return '{}\n{}\n\n'.format(
+        return '{}\n{}\n{}\n\n'.format(
             self._heading.to_string(),
-            self.contents
+            self.contents,
+            self.generate_prop_list()
         )
 
 

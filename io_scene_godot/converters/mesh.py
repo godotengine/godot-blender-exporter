@@ -1,6 +1,7 @@
 import bpy
 import bmesh
 import mathutils
+from .physics import export_physics_properties
 from ..structures import Array, NodeTemplate, InternalResource, ExternalResource
 
 
@@ -23,7 +24,10 @@ def export_mesh_node(escn_file, node, parent_path):
 
     mesh_node = NodeTemplate(node.name, "MeshInstance", parent_path)
     mesh_node.mesh = "SubResource({})".format(mesh_id)
-    mesh_node.transform = node.matrix_local
+    if node.rigid_body is None:
+        mesh_node.transform = node.matrix_local
+    else:
+        mesh_node.transform = mathutils.Matrix.Identity(4)
     escn_file.add_node(mesh_node)
 
 

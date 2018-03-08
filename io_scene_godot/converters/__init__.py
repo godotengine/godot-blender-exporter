@@ -9,3 +9,4 @@ are stored in individual files
 
 from .simple_nodes import *
 from .mesh import export_mesh_node
+from .physics import export_physics_properties
