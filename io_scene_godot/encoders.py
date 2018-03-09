@@ -31,35 +31,39 @@ def mat4_to_string(mtx):
         return trans
 
     mtx = fix_matrix(mtx)
-    s = ""
-    for x in range(3):
-        for y in range(3):
-            if x != 0 or y != 0:
-                s += ", "
-            s += "{} ".format(mtx[x][y])
+    out_str = ""
+    for row in range(3):
+        for col in range(3):
+            out_str += " {},".format(mtx[row][col])
 
-    for x in range(3):
-        s += ",{} ".format(mtx[x][3])
+    # Export the basis
+    for axis in range(3):
+        out_str += " {},".format(mtx[axis][3])
 
-    s = "Transform( {} )".format(s)
-    return s
+    out_str = out_str[:-1]  # Remove trailing comma
+
+    out_str = "Transform( {} )".format(out_str)
+    return out_str
 
 
 def color_to_string(rgba):
     """Converts an RGB colors in range 0-1 into a fomat Godot can read. Accepts
     iterables of 3 or 4 in length, but is designed for mathutils.Color"""
-    a = 1.0 if len(rgba) < 4 else rgba[3]
+    alpha = 1.0 if len(rgba) < 4 else rgba[3]
     return "Color( {}, {}, {}, {} )".format(
         rgba[0],
         rgba[1],
         rgba[2],
-        a,
+        alpha,
     )
-    
+
+
 def vector_to_string(vec):
+    """Encode a mathutils.vector. actually, it accepts iterable of any length,
+    but 2, 3 are best...."""
     elements = list(vec)
     return "Vector{}({})".format(
-        len(elements), 
+        len(elements),
         ", ".join(str(e) for e in elements)
     )
 

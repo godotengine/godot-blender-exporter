@@ -30,7 +30,7 @@ def get_extents(node):
     return maxs - mins
 
 
-def export_collision_shape(escn_file, node, parent_path):
+def export_collision_shape(escn_file, export_settings, node, parent_path):
     """Exports the collision primitives/geometry"""
     col_name = node.name + 'Collision'
     col_node = NodeTemplate(col_name, "CollisionShape", parent_path)
@@ -40,7 +40,7 @@ def export_collision_shape(escn_file, node, parent_path):
 
     col_shape = None
     bounds = get_extents(node)
-    print(bounds)
+
     if rbd.collision_shape == "BOX":
         col_shape = InternalResource("BoxShape")
         col_shape.extents = mathutils.Vector(bounds/2)
@@ -66,7 +66,7 @@ def export_collision_shape(escn_file, node, parent_path):
     escn_file.add_node(col_node)
 
 
-def export_physics_properties(escn_file, node, parent_path):
+def export_physics_properties(escn_file, export_settings, node, parent_path):
     """Creates the necessary nodes for the physics"""
     phys_name = node.name + 'Physics'
 
@@ -88,7 +88,7 @@ def export_physics_properties(escn_file, node, parent_path):
     col_groups = 0
     for offset, bit in enumerate(rbd.collision_groups):
         col_groups += bit << offset
-    
+
     phys_obj.transform = node.matrix_local
     phys_obj.collision_layer = col_groups
     phys_obj.collision_mask = col_groups
@@ -107,6 +107,6 @@ def export_physics_properties(escn_file, node, parent_path):
     else:
         phys_path = parent_path + '/' + phys_name
 
-    export_collision_shape(escn_file, node, phys_path)
+    export_collision_shape(escn_file, export_settings, node, phys_path)
 
     return phys_path

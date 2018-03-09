@@ -24,28 +24,21 @@ This script is an exporter to Godot Engine
 http://www.godotengine.org
 """
 
-import os
 import logging
 import bpy
 
 from . import structures
 from . import converters
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.INFO, format="[%(levelname)s]: %(message)s")
 
-
-EXPORT_TYPES = {
-    "MESH": converters.export_mesh_node,
-    "CAMERA": converters.export_camera_node,
-    "LAMP": converters.export_lamp_node,
-    "EMPTY": converters.export_empty_node
-}
 
 
 class GodotExporter:
     def export_node(self, node, parent_path):
         """Recursively export a node. It calls the export_node function on
-        all of the nodes children"""
+        all of the nodes children. If you have heirarchies more than 1000 nodes
+        deep, this will fail with a recursion error"""
         if node not in self.valid_nodes:
             return
         logging.info("Exporting Blender Object: %s", node.name)
@@ -55,17 +48,21 @@ class GodotExporter:
 
         node_name = node.name
 
-        if node.type in EXPORT_TYPES:
-            exporter = EXPORT_TYPES[node.type]
+        if node.type in converters.BLENDER_TYPE_TO_EXPORTER:
+            exporter = converters.BLENDER_TYPE_TO_EXPORTER[node.type]
         else:
             logging.warning("Unknown object type. Treating as empty: %s", node.name)
-            exporter = converters.export_empty_node
-            
+            exporter = converters.BLENDER_TYPE_TO_EXPORTER["EMPTY"]
+
         if node.rigid_body is not None:
-            parent_path = converters.export_physics_properties(self.escn_file, node, parent_path)
-        
-        
-        exporter(self.escn_file, node, parent_path)
+            # Physics export is unique in that it requires creation of a new
+            # node at a higher level than the mesh node. If more objects
+            # do this, a new solution will need to be found.
+            parent_path = converters.export_physics_properties(
+                self.escn_file, self.config, node, parent_path
+            )
+
+        exporter(self.escn_file, self.config, node, parent_path)
 
         if parent_path == ".":
             parent_path = node_name
@@ -101,7 +98,7 @@ class GodotExporter:
         self.escn_file.add_node(
             structures.SectionHeading("node", type="Spatial", name=self.scene.name)
         )
-        logging.info("Exporting scene: {}".format(self.scene.name))
+        logging.info("Exporting scene: %s", self.scene.name)
 
         # Decide what objects to export
         for obj in self.scene.objects:
@@ -150,7 +147,7 @@ class GodotExporter:
         pass
 
 
-def save(operator, context, filepath="", use_selection=False, **kwargs):
+def save(operator, context, filepath="", **kwargs):
     """Begin the export"""
     with GodotExporter(filepath, kwargs, operator) as exp:
         exp.export()

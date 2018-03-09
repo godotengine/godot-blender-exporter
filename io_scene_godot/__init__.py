@@ -52,13 +52,14 @@ class ExportGodot(bpy.types.Operator, ExportHelper):
     object_types = EnumProperty(
         name="Object Types",
         options={"ENUM_FLAG"},
-        items=(("EMPTY", "Empty", ""),
-               ("CAMERA", "Camera", ""),
-               ("LAMP", "Lamp", ""),
-               ("ARMATURE", "Armature", ""),
-               ("MESH", "Mesh", ""),
-               ("CURVE", "Curve", ""),
-               ),
+        items=(
+            ("EMPTY", "Empty", ""),
+            ("CAMERA", "Camera", ""),
+            ("LAMP", "Lamp", ""),
+            ("ARMATURE", "Armature", ""),
+            ("MESH", "Mesh", ""),
+            ("CURVE", "Curve", ""),
+        ),
         default={"EMPTY", "CAMERA", "LAMP", "ARMATURE", "MESH", "CURVE"},
         )
 
@@ -129,15 +130,14 @@ class ExportGodot(bpy.types.Operator, ExportHelper):
         if not self.filepath:
             raise Exception("filepath not set")
 
-        print("esporting scene "+str(len(context.scene.objects)))
-   
-        keywords = self.as_keywords(ignore=("axis_forward",
-                                            "axis_up",
-                                            "global_scale",
-                                            "check_existing",
-                                            "filter_glob",
-                                            "xna_validate",
-                                            ))
+        keywords = self.as_keywords(ignore=(
+            "axis_forward",
+            "axis_up",
+            "global_scale",
+            "check_existing",
+            "filter_glob",
+            "xna_validate",
+        ))
 
         from . import export_godot
         return export_godot.save(self, context, **keywords)

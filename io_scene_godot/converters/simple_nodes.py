@@ -1,4 +1,10 @@
+"""
+Any exporters that can be written in a single function can go in here.
+Anything more complex should go in it's own file
+"""
+
 import math
+import logging
 import mathutils
 from ..structures import NodeTemplate
 
@@ -7,14 +13,14 @@ from ..structures import NodeTemplate
 AXIS_CORRECT = mathutils.Matrix.Rotation(math.radians(-90), 4, 'X')
 
 
-def export_empty_node(escn_file, node, parent_path):
+def export_empty_node(escn_file, export_settings, node, parent_path):
     """Converts an empty (or any unknown node) into a spatial"""
     empty_node = NodeTemplate(node.name, "Spatial", parent_path)
     empty_node.transform = node.matrix_local
     escn_file.add_node(empty_node)
 
 
-def export_camera_node(escn_file, node, parent_path):
+def export_camera_node(escn_file, export_settings, node, parent_path):
     """Exports a camera"""
     if node.data is None:
         return
@@ -36,7 +42,7 @@ def export_camera_node(escn_file, node, parent_path):
     escn_file.add_node(cam_node)
 
 
-def export_lamp_node(escn_file, node, parent_path):
+def export_lamp_node(escn_file, export_settings, node, parent_path):
     """Exports lights - well, the ones it knows about. Other light types
     just throw a warning"""
     if node.data is None:
@@ -50,7 +56,7 @@ def export_lamp_node(escn_file, node, parent_path):
         light_node.shadow_enabled = light.shadow_method != "NOSHADOW"
 
         if not light.use_sphere:
-            print("WARNING: Ranged light without sphere enabled. May not appear as expected: {}".format(node.name))
+            logging.warning("Ranged light without sphere enabled: %s", node.name)
 
     elif light.type == "SPOT":
         light_node = NodeTemplate(node.name, "SpotLight", parent_path)
@@ -60,14 +66,14 @@ def export_lamp_node(escn_file, node, parent_path):
         light_node.shadow_enabled = light.shadow_method != "NOSHADOW"
 
         if not light.use_sphere:
-            print("WARNING: Ranged light without sphere enabled: {}".format(node.name))
+            logging.warning("Ranged light without sphere enabled: %s", node.name)
 
     elif light.type == "SUN":
         light_node = NodeTemplate(node.name, "DirectionalLight", parent_path)
         light_node.shadow_enabled = light.shadow_method != "NOSHADOW"
     else:
         light_node = None
-        print("WARNING: Unknown light type. Use Point, Spot or Sun: {}".format(node.name))
+        logging.warning("Unknown light type. Use Point, Spot or Sun: %s", node.name)
 
     if light_node is not None:
         # Properties common to all lights

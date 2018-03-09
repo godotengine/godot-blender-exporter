@@ -1,33 +1,53 @@
+"""
+Exports materials. For now I'm targetting the blender internal, however this
+will be deprecated in Blender 2.8 in favor of EEVEE. EEVEE has PBR and
+should be able to match Godot better, but unfortunately parseing a node
+tree into a flat bunch of parameters is not trivial. So for someone else:"""
+# TODO: Add EEVEE support
 
 
-def export_image(escn_file, image):
-	img_id = self.image_cache.get(image)
-	if img_id:
-		return img_id
+import bpy
+import mathutils
+from ..structures import InternalResource
 
-	imgpath = image.filepath
-	if imgpath.startswith("//"):
-		imgpath = bpy.path.abspath(imgpath)
 
-	try:
-		imgpath = os.path.relpath(imgpath, os.path.dirname(self.path)).replace("\\", "/")
-	except:
-		# TODO: Review, not sure why it fails - maybe try bpy.paths.abspath
-		pass
+def export_image(escn_file, export_settings, image):
+    """
+    Saves an image as an external reference relative to the blend location
+    """
+    image_id = escn_file.get_external_resource(image)
+    if image_id is not None:
+        return image_id
 
-	imgid = str(self.new_external_resource_id())
 
-	self.image_cache[image] = imgid
-	self.writel(S_EXTERNAL_RES, 0, '[ext_resource path="' + imgpath + '" type="Texture" id=' + imgid + ']')
-	return imgid
+    imgpath = image.filepath
+    if imgpath.startswith("//"):
+        imgpath = bpy.path.abspath(imgpath)
 
-def export_material(escn_file, material):
-	material_id = self.material_cache.get(material)
-	if material_id:
-		return material_id
+    imgpath = os.path.relpath(imgpath, os.path.dirname(self.path)).replace("\\", "/")
 
-	material_id = str(self.new_resource_id())
-	self.material_cache[material] = material_id
+    # Add the image to the file
+    image_resource = ExternalResource("Image", imgpath)
+    image_id = escn_file.add_external_resource(image_resource, image)
 
-	self.writel(S_INTERNAL_RES, 0, '\n[sub_resource type="SpatialMaterial" id=' + material_id + ']\n')
-	return material_id
+    return image_id
+
+
+def export_material(escn_file, export_settings, material):
+    print(material)
+    resource_id = escn_file.get_internal_resource(material)
+    if resource_id is not None:
+        return resource_id
+
+    mat = InternalResource("SpatialMaterial")
+
+    mat.flags_unshaded = material.use_shadeless
+    mat.flags_vertex_lighting = material.use_vertex_color_light
+    mat.flags_transparent = material.use_transparency
+    mat.vertex_color_use_as_albedo = material.use_vertex_color_paint
+    mat.albedo_color = material.diffuse_color
+    mat.subsurf_scatter_enabled = material.subsurface_scattering.use
+
+
+    resource_id = escn_file.add_internal_resource(mat, material)
+    return resource_id

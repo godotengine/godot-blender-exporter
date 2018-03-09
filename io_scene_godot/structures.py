@@ -46,7 +46,7 @@ class ESCNFile:
             raise Exception("Attempting to add object to file twice")
 
         self.external_resources.append(item)
-        index = len(self.external_resources) - 1
+        index = len(self.external_resources)
         item._heading.id = index
         self._external_hashes[hashable] = index
         return index
@@ -61,7 +61,7 @@ class ESCNFile:
         if self.get_internal_resource(hashable) is not None:
             raise Exception("Attempting to add object to file twice")
         self.internal_resources.append(item)
-        index = len(self.internal_resources) - 1
+        index = len(self.internal_resources)
         item._heading.id = index
         self._internal_hashes[hashable] = index
         return index
@@ -122,7 +122,7 @@ class SectionHeading:
 
     def to_string(self):
         """Serializes this heading to a string"""
-        return '[{} {}]\n'.format(self._type, self.generate_prop_list())
+        return '\n\n[{} {}]\n'.format(self._type, self.generate_prop_list())
 
 
 class NodeTemplate:
@@ -158,7 +158,7 @@ class NodeTemplate:
 
     def to_string(self):
         """Serialize the node for writing to the file"""
-        return '{}\n{}\n\n'.format(
+        return '{}{}\n'.format(
             self._heading.to_string(),
             self.generate_prop_list()
         )
@@ -172,11 +172,11 @@ class ExternalResource():
             path=path,
             type=resource_type
         )
-        
+
     def to_string():
         return self.heading.to_string()
-        
-        
+
+
 class InternalResource():
     def __init__(self, resource_type):
         self._heading = SectionHeading(
@@ -184,10 +184,10 @@ class InternalResource():
             id=None,  # This is overwritten by ESCN_File.add_external_resource
             type=resource_type
         )
-        
+
         # This string is dumped verbatim, so can be used it the key=value isn't ideal
-        self.contents = ''  
-        
+        self.contents = ''
+
     def generate_prop_list(self):
         """Generate key/value pairs from the attributes of the node"""
         out_str = ''
@@ -205,10 +205,10 @@ class InternalResource():
 
     def to_string(self):
         """Serialize the node for writing to the file"""
-        return '{}\n{}\n{}\n\n'.format(
+        return '{}{}\n{}'.format(
             self._heading.to_string(),
+            self.generate_prop_list(),
             self.contents,
-            self.generate_prop_list()
         )
 
 
