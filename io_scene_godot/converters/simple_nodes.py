@@ -36,7 +36,7 @@ def export_camera_node(escn_file, export_settings, node, parent_path):
         cam_node.fov = math.degrees(camera.angle)
     else:
         cam_node.projection = 1
-        cam_node.size = camera.ortho_scale * 0.5
+        cam_node.size = camera.ortho_scale
 
     cam_node.transform = node.matrix_local * AXIS_CORRECT
     escn_file.add_node(cam_node)
