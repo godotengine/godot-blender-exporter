@@ -12,7 +12,7 @@ def export_mesh_node(escn_file, export_settings, node, parent_path):
     """Exports a MeshInstance. If the mesh is not already exported, it will
     trigger the export of that mesh"""
     if node.data is None:
-        return
+        return parent_path
 
     # If this mesh object has physics properties, we need to export them first
     # because they need to be higher in the scene-tree
@@ -25,8 +25,6 @@ def export_mesh_node(escn_file, export_settings, node, parent_path):
         return parent_path
 
     else:
-        mesh = node.data
-
         armature = None
         if node.parent is not None and node.parent.type == "ARMATURE":
             armature = node.parent
@@ -55,9 +53,6 @@ def export_mesh(escn_file, export_settings, node, armature):
 
     mesh_resource = InternalResource('ArrayMesh')
 
-    morph_target_arrays = []
-    morph_target_names = []
-
     mesh_lines = []
     mesh_materials = []
     make_arrays(node, armature, mesh_lines, mesh_materials)
@@ -75,7 +70,7 @@ def export_mesh(escn_file, export_settings, node, armature):
         mesh_resource.contents += "\t" + "],\n"
         mesh_resource.contents += "\t" + "\"morph_arrays\":[]\n"
         mesh_resource.contents += "}\n"
-        
+
     mesh_id = escn_file.add_internal_resource(mesh_resource, mesh)
     assert mesh_id is not None
 
@@ -139,7 +134,7 @@ def make_arrays(node, armature, mesh_lines, ret_materials, skeyindex=-1):
                 ret_materials.append(mat)
             else:
                 ret_materials.append(None)
-            
+
         surface = surfaces[material_to_surface[face.material_index]]
         vi = []
 

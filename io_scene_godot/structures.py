@@ -136,7 +136,7 @@ class NodeTemplate:
     def __init__(self, name, node_type, parent_path):
         if parent_path.startswith("./"):
             parent_path = parent_path[2:]
-        
+
         self._heading = SectionHeading(
             "node",
             name=name,
@@ -168,6 +168,8 @@ class NodeTemplate:
 
 
 class ExternalResource():
+    """External Resouces are references to external files. In the case of
+    an escn export, this is mostly used for images, sounds and so on"""
     def __init__(self, path, resource_type):
         self._heading = SectionHeading(
             'ext_resource',
@@ -176,11 +178,14 @@ class ExternalResource():
             type=resource_type
         )
 
-    def to_string():
-        return self.heading.to_string()
+    def to_string(self):
+        """Serialize for export"""
+        return self._heading.to_string()
 
 
 class InternalResource():
+    """ A resource stored internally to the escn file, such as the
+    description of a material """
     def __init__(self, resource_type):
         self._heading = SectionHeading(
             'sub_resource',
@@ -188,7 +193,8 @@ class InternalResource():
             type=resource_type
         )
 
-        # This string is dumped verbatim, so can be used it the key=value isn't ideal
+        # This string is dumped verbatim, so can be used it the key=value
+        # would be hard to manage (Eg meshes, custom array types
         self.contents = ''
 
     def generate_prop_list(self):

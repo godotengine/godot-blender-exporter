@@ -24,8 +24,8 @@ def export_empty_node(escn_file, export_settings, node, parent_path):
 
 def export_camera_node(escn_file, export_settings, node, parent_path):
     """Exports a camera"""
-    if node.data is None:
-        return
+    if node.data is None or node.hide_render:
+        return parent_path
 
     cam_node = NodeTemplate(node.name, "Camera", parent_path)
     camera = node.data
@@ -49,8 +49,8 @@ def export_camera_node(escn_file, export_settings, node, parent_path):
 def export_lamp_node(escn_file, export_settings, node, parent_path):
     """Exports lights - well, the ones it knows about. Other light types
     just throw a warning"""
-    if node.data is None:
-        return
+    if node.data is None or node.hide_render:
+        return parent_path
 
     light = node.data
 

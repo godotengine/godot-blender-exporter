@@ -6,9 +6,9 @@ tree into a flat bunch of parameters is not trivial. So for someone else:"""
 # TODO: Add EEVEE support
 
 
+import os
 import bpy
-import mathutils
-from ..structures import InternalResource
+from ..structures import InternalResource, ExternalResource
 
 
 def export_image(escn_file, export_settings, image):
@@ -19,12 +19,14 @@ def export_image(escn_file, export_settings, image):
     if image_id is not None:
         return image_id
 
-
     imgpath = image.filepath
     if imgpath.startswith("//"):
         imgpath = bpy.path.abspath(imgpath)
 
-    imgpath = os.path.relpath(imgpath, os.path.dirname(self.path)).replace("\\", "/")
+    imgpath = os.path.relpath(
+        imgpath,
+        os.path.dirname(export_settings['path'])
+    ).replace("\\", "/")
 
     # Add the image to the file
     image_resource = ExternalResource("Image", imgpath)
@@ -34,7 +36,7 @@ def export_image(escn_file, export_settings, image):
 
 
 def export_material(escn_file, export_settings, material):
-    print(material)
+    """ Exports a blender internal material as best it can"""
     resource_id = escn_file.get_internal_resource(material)
     if resource_id is not None:
         return resource_id
@@ -47,7 +49,6 @@ def export_material(escn_file, export_settings, material):
     mat.vertex_color_use_as_albedo = material.use_vertex_color_paint
     mat.albedo_color = material.diffuse_color
     mat.subsurf_scatter_enabled = material.subsurface_scattering.use
-
 
     resource_id = escn_file.add_internal_resource(mat, material)
     return resource_id

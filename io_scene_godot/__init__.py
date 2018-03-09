@@ -1,3 +1,7 @@
+"""
+Export to godot's escn file format - a format that Godot can work with
+without significant importing (it's the same as Godot's tscn format).
+"""
 # ##### BEGIN GPL LICENSE BLOCK #####
 #
 #  This program is free software; you can redistribute it and/or
@@ -19,7 +23,7 @@ import bpy
 from bpy.props import StringProperty, BoolProperty, FloatProperty, EnumProperty
 
 from bpy_extras.io_utils import ExportHelper
-bl_info = {
+bl_info = {  # pylint: disable=invalid-name
     "name": "Godot Engine Exporter",
     "author": "Juan Linietsky",
     "blender": (2, 5, 8),
@@ -30,12 +34,8 @@ bl_info = {
     "wiki_url": ("https://godotengine.org"),
     "tracker_url": "https://github.com/godotengine/blender-exporter",
     "support": "OFFICIAL",
-    "category": "Import-Export"}
-
-if "bpy" in locals():
-    import imp
-    if "export_godot" in locals():
-        imp.reload(export_godot)  # noqa
+    "category": "Import-Export"
+}
 
 
 class ExportGodot(bpy.types.Operator, ExportHelper):
@@ -124,9 +124,12 @@ class ExportGodot(bpy.types.Operator, ExportHelper):
 
     @property
     def check_extension(self):
+        """Checks if the file extension is value. It appears we don't
+        really care.... """
         return True
 
     def execute(self, context):
+        """Begin the export"""
         if not self.filepath:
             raise Exception("filepath not set")
 
@@ -144,19 +147,23 @@ class ExportGodot(bpy.types.Operator, ExportHelper):
 
 
 def menu_func(self, context):
+    """Add to the manu"""
     self.layout.operator(ExportGodot.bl_idname, text="Godot Engine (.escn)")
 
 
 def register():
+    """Add addon to blender"""
     bpy.utils.register_module(__name__)
 
     bpy.types.INFO_MT_file_export.append(menu_func)
 
 
 def unregister():
+    """Remove addon from blender"""
     bpy.utils.unregister_module(__name__)
 
     bpy.types.INFO_MT_file_export.remove(menu_func)
+
 
 if __name__ == "__main__":
     register()

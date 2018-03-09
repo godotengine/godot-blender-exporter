@@ -33,8 +33,9 @@ from . import converters
 logging.basicConfig(level=logging.INFO, format="[%(levelname)s]: %(message)s")
 
 
-
 class GodotExporter:
+    """Handles picking what nodes to export and kicks off the export process"""
+
     def export_node(self, node, parent_path):
         """Recursively export a node. It calls the export_node function on
         all of the nodes children. If you have heirarchies more than 1000 nodes
@@ -46,14 +47,16 @@ class GodotExporter:
         prev_node = bpy.context.scene.objects.active
         bpy.context.scene.objects.active = node
 
-        node_name = node.name
-
+        # Figure out what function will perform the export of this object
         if node.type in converters.BLENDER_TYPE_TO_EXPORTER:
             exporter = converters.BLENDER_TYPE_TO_EXPORTER[node.type]
         else:
-            logging.warning("Unknown object type. Treating as empty: %s", node.name)
+            logging.warning(
+                "Unknown object type. Treating as empty: %s", node.name
+            )
             exporter = converters.BLENDER_TYPE_TO_EXPORTER["EMPTY"]
 
+        # Perform the export
         parent_path = exporter(self.escn_file, self.config, node, parent_path)
 
         for child in node.children:
@@ -82,9 +85,9 @@ class GodotExporter:
 
     def export_scene(self):
         """Decide what objects to export, and export them!"""
-        self.escn_file.add_node(
-            structures.SectionHeading("node", type="Spatial", name=self.scene.name)
-        )
+        self.escn_file.add_node(structures.SectionHeading(
+            "node", type="Spatial", name=self.scene.name
+        ))
         logging.info("Exporting scene: %s", self.scene.name)
 
         # Decide what objects to export
