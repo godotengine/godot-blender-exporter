@@ -19,6 +19,8 @@ def export_empty_node(escn_file, export_settings, node, parent_path):
     empty_node.transform = node.matrix_local
     escn_file.add_node(empty_node)
 
+    return parent_path + '/' + node.name
+
 
 def export_camera_node(escn_file, export_settings, node, parent_path):
     """Exports a camera"""
@@ -40,6 +42,8 @@ def export_camera_node(escn_file, export_settings, node, parent_path):
 
     cam_node.transform = node.matrix_local * AXIS_CORRECT
     escn_file.add_node(cam_node)
+
+    return parent_path + '/' + node.name
 
 
 def export_lamp_node(escn_file, export_settings, node, parent_path):
@@ -84,3 +88,5 @@ def export_lamp_node(escn_file, export_settings, node, parent_path):
         light_node.light_energy = light.energy
 
         escn_file.add_node(light_node)
+
+    return parent_path + '/' + node.name

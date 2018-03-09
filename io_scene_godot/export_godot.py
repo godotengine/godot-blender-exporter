@@ -54,20 +54,7 @@ class GodotExporter:
             logging.warning("Unknown object type. Treating as empty: %s", node.name)
             exporter = converters.BLENDER_TYPE_TO_EXPORTER["EMPTY"]
 
-        if node.rigid_body is not None:
-            # Physics export is unique in that it requires creation of a new
-            # node at a higher level than the mesh node. If more objects
-            # do this, a new solution will need to be found.
-            parent_path = converters.export_physics_properties(
-                self.escn_file, self.config, node, parent_path
-            )
-
-        exporter(self.escn_file, self.config, node, parent_path)
-
-        if parent_path == ".":
-            parent_path = node_name
-        else:
-            parent_path = parent_path+"/"+node_name
+        parent_path = exporter(self.escn_file, self.config, node, parent_path)
 
         for child in node.children:
             self.export_node(child, parent_path)

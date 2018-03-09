@@ -6,6 +6,11 @@ more godot nodes. All the converters should take as input arguments:
  - The node to export
  - The path to the parent node
 
+All converters that convert nodes should return the path to the node. All
+converters that convert resources should return the resource ID. Additional,
+converters for resources should have internal protection against importing
+twice
+
 One-function exporters are stored in simple_nodes. Others (such as meshes)
 are stored in individual files.
 """

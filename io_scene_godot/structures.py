@@ -134,6 +134,9 @@ class NodeTemplate:
     Similar to the Sectionheading, this class uses it's attributes to
     determine the properties of the node."""
     def __init__(self, name, node_type, parent_path):
+        if parent_path.startswith("./"):
+            parent_path = parent_path[2:]
+        
         self._heading = SectionHeading(
             "node",
             name=name,

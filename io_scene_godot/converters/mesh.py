@@ -4,6 +4,7 @@ import mathutils
 
 from .material import export_material
 from ..structures import Array, NodeTemplate, InternalResource
+from . import physics
 
 
 # ------------------------------- The Mesh -----------------------------------
@@ -13,23 +14,35 @@ def export_mesh_node(escn_file, export_settings, node, parent_path):
     if node.data is None:
         return
 
-    mesh = node.data
-    mesh_id = escn_file.get_internal_resource(mesh)
+    # If this mesh object has physics properties, we need to export them first
+    # because they need to be higher in the scene-tree
+    if node.rigid_body is not None:
+        parent_path = physics.export_physics_properties(
+            escn_file, export_settings, node, parent_path
+        )
 
-    armature = None
-    if node.parent is not None and node.parent.type == "ARMATURE":
-        armature = node.parent
+    if node.hide_render:
+        return parent_path
 
-    mesh_id = export_mesh(escn_file, export_settings, node, armature)  # We need to export the mesh
-
-
-    mesh_node = NodeTemplate(node.name, "MeshInstance", parent_path)
-    mesh_node.mesh = "SubResource({})".format(mesh_id)
-    if node.rigid_body is None:
-        mesh_node.transform = node.matrix_local
     else:
-        mesh_node.transform = mathutils.Matrix.Identity(4)
-    escn_file.add_node(mesh_node)
+        mesh = node.data
+
+        armature = None
+        if node.parent is not None and node.parent.type == "ARMATURE":
+            armature = node.parent
+
+        mesh_id = export_mesh(escn_file, export_settings, node, armature)  # We need to export the mesh
+
+
+        mesh_node = NodeTemplate(node.name, "MeshInstance", parent_path)
+        mesh_node.mesh = "SubResource({})".format(mesh_id)
+        if node.rigid_body is None:
+            mesh_node.transform = node.matrix_local
+        else:
+            mesh_node.transform = mathutils.Matrix.Identity(4)
+        escn_file.add_node(mesh_node)
+
+        return parent_path + '/' + node.name
 
 
 def export_mesh(escn_file, export_settings, node, armature):
