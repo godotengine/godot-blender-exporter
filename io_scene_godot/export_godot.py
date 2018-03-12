@@ -101,8 +101,11 @@ class GodotExporter:
 
     def export_scene(self):
         """Decide what objects to export, and export them!"""
-        self.escn_file.add_node(structures.SectionHeading(
-            "node", type="Spatial", name=self.scene.name
+        self.escn_file.add_node(structures.FileEntry(
+            "node", {
+                "type":"Spatial",
+                "name":self.scene.name
+            }
         ))
         logging.info("Exporting scene: %s", self.scene.name)
 
@@ -126,9 +129,13 @@ class GodotExporter:
 
     def export(self):
         """Begin the export"""
-        self.escn_file = structures.ESCNFile(
-            structures.SectionHeading("gd_scene", load_steps=1, format=2)
-        )
+        self.escn_file = structures.ESCNFile(structures.FileEntry(
+            "gd_scene",
+            {
+                "load_steps":1,
+                "format":2
+            }
+        ))
 
         self.export_scene()
         self.escn_file.fix_paths(self.config)

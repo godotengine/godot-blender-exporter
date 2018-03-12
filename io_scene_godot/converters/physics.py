@@ -68,10 +68,10 @@ def export_collision_shape(escn_file, export_settings, node, parent_path,
     col_node = NodeTemplate(col_name, "CollisionShape", parent_path)
 
     if parent_override is None:
-        col_node.transform = mathutils.Matrix.Identity(4) * AXIS_CORRECT
+        col_node['transform'] = mathutils.Matrix.Identity(4) * AXIS_CORRECT
     else:
         parent_to_world = parent_override.matrix_world.inverted()
-        col_node.transform = parent_to_world * node.matrix_world
+        col_node['transform'] = parent_to_world * node.matrix_world
 
     rbd = node.rigid_body
 
@@ -80,24 +80,24 @@ def export_collision_shape(escn_file, export_settings, node, parent_path,
 
     if rbd.collision_shape == "BOX":
         col_shape = InternalResource("BoxShape")
-        col_shape.extents = mathutils.Vector(bounds/2)
+        col_shape['extents'] = mathutils.Vector(bounds/2)
         shape_id = escn_file.add_internal_resource(col_shape, rbd)
 
     elif rbd.collision_shape == "SPHERE":
         col_shape = InternalResource("SphereShape")
-        col_shape.radius = max(list(bounds))/2
+        col_shape['radius'] = max(list(bounds))/2
         shape_id = escn_file.add_internal_resource(col_shape, rbd)
 
     elif rbd.collision_shape == "CAPSULE":
         col_shape = InternalResource("CapsuleShape")
-        col_shape.radius = max(bounds.x, bounds.y) / 2
-        col_shape.height = bounds.z - col_shape.radius * 2
+        col_shape['radius'] = max(bounds.x, bounds.y) / 2
+        col_shape['height'] = bounds.z - col_shape['radius'] * 2
         shape_id = escn_file.add_internal_resource(col_shape, rbd)
     # elif rbd.collision_shape == "CONVEX_HULL":
     #   pass
     elif rbd.collision_shape == "MESH":
         shape_id = generate_triangle_mesh_array(
-            escn_file, export_settings, 
+            escn_file, export_settings,
             node
         )
 
@@ -105,7 +105,7 @@ def export_collision_shape(escn_file, export_settings, node, parent_path,
         logging.warning("Unable to export physics shape for %s", node.name)
 
     if shape_id is not None:
-        col_node.shape = "SubResource({})".format(shape_id)
+        col_node['shape'] = "SubResource({})".format(shape_id)
     escn_file.add_node(col_node)
 
     return parent_path + "/" + col_name
@@ -140,7 +140,7 @@ def generate_triangle_mesh_array(escn_file, export_settings, node):
 
     bpy.data.meshes.remove(mesh)
 
-    col_shape.data = Array("PoolVector3Array(", values=vert_array)
+    col_shape['data'] = Array("PoolVector3Array(", values=vert_array)
 
     return escn_file.add_internal_resource(col_shape, key)
 
@@ -163,22 +163,22 @@ def export_physics_controller(escn_file, export_settings, node, parent_path):
     phys_obj = NodeTemplate(phys_name, phys_controller, parent_path)
 
     #  OPTIONS FOR ALL PHYSICS TYPES
-    phys_obj.friction = rbd.friction
-    phys_obj.bounce = rbd.restitution
+    phys_obj['friction'] = rbd.friction
+    phys_obj['bounce'] = rbd.restitution
 
     col_groups = 0
     for offset, bit in enumerate(rbd.collision_groups):
         col_groups += bit << offset
 
-    phys_obj.transform = node.matrix_local
-    phys_obj.collision_layer = col_groups
-    phys_obj.collision_mask = col_groups
+    phys_obj['transform'] = node.matrix_local
+    phys_obj['collision_layer'] = col_groups
+    phys_obj['collision_mask'] = col_groups
 
     if phys_controller == "RigidBody":
-        phys_obj.can_sleep = rbd.use_deactivation
-        phys_obj.linear_damp = rbd.linear_damping
-        phys_obj.angular_damp = rbd.angular_damping
-        phys_obj.sleeping = rbd.use_start_deactivated
+        phys_obj['can_sleep'] = rbd.use_deactivation
+        phys_obj['linear_damp'] = rbd.linear_damping
+        phys_obj['angular_damp'] = rbd.angular_damping
+        phys_obj['sleeping'] = rbd.use_start_deactivated
 
     escn_file.add_node(phys_obj)
 

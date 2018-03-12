@@ -133,7 +133,7 @@ class ExportGodot(bpy.types.Operator, ExportHelper):
 
 
 def menu_func(self, context):
-    """Add to the manu"""
+    """Add to the menu"""
     self.layout.operator(ExportGodot.bl_idname, text="Godot Engine (.escn)")
 
 

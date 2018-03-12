@@ -3,6 +3,7 @@
 This file contains classes to help dealing with the actual writing to the file
 """
 import os
+import collections
 from .encoders import CONVERSIONS
 
 
@@ -47,7 +48,7 @@ class ESCNFile:
 
         self.external_resources.append(item)
         index = len(self.external_resources)
-        item._heading.id = index
+        item.heading['id'] = index
         self._external_hashes[hashable] = index
         return index
 
@@ -62,7 +63,7 @@ class ESCNFile:
             raise Exception("Attempting to add object to file twice")
         self.internal_resources.append(item)
         index = len(self.internal_resources)
-        item._heading.id = index
+        item.heading['id'] = index
         self._internal_hashes[hashable] = index
         return index
 
@@ -88,152 +89,109 @@ class ESCNFile:
         )
 
 
-class SectionHeading:
-    """Many things in the escn file are separated by headings. These consist
-    of square brackets with key=value pairs inside them. The first element
-    is not a key-value pair, but describes what type of heading it is.
+class FileEntry(collections.OrderedDict):
+    '''Everything inside the file looks pretty much the same. A heading
+    that looks like [type key=val key=val...] and contents that is newline
+    separated key=val pairs. This FileEntry handles the serialization of
+    on entity into this form'''
+    def __init__(self, entry_type, heading_dict=(), values_dict=()):
+        self.entry_type = entry_type
+        self.heading = collections.OrderedDict(heading_dict)
 
-    This class generates a section heading from it's attributes, so you can go:
-    sect = SectionHeading('thingo')
-    sect.foo = "bar"
-    sect.bar = 1234
+        # This string is copied verbaitum, so can be used for custom writing
+        self.contents = ''
 
-    and then sect.to_string() will return:
-    [thingo foo=bar bar=1234]
-    """
-    def __init__(self, section_type, **kwargs):
-        self._type = section_type
-        for key in kwargs:
-            self.__dict__[key] = kwargs[key]
+        super().__init__(values_dict)
 
-    def generate_prop_list(self):
-        """Generate all the key=value pairs into a string from all the
-        attributes in this class"""
+    def generate_heading_string(self):
+        """Convert the heading dict into [type key=val key=val ...]"""
+        out_str = '[{}'.format(self.entry_type)
+        for var in self.heading:
+            val = self.heading[var]
+
+            if isinstance(val, str):
+                val = '"{}"'.format(val)
+
+            out_str += " {}={}".format(var, val)
+        out_str += ']'
+        return out_str
+
+    def generate_body_string(self):
+        """Convert the contents of the super/internal dict into newline
+        separated key=val pairs"""
         out_str = ''
-        attribs = vars(self)
-        for var in attribs:
-            if var.startswith('_'):
-                continue  # Ignore hidden variables
-            val = attribs[var]
+        for var in self:
+            val = self[var]
+
             converter = CONVERSIONS.get(type(val))
             if converter is not None:
                 val = converter(val)
 
-            # Extra wrapper for str's
-            if isinstance(val, str):
-                val = '"{}"'.format(val)
+            if hasattr(val, "to_string"):
+                val = val.to_string()
 
-            out_str += ' {}={}'.format(var, val)
-
+            out_str += '\n{} = {}'.format(var, val)
         return out_str
 
     def to_string(self):
-        """Serializes this heading to a string"""
-        return '\n\n[{} {}]\n'.format(self._type, self.generate_prop_list())
+        """Serialize this entire entry"""
+        return "{}\n{}{}".format(
+            self.generate_heading_string(),
+            self.generate_body_string(),
+            self.contents
+        )
 
 
-class NodeTemplate:
+class NodeTemplate(FileEntry):
     """Most things inside the escn file are Nodes that make up the scene tree.
     This is a template node that can be used to contruct nodes of any type.
     It is not intended that other classes in the exporter inherit from this,
-    but rather that all the exported nodes use this template directly.
-
-    Similar to the Sectionheading, this class uses it's attributes to
-    determine the properties of the node."""
+    but rather that all the exported nodes use this template directly."""
     def __init__(self, name, node_type, parent_path):
         if parent_path.startswith("./"):
             parent_path = parent_path[2:]
 
-        self._heading = SectionHeading(
+        super().__init__(
             "node",
-            name=name,
-            type=node_type,
-            parent=parent_path,
-        )
-
-    def generate_prop_list(self):
-        """Generate key/value pairs from the attributes of the node"""
-        out_str = ''
-        attribs = vars(self)
-        for var in attribs:
-            if var.startswith('_'):
-                continue  # Ignore hidden variables
-            val = attribs[var]
-            converter = CONVERSIONS.get(type(val))
-            if converter is not None:
-                val = converter(val)
-            out_str += '\n{} = {}'.format(var, val)
-
-        return out_str
-
-    def to_string(self):
-        """Serialize the node for writing to the file"""
-        return '{}{}\n'.format(
-            self._heading.to_string(),
-            self.generate_prop_list()
+            {
+                "name": name,
+                "type": node_type,
+                "parent": parent_path
+            }
         )
 
 
-class ExternalResource():
+class ExternalResource(FileEntry):
     """External Resouces are references to external files. In the case of
     an escn export, this is mostly used for images, sounds and so on"""
     def __init__(self, path, resource_type):
-        self._heading = SectionHeading(
+        super().__init__(
             'ext_resource',
-            id=None,  # This is overwritten by ESCN_File.add_external_resource
-            path=path,
-            type=resource_type
+            {
+                'id':None,  # This is overwritten by ESCN_File.add_external_resource
+                'path':path,
+                'type':resource_type
+            }
         )
 
     def fix_path(self, export_settings):
         """Makes the resource path relative to the exported file"""
-        self._heading.path = os.path.relpath(
-            self._heading.path,
+        self.heading['path'] = os.path.relpath(
+            self.heading['path'],
             os.path.dirname(export_settings["path"]),
         )
 
-    def to_string(self):
-        """Serialize for export"""
-        return self._heading.to_string()
 
-
-class InternalResource():
+class InternalResource(FileEntry):
     """ A resource stored internally to the escn file, such as the
     description of a material """
     def __init__(self, resource_type):
-        self._heading = SectionHeading(
+        super().__init__(
             'sub_resource',
-            id=None,  # This is overwritten by ESCN_File.add_external_resource
-            type=resource_type
-        )
-
-        # This string is dumped verbatim, so can be used it the key=value
-        # would be hard to manage (Eg meshes, custom array types
-        self.contents = ''
-
-    def generate_prop_list(self):
-        """Generate key/value pairs from the attributes of the node"""
-        out_str = ''
-        attribs = vars(self)
-        for var in attribs:
-            if var.startswith('_') or var == 'contents':
-                continue  # Ignore hidden variables
-            val = attribs[var]
-            converter = CONVERSIONS.get(type(val))
-            if converter is not None:
-                val = converter(val)
-            if hasattr(val, "to_string"):
-                val = val.to_string()
-            out_str += '\n{} = {}'.format(var, val)
-
-        return out_str
-
-    def to_string(self):
-        """Serialize the node for writing to the file"""
-        return '{}{}\n{}'.format(
-            self._heading.to_string(),
-            self.generate_prop_list(),
-            self.contents,
+            {
+                'id':None,  # This is overwritten by ESCN_File.add_external_resource
+                'type':resource_type
+            }
         )
 
 

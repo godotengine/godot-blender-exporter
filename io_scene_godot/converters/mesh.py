@@ -34,11 +34,11 @@ def export_mesh_node(escn_file, export_settings, node, parent_path):
         mesh_id = export_mesh(escn_file, export_settings, node, armature)  # We need to export the mesh
 
         mesh_node = NodeTemplate(node.name, "MeshInstance", parent_path)
-        mesh_node.mesh = "SubResource({})".format(mesh_id)
+        mesh_node['mesh'] = "SubResource({})".format(mesh_id)
         if not physics.has_physics(node) or not physics.is_physics_root(node):
-            mesh_node.transform = node.matrix_local
+            mesh_node['transform'] = node.matrix_local
         else:
-            mesh_node.transform = mathutils.Matrix.Identity(4)
+            mesh_node['transform'] = mathutils.Matrix.Identity(4)
         escn_file.add_node(mesh_node)
 
         return parent_path + '/' + node.name
@@ -293,9 +293,6 @@ class Surface:
         surface_lines.append(int_values.to_string())
 
         return surface_lines
-
-
-CMP_EPSILON = 0.0001
 
 
 def fix_vertex(vtx):
