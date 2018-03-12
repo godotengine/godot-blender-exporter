@@ -233,7 +233,7 @@ class Surface:
                 continue
             uv_vals = Array("Vector2Array(")
             for vert in self.vertices:
-                uv_vals.extend([vert.uv[i].x, -vert.uv[i].y])
+                uv_vals.extend([vert.uv[i].x, 1.0-vert.uv[i].y])
 
             surface_lines.append(uv_vals.to_string())
 
