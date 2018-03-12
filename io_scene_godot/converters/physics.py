@@ -3,11 +3,14 @@ The physics converter is a little special as it runs before the blender
 object is exported. In blender, the object owns the physics. In Godot, the
 physics owns the object.
 """
+
 import os
 import math
 import logging
+import bpy
 import mathutils
-from ..structures import NodeTemplate, InternalResource
+import bmesh
+from ..structures import NodeTemplate, InternalResource, Array
 
 
 AXIS_CORRECT = mathutils.Matrix.Rotation(math.radians(-90), 4, 'X')
@@ -78,28 +81,65 @@ def export_collision_shape(escn_file, export_settings, node, parent_path,
     if rbd.collision_shape == "BOX":
         col_shape = InternalResource("BoxShape")
         col_shape.extents = mathutils.Vector(bounds/2)
+        shape_id = escn_file.add_internal_resource(col_shape, rbd)
 
     elif rbd.collision_shape == "SPHERE":
         col_shape = InternalResource("SphereShape")
         col_shape.radius = max(list(bounds))/2
+        shape_id = escn_file.add_internal_resource(col_shape, rbd)
 
     elif rbd.collision_shape == "CAPSULE":
         col_shape = InternalResource("CapsuleShape")
         col_shape.radius = max(bounds.x, bounds.y) / 2
         col_shape.height = bounds.z - col_shape.radius * 2
+        shape_id = escn_file.add_internal_resource(col_shape, rbd)
     # elif rbd.collision_shape == "CONVEX_HULL":
     #   pass
-    # elif rbd.collision_shape == "MESH":
-    #   pass
+    elif rbd.collision_shape == "MESH":
+        shape_id = generate_triangle_mesh_array(escn_file, node)
+
     else:
         logging.warning("Unable to export physics shape for %s", node.name)
 
-    if col_shape is not None:
-        shape_id = escn_file.add_internal_resource(col_shape, rbd)
+    if shape_id is not None:
         col_node.shape = "SubResource({})".format(shape_id)
     escn_file.add_node(col_node)
 
     return parent_path + "/" + col_name
+
+
+def generate_triangle_mesh_array(escn_file, node):
+    """Generates godots ConcavePolygonShape from an object"""
+    mesh = node.data
+    key = (mesh, "TriangleCollisionMesh")
+    resource_id = escn_file.get_internal_resource(key)
+    if resource_id is not None:
+        return resource_id
+
+    col_shape = InternalResource("ConcavePolygonShape")
+
+
+    mesh = node.to_mesh(bpy.context.scene,
+                        True,  # Apply Modifiers. TODO: make this an option
+                        "RENDER")  # TODO: Review
+
+    # Triangulate
+    triangulated_mesh = bmesh.new()
+    triangulated_mesh.from_mesh(mesh)
+    bmesh.ops.triangulate(triangulated_mesh, faces=triangulated_mesh.faces)
+    triangulated_mesh.to_mesh(mesh)
+    triangulated_mesh.free()
+
+    vert_array = list()
+    for poly in mesh.polygons:
+        for vert_id in poly.vertices:
+            vert_array.append(list(mesh.vertices[vert_id].co))
+
+    bpy.data.meshes.remove(mesh)
+
+    col_shape.data = Array("PoolVector3Array(", ", ", ")", values=vert_array)
+
+    return escn_file.add_internal_resource(col_shape, key)
 
 
 def export_physics_controller(escn_file, export_settings, node, parent_path):

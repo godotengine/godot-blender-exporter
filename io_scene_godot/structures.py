@@ -222,6 +222,8 @@ class InternalResource():
             converter = CONVERSIONS.get(type(val))
             if converter is not None:
                 val = converter(val)
+            if hasattr(val, "to_string"):
+                val = val.to_string()
             out_str += '\n{} = {}'.format(var, val)
 
         return out_str
