@@ -35,7 +35,7 @@ def export_mesh_node(escn_file, export_settings, node, parent_path):
 
         mesh_node = NodeTemplate(node.name, "MeshInstance", parent_path)
         mesh_node.mesh = "SubResource({})".format(mesh_id)
-        if not physics.is_physics_root(node):
+        if not physics.has_physics(node) or not physics.is_physics_root(node):
             mesh_node.transform = node.matrix_local
         else:
             mesh_node.transform = mathutils.Matrix.Identity(4)
