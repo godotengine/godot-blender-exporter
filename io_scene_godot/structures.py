@@ -2,7 +2,7 @@
 
 This file contains classes to help dealing with the actual writing to the file
 """
-
+import os
 from .encoders import CONVERSIONS
 
 
@@ -71,8 +71,15 @@ class ESCNFile:
         the complexity of the other resource types"""
         self.nodes.append(item)
 
+    def fix_paths(self, export_settings):
+        """Ensures all external resource paths are relative to the exported
+        file"""
+        for res in self.external_resources:
+            res.fix_path(export_settings)
+
     def to_string(self):
         """Serializes the file ready to dump out to disk"""
+
         return "{}\n\n{}\n\n{}\n\n{}\n".format(
             self.heading.to_string(),
             '\n'.join(i.to_string() for i in self.external_resources),
@@ -176,6 +183,13 @@ class ExternalResource():
             id=None,  # This is overwritten by ESCN_File.add_external_resource
             path=path,
             type=resource_type
+        )
+
+    def fix_path(self, export_settings):
+        """Makes the resource path relative to the exported file"""
+        self._heading.path = os.path.relpath(
+            self._heading.path,
+            os.path.dirname(export_settings["path"]),
         )
 
     def to_string(self):

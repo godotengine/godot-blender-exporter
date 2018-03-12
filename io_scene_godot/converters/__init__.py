@@ -15,7 +15,7 @@ One-function exporters are stored in simple_nodes. Others (such as meshes)
 are stored in individual files.
 """
 
-from .simple_nodes import *
+from .simple_nodes import *  # pylint: disable=wildcard-import
 from .mesh import export_mesh_node
 from .physics import export_physics_properties
 

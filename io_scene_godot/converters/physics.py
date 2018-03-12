@@ -152,7 +152,6 @@ def export_physics_properties(escn_file, export_settings, node, parent_path):
         )
 
     tmp_parent_path = os.path.normpath(parent_path + "/.." * counter)
-    print(tmp_parent_path)
 
     export_collision_shape(
         escn_file, export_settings, node, tmp_parent_path,

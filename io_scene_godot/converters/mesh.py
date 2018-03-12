@@ -1,3 +1,4 @@
+import logging
 import bpy
 import bmesh
 import mathutils
@@ -31,7 +32,6 @@ def export_mesh_node(escn_file, export_settings, node, parent_path):
 
         mesh_id = export_mesh(escn_file, export_settings, node, armature)  # We need to export the mesh
 
-
         mesh_node = NodeTemplate(node.name, "MeshInstance", parent_path)
         mesh_node.mesh = "SubResource({})".format(mesh_id)
         if not physics.is_physics_root(node):
@@ -61,8 +61,8 @@ def export_mesh(escn_file, export_settings, node, armature):
     for i in range(len(mesh_lines)):
         mesh_resource.contents += "surfaces/" + str(i) + "={\n"
         if mesh_materials[i] is not None:
-            mat_resource_id = export_material(escn_file, export_settings, mesh_materials[i])
-            mesh_resource.contents += "\t" + "\"material\":SubResource(" + str(mat_resource_id) + "),\n"
+            mat_resource = export_material(escn_file, export_settings, mesh_materials[i])
+            mesh_resource.contents += "\t" + "\"material\":" + mat_resource + ",\n"
         mesh_resource.contents += "\t" + "\"primitive\":4,\n"
         mesh_resource.contents += "\t" + "\"arrays\":[\n"
         for sline in mesh_lines[i]:
@@ -112,10 +112,10 @@ def make_arrays(node, armature, mesh_lines, ret_materials, skeyindex=-1):
         try:
             mesh.calc_tangents()
         except:
-            self.operator.report(
-                {"WARNING"},
-                "CalcTangets failed for mesh \"{}\", no tangets will be "
-                "exported.".format(mesh.name))
+            logging.warning(
+                "CalcTangets failed for mesh %s, no tangets will be "
+                "exported.", mesh.name
+            )
             mesh.calc_normals_split()
             has_tangents = False
 
@@ -282,7 +282,10 @@ class Surface:
         # Indices- each face is made of 3 verts, and these are the indices
         # in the vertex arrays. The backface is computed from the winding
         # order, hence v[2] before v[1]
-        int_values = Array("IntArray(", values=[[v[0], v[2], v[1]] for v in self.indices])
+        int_values = Array(
+            "IntArray(", 
+            values=[[v[0], v[2], v[1]] for v in self.indices]
+        )
         surface_lines.append(int_values.to_string())
 
         return surface_lines

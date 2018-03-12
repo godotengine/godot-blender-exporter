@@ -79,48 +79,27 @@ class ExportGodot(bpy.types.Operator, ExportHelper):
         description="Export only objects on the active layers.",
         default=True,
         )
-    use_exclude_ctrl_bones = BoolProperty(
-        name="Exclude Control Bones",
-        description="Exclude skeleton bones with names beginning with 'ctrl'.",
-        default=True,
+    material_search_paths = EnumProperty(
+        name="Material Search Paths",
+        description="Search for existing godot materials with names that match"
+                    "the blender material names (ie the file <matname>.tres"
+                    "containing a material resource)",
+        default="PROJECT_DIR",
+        items=(
+            (
+                "NONE", "None",
+                "Don't search for materials"
+            ),
+            (
+                "EXPORT_DIR", "Export Directory",
+                "Search the folder where the escn is exported to"
+            ),
+            (
+                "PROJECT_DIR", "Project Directory",
+                "Search for materials in the godot project directory"
+            ),
         )
-    use_anim = BoolProperty(
-        name="Export Animation",
-        description="Export keyframe animation",
-        default=False,
-        )
-    use_anim_action_all = BoolProperty(
-        name="All Actions",
-        description=("Export all actions for the first armature found "
-                     "in separate Godot files"),
-        default=False,
-        )
-    use_anim_skip_noexp = BoolProperty(
-        name="Skip (-noexp) Actions",
-        description="Skip exporting of actions whose name end in (-noexp)."
-                    " Useful to skip control animations.",
-        default=True,
-        )
-    use_anim_optimize = BoolProperty(
-        name="Optimize Keyframes",
-        description="Remove double keyframes",
-        default=True,
-        )
-
-    anim_optimize_precision = FloatProperty(
-        name="Precision",
-        description=("Tolerence for comparing double keyframes "
-                     "(higher for greater accuracy)"),
-        min=1, max=16,
-        soft_min=1, soft_max=16,
-        default=6.0,
-        )
-
-    use_metadata = BoolProperty(
-        name="Use Metadata",
-        default=True,
-        options={"HIDDEN"},
-        )
+    )
 
     @property
     def check_extension(self):

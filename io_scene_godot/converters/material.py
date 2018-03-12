@@ -5,7 +5,7 @@ should be able to match Godot better, but unfortunately parseing a node
 tree into a flat bunch of parameters is not trivial. So for someone else:"""
 # TODO: Add EEVEE support
 
-
+import logging
 import os
 import bpy
 from ..structures import InternalResource, ExternalResource
@@ -29,7 +29,7 @@ def export_image(escn_file, export_settings, image):
     ).replace("\\", "/")
 
     # Add the image to the file
-    image_resource = ExternalResource("Image", imgpath)
+    image_resource = ExternalResource(imgpath, "Image")
     image_id = escn_file.add_external_resource(image_resource, image)
 
     return image_id
@@ -37,9 +37,22 @@ def export_image(escn_file, export_settings, image):
 
 def export_material(escn_file, export_settings, material):
     """ Exports a blender internal material as best it can"""
+
+    external_material = find_material(export_settings, material)
+    if external_material is not None:
+        resource_id = escn_file.get_external_resource(material)
+        if resource_id is None:
+            ext_mat = ExternalResource(
+                external_material[0],  # Path
+                external_material[1]  # Material Type
+            )
+            resource_id = escn_file.add_external_resource(ext_mat, material)
+        return "ExtResource({})".format(resource_id)
+
     resource_id = escn_file.get_internal_resource(material)
+    # Existing internal resource
     if resource_id is not None:
-        return resource_id
+        return "SubResource({})".format(resource_id)
 
     mat = InternalResource("SpatialMaterial")
 
@@ -51,4 +64,47 @@ def export_material(escn_file, export_settings, material):
     mat.subsurf_scatter_enabled = material.subsurface_scattering.use
 
     resource_id = escn_file.add_internal_resource(mat, material)
-    return resource_id
+    return "SubResource({})".format(resource_id)
+
+
+# ------------------- Tools for finding existing materials -------------------
+def _find_material_in_subtree(folder, material):
+    """Searches for godot materials that match a blender material. If found,
+    it returns (path, type) otherwise it returns None"""
+    candidates = []
+
+    material_file_name = material.name + '.tres'
+    for folder, _subdirs, files in os.walk(folder):
+        if material_file_name in files:
+            candidates.append(os.path.join(folder, material_file_name))
+
+    # Checks it is a material and finds out what type
+    valid_candidates = []
+    for candidate in candidates:
+        with open(candidate) as mat_file:
+            first_line = mat_file.readline()
+            if "SpatialMaterial" in first_line:
+                valid_candidates.append((candidate, "SpatialMaterial"))
+            if "ShaderMaterial" in first_line:
+                valid_candidates.append((candidate, "ShaderMaterial"))
+
+    if not valid_candidates:
+        return None
+    if len(valid_candidates) > 1:
+        logging.warning("Multiple materials found for %s", material.name)
+    return valid_candidates[0]
+
+
+def find_material(export_settings, material):
+    """Searches for an existing Godot material"""
+    search_type = export_settings["material_search_paths"]
+    if search_type == "PROJECT_DIR":
+        search_dir = export_settings["project_path"]
+    elif search_type == "EXPORT_DIR":
+        search_dir = export_settings["path"]
+    else:
+        search_dir = None
+
+    if search_dir is None:
+        return None
+    return _find_material_in_subtree(search_dir, material)

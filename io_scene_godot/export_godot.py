@@ -24,6 +24,7 @@ This script is an exporter to Godot Engine
 http://www.godotengine.org
 """
 
+import os
 import logging
 import bpy
 
@@ -31,6 +32,21 @@ from . import structures
 from . import converters
 
 logging.basicConfig(level=logging.INFO, format="[%(levelname)s]: %(message)s")
+
+
+
+def find_godot_project_dir(export_path):
+    """Finds the project.godot file assuming that the export path
+    is inside a project (looks for a project.godot file)"""
+    project_dir = export_path
+
+    while not os.path.isfile(os.path.join(project_dir, "project.godot")):
+        project_dir = os.path.split(project_dir)[0]
+        if project_dir == "/" or len(project_dir) < 3:
+            logging.error("Unable to find godot project file")
+            return None
+    logging.info("Found godot project directory at %s", project_dir)
+    return project_dir
 
 
 class GodotExporter:
@@ -115,7 +131,7 @@ class GodotExporter:
         )
 
         self.export_scene()
-
+        self.escn_file.fix_paths(self.config)
         with open(self.path, 'w') as out_file:
             out_file.write(self.escn_file.to_string())
 
@@ -126,6 +142,8 @@ class GodotExporter:
         self.operator = operator
         self.scene = bpy.context.scene
         self.config = kwargs
+        self.config["path"] = path
+        self.config["project_path"] = find_godot_project_dir(path)
         self.valid_nodes = []
 
         self.escn_file = None

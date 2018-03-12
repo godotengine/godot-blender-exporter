@@ -18,6 +18,7 @@ def export_escn(out_file):
 		use_active_layers=False,
 		use_export_selected=False,
 		use_mesh_modifiers=True,
+		material_search_paths = 'PROJECT_DIR'
 	)
 
 
