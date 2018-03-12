@@ -56,12 +56,19 @@ class ExportGodot(bpy.types.Operator, ExportHelper):
             ("EMPTY", "Empty", ""),
             ("CAMERA", "Camera", ""),
             ("LAMP", "Lamp", ""),
-            ("ARMATURE", "Armature", ""),
+            # ("ARMATURE", "Armature", ""),
             ("MESH", "Mesh", ""),
-            ("CURVE", "Curve", ""),
+            # ("CURVE", "Curve", ""),
         ),
-        default={"EMPTY", "CAMERA", "LAMP", "ARMATURE", "MESH", "CURVE"},
-        )
+        default={
+            "EMPTY",
+            "CAMERA",
+            "LAMP",
+            # "ARMATURE",
+            "MESH",
+            # "CURVE"
+        },
+    )
 
     use_export_selected = BoolProperty(
         name="Selected Objects",
@@ -72,7 +79,7 @@ class ExportGodot(bpy.types.Operator, ExportHelper):
     use_mesh_modifiers = BoolProperty(
         name="Apply Modifiers",
         description="Apply modifiers to mesh objects (on a copy!).",
-        default=False,
+        default=True,
         )
     use_active_layers = BoolProperty(
         name="Active Layers",
@@ -103,7 +110,7 @@ class ExportGodot(bpy.types.Operator, ExportHelper):
 
     @property
     def check_extension(self):
-        """Checks if the file extension is value. It appears we don't
+        """Checks if the file extension is valid. It appears we don't
         really care.... """
         return True
 

@@ -12,7 +12,8 @@ from . import physics
 def export_mesh_node(escn_file, export_settings, node, parent_path):
     """Exports a MeshInstance. If the mesh is not already exported, it will
     trigger the export of that mesh"""
-    if node.data is None:
+    if (node.data is None or
+            "MESH" not in export_settings['object_types']):
         return parent_path
 
     # If this mesh object has physics properties, we need to export them first
@@ -48,6 +49,7 @@ def export_mesh(escn_file, export_settings, node, armature):
     # Check if it exists so we don't bother to export it twice
     mesh = node.data
     mesh_id = escn_file.get_internal_resource(mesh)
+
     if mesh_id is not None:
         return mesh_id
 
@@ -55,7 +57,7 @@ def export_mesh(escn_file, export_settings, node, armature):
 
     mesh_lines = []
     mesh_materials = []
-    make_arrays(node, armature, mesh_lines, mesh_materials)
+    make_arrays(export_settings, node, armature, mesh_lines, mesh_materials)
 
 
     for i in range(len(mesh_lines)):
@@ -65,8 +67,10 @@ def export_mesh(escn_file, export_settings, node, armature):
             mesh_resource.contents += "\t" + "\"material\":" + mat_resource + ",\n"
         mesh_resource.contents += "\t" + "\"primitive\":4,\n"
         mesh_resource.contents += "\t" + "\"arrays\":[\n"
-        for sline in mesh_lines[i]:
-            mesh_resource.contents += "\t\t" + sline + "\n"
+
+        arrays = ",\n\t\t".join(mesh_lines[i])
+        mesh_resource.contents += "\t\t" + arrays + "\n"
+
         mesh_resource.contents += "\t" + "],\n"
         mesh_resource.contents += "\t" + "\"morph_arrays\":[]\n"
         mesh_resource.contents += "}\n"
@@ -77,11 +81,11 @@ def export_mesh(escn_file, export_settings, node, armature):
     return mesh_id
 
 
-def make_arrays(node, armature, mesh_lines, ret_materials, skeyindex=-1):
+def make_arrays(export_settings, node, armature, mesh_lines, ret_materials, skeyindex=-1):
 
     mesh = node.to_mesh(bpy.context.scene,
-                        True,  # Apply Modifiers. TODO: make this an option
-                        "RENDER")  # TODO: Review
+                        export_settings['use_mesh_modifiers'],
+                        "RENDER")
 
     if True:  # Triangulate, always
         bm = bmesh.new()
@@ -227,7 +231,7 @@ class Surface:
                 # but if there aren't enough in blender, make one of them into null
                 surface_lines.append("null, ; No UV"+str(i+1))
                 continue
-            uv_vals = Array("Vector2Array(", ", ", "),")
+            uv_vals = Array("Vector2Array(")
             for vert in self.vertices:
                 uv_vals.extend([vert.uv[i].x, -vert.uv[i].y])
 
@@ -283,7 +287,7 @@ class Surface:
         # in the vertex arrays. The backface is computed from the winding
         # order, hence v[2] before v[1]
         int_values = Array(
-            "IntArray(", 
+            "IntArray(",
             values=[[v[0], v[2], v[1]] for v in self.indices]
         )
         surface_lines.append(int_values.to_string())

@@ -96,7 +96,10 @@ def export_collision_shape(escn_file, export_settings, node, parent_path,
     # elif rbd.collision_shape == "CONVEX_HULL":
     #   pass
     elif rbd.collision_shape == "MESH":
-        shape_id = generate_triangle_mesh_array(escn_file, node)
+        shape_id = generate_triangle_mesh_array(
+            escn_file, export_settings, 
+            node
+        )
 
     else:
         logging.warning("Unable to export physics shape for %s", node.name)
@@ -108,7 +111,7 @@ def export_collision_shape(escn_file, export_settings, node, parent_path,
     return parent_path + "/" + col_name
 
 
-def generate_triangle_mesh_array(escn_file, node):
+def generate_triangle_mesh_array(escn_file, export_settings, node):
     """Generates godots ConcavePolygonShape from an object"""
     mesh = node.data
     key = (mesh, "TriangleCollisionMesh")
@@ -120,8 +123,8 @@ def generate_triangle_mesh_array(escn_file, node):
 
 
     mesh = node.to_mesh(bpy.context.scene,
-                        True,  # Apply Modifiers. TODO: make this an option
-                        "RENDER")  # TODO: Review
+                        export_settings['use_mesh_modifiers'],
+                        "RENDER")
 
     # Triangulate
     triangulated_mesh = bmesh.new()
@@ -137,7 +140,7 @@ def generate_triangle_mesh_array(escn_file, node):
 
     bpy.data.meshes.remove(mesh)
 
-    col_shape.data = Array("PoolVector3Array(", ", ", ")", values=vert_array)
+    col_shape.data = Array("PoolVector3Array(", values=vert_array)
 
     return escn_file.add_internal_resource(col_shape, key)
 

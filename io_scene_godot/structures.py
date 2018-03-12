@@ -246,7 +246,7 @@ class Array(list):
     Note that the constructor values parameter flattens the list using the
     add_elements method
     """
-    def __init__(self, prefix, seperator=', ', suffix='),', values=()):
+    def __init__(self, prefix, seperator=', ', suffix=')', values=()):
         self.prefix = prefix
         self.seperator = seperator
         self.suffix = suffix
