@@ -25,6 +25,7 @@ http://www.godotengine.org
 """
 
 import os
+import collections
 import logging
 import bpy
 
@@ -102,10 +103,10 @@ class GodotExporter:
         """Decide what objects to export, and export them!"""
         # Scene root
         self.escn_file.add_node(structures.FileEntry(
-            "node", {
-                "type": "Spatial",
-                "name": self.scene.name
-            }
+            "node", collections.OrderedDict((
+                ("type", "Spatial"),
+                ("name", self.scene.name)
+            ))
         ))
         logging.info("Exporting scene: %s", self.scene.name)
 
@@ -131,10 +132,10 @@ class GodotExporter:
         """Begin the export"""
         self.escn_file = structures.ESCNFile(structures.FileEntry(
             "gd_scene",
-            {
-                "load_steps": 1,
-                "format": 2
-            }
+            collections.OrderedDict((
+                ("load_steps", 1),
+                ("format", 2)
+            ))
         ))
 
         self.export_scene()

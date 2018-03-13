@@ -153,11 +153,11 @@ class NodeTemplate(FileEntry):
 
         super().__init__(
             "node",
-            {
-                "name": name,
-                "type": node_type,
-                "parent": parent_path
-            }
+            collections.OrderedDict((
+                ("name", name),
+                ("type", node_type),
+                ("parent", parent_path)
+            ))
         )
 
 
@@ -167,12 +167,12 @@ class ExternalResource(FileEntry):
     def __init__(self, path, resource_type):
         super().__init__(
             'ext_resource',
-            {
+            collections.OrderedDict((
                 # ID is overwritten by ESCN_File.add_external_resource
-                'id': None,
-                'path': path,
-                'type': resource_type
-            }
+                ('id', None),
+                ('path', path),
+                ('type', resource_type)
+            ))
         )
 
     def fix_path(self, export_settings):
@@ -189,11 +189,11 @@ class InternalResource(FileEntry):
     def __init__(self, resource_type):
         super().__init__(
             'sub_resource',
-            {
+            collections.OrderedDict((
                 # ID is overwritten by ESCN_File.add_internal_resource
-                'id': None,
-                'type': resource_type
-            }
+                ('id', None),
+                ('type', resource_type)
+            ))
         )
 
 

@@ -14,6 +14,7 @@ pep8:
 
 
 export-blends:
+	mkdir -p ./tests/exports/
 	rm -rf ./tests/.import  # Ensure we don't have any hangover data
 	$(BLENDER) -b --python ./tests/scenes/export_blends.py
 

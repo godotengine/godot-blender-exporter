@@ -3,7 +3,6 @@ Exports materials. For now I'm targetting the blender internal, however this
 will be deprecated in Blender 2.8 in favor of EEVEE. EEVEE has PBR and
 should be able to match Godot better, but unfortunately parseing a node
 tree into a flat bunch of parameters is not trivial. So for someone else:"""
-# TODO: Add EEVEE support
 
 import logging
 import os
