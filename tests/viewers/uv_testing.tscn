@@ -1,6 +1,6 @@
 [gd_scene load_steps=4 format=2]
 
-[ext_resource path="res://scenes/uv_testing.escn" type="PackedScene" id=1]
+[ext_resource path="res://exports/uv_testing.escn" type="PackedScene" id=1]
 [ext_resource path="res://multi_uv_tester.tres" type="Material" id=2]
 [ext_resource path="res://uv_tester_material.tres" type="Material" id=3]
 

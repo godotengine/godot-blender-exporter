@@ -81,11 +81,11 @@ class ESCNFile:
     def to_string(self):
         """Serializes the file ready to dump out to disk"""
 
-        return "{}\n\n{}\n\n{}\n\n{}\n".format(
+        return "{}{}\n{}\n{}\n".format(
             self.heading.to_string(),
-            '\n'.join(i.to_string() for i in self.external_resources),
-            '\n'.join(e.to_string() for e in self.internal_resources),
-            '\n'.join(n.to_string() for n in self.nodes)
+            '\n\n'.join(i.to_string() for i in self.external_resources),
+            '\n\n'.join(e.to_string() for e in self.internal_resources),
+            '\n\n'.join(n.to_string() for n in self.nodes)
         )
 
 
@@ -168,9 +168,10 @@ class ExternalResource(FileEntry):
         super().__init__(
             'ext_resource',
             {
-                'id':None,  # This is overwritten by ESCN_File.add_external_resource
-                'path':path,
-                'type':resource_type
+                # ID is overwritten by ESCN_File.add_external_resource
+                'id': None,
+                'path': path,
+                'type': resource_type
             }
         )
 
@@ -189,8 +190,9 @@ class InternalResource(FileEntry):
         super().__init__(
             'sub_resource',
             {
-                'id':None,  # This is overwritten by ESCN_File.add_external_resource
-                'type':resource_type
+                # ID is overwritten by ESCN_File.add_internal_resource
+                'id': None,
+                'type': resource_type
             }
         )
 
@@ -210,6 +212,8 @@ class Array(list):
         self.suffix = suffix
         super().__init__()
         self.add_elements(values)
+
+        self.__str__ = self.to_string
 
     def add_elements(self, list_of_lists):
         """Add each element from a list of lists to the array (flatten the

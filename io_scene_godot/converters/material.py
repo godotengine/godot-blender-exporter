@@ -37,7 +37,6 @@ def export_image(escn_file, export_settings, image):
 
 def export_material(escn_file, export_settings, material):
     """ Exports a blender internal material as best it can"""
-
     external_material = find_material(export_settings, material)
     if external_material is not None:
         resource_id = escn_file.get_external_resource(material)
@@ -53,15 +52,14 @@ def export_material(escn_file, export_settings, material):
     # Existing internal resource
     if resource_id is not None:
         return "SubResource({})".format(resource_id)
-
     mat = InternalResource("SpatialMaterial")
 
-    mat.flags_unshaded = material.use_shadeless
-    mat.flags_vertex_lighting = material.use_vertex_color_light
-    mat.flags_transparent = material.use_transparency
-    mat.vertex_color_use_as_albedo = material.use_vertex_color_paint
-    mat.albedo_color = material.diffuse_color
-    mat.subsurf_scatter_enabled = material.subsurface_scattering.use
+    mat['flags_unshaded'] = material.use_shadeless
+    mat['flags_vertex_lighting'] = material.use_vertex_color_light
+    mat['flags_transparent'] = material.use_transparency
+    mat['vertex_color_use_as_albedo'] = material.use_vertex_color_paint
+    mat['albedo_color'] = material.diffuse_color
+    mat['subsurf_scatter_enabled'] = material.subsurface_scattering.use
 
     resource_id = escn_file.add_internal_resource(mat, material)
     return "SubResource({})".format(resource_id)

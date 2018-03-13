@@ -121,7 +121,6 @@ def generate_triangle_mesh_array(escn_file, export_settings, node):
 
     col_shape = InternalResource("ConcavePolygonShape")
 
-
     mesh = node.to_mesh(bpy.context.scene,
                         export_settings['use_mesh_modifiers'],
                         "RENDER")

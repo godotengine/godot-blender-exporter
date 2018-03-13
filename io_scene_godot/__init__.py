@@ -29,7 +29,8 @@ bl_info = {  # pylint: disable=invalid-name
     "blender": (2, 5, 8),
     "api": 38691,
     "location": "File > Import-Export",
-    "description": ("Export Godot Scenes to a format that can be efficiently imported. "),
+    "description": ("Export Godot Scenes to a format that can be efficiently "
+                    "imported. "),
     "warning": "",
     "wiki_url": ("https://godotengine.org"),
     "tracker_url": "https://github.com/godotengine/blender-exporter",

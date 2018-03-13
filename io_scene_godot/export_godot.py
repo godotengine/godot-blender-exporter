@@ -34,7 +34,6 @@ from . import converters
 logging.basicConfig(level=logging.INFO, format="[%(levelname)s]: %(message)s")
 
 
-
 def find_godot_project_dir(export_path):
     """Finds the project.godot file assuming that the export path
     is inside a project (looks for a project.godot file)"""
@@ -101,10 +100,11 @@ class GodotExporter:
 
     def export_scene(self):
         """Decide what objects to export, and export them!"""
+        # Scene root
         self.escn_file.add_node(structures.FileEntry(
             "node", {
-                "type":"Spatial",
-                "name":self.scene.name
+                "type": "Spatial",
+                "name": self.scene.name
             }
         ))
         logging.info("Exporting scene: %s", self.scene.name)
@@ -132,8 +132,8 @@ class GodotExporter:
         self.escn_file = structures.ESCNFile(structures.FileEntry(
             "gd_scene",
             {
-                "load_steps":1,
-                "format":2
+                "load_steps": 1,
+                "format": 2
             }
         ))
 

@@ -1,4 +1,4 @@
-import logging
+"""Exports a normal triangle mesh"""
 import bpy
 import bmesh
 import mathutils
@@ -31,7 +31,7 @@ def export_mesh_node(escn_file, export_settings, node, parent_path):
         if node.parent is not None and node.parent.type == "ARMATURE":
             armature = node.parent
 
-        mesh_id = export_mesh(escn_file, export_settings, node, armature)  # We need to export the mesh
+        mesh_id = export_mesh(escn_file, export_settings, node, armature)
 
         mesh_node = NodeTemplate(node.name, "MeshInstance", parent_path)
         mesh_node['mesh'] = "SubResource({})".format(mesh_id)
@@ -55,25 +55,14 @@ def export_mesh(escn_file, export_settings, node, armature):
 
     mesh_resource = InternalResource('ArrayMesh')
 
-    mesh_lines = []
-    mesh_materials = []
-    make_arrays(export_settings, node, armature, mesh_lines, mesh_materials)
+    surfaces = make_arrays(
+        escn_file,
+        export_settings,
+        node,
+        armature)
 
-
-    for i in range(len(mesh_lines)):
-        mesh_resource.contents += "surfaces/" + str(i) + "={\n"
-        if mesh_materials[i] is not None:
-            mat_resource = export_material(escn_file, export_settings, mesh_materials[i])
-            mesh_resource.contents += "\t" + "\"material\":" + mat_resource + ",\n"
-        mesh_resource.contents += "\t" + "\"primitive\":4,\n"
-        mesh_resource.contents += "\t" + "\"arrays\":[\n"
-
-        arrays = ",\n\t\t".join(mesh_lines[i])
-        mesh_resource.contents += "\t\t" + arrays + "\n"
-
-        mesh_resource.contents += "\t" + "],\n"
-        mesh_resource.contents += "\t" + "\"morph_arrays\":[]\n"
-        mesh_resource.contents += "}\n"
+    for surface in surfaces:
+        mesh_resource[surface.name_str] = surface
 
     mesh_id = escn_file.add_internal_resource(mesh_resource, mesh)
     assert mesh_id is not None
@@ -81,107 +70,112 @@ def export_mesh(escn_file, export_settings, node, armature):
     return mesh_id
 
 
-def make_arrays(export_settings, node, armature, mesh_lines, ret_materials, skeyindex=-1):
-
+def make_arrays(escn_file, export_settings, node, armature):
+    """Generates arrays of positions, normals etc"""
     mesh = node.to_mesh(bpy.context.scene,
                         export_settings['use_mesh_modifiers'],
                         "RENDER")
 
-    if True:  # Triangulate, always
-        bm = bmesh.new()
-        bm.from_mesh(mesh)
-        bmesh.ops.triangulate(bm, faces=bm.faces)
-        bm.to_mesh(mesh)
-        bm.free()
-
-    surfaces = []
-    material_to_surface = {}
+    # Prepare the mesh for export
+    tri_mesh = bmesh.new()
+    tri_mesh.from_mesh(mesh)
+    bmesh.ops.triangulate(tri_mesh, faces=tri_mesh.faces)
+    tri_mesh.to_mesh(mesh)
+    tri_mesh.free()
 
     mesh.update(calc_tessface=True)
-
-    si = None
-    #if armature is not None:
-    #    si = self.skeleton_info[armature]
-
-    # TODO: Implement automatic tangent detection
-    has_tangents = True  # always use tangents, we are grown up now.
-
-    has_colors = len(mesh.vertex_colors)
 
     uv_layer_count = len(mesh.uv_textures)
     if uv_layer_count > 2:
         uv_layer_count = 2
 
-    if has_tangents and len(mesh.uv_textures):
-        try:
-            mesh.calc_tangents()
-        except:
-            logging.warning(
-                "CalcTangets failed for mesh %s, no tangets will be "
-                "exported.", mesh.name
-            )
-            mesh.calc_normals_split()
-            has_tangents = False
-
+    if len(mesh.uv_textures):
+        has_tangents = True
+        mesh.calc_tangents()
     else:
         mesh.calc_normals_split()
         has_tangents = False
 
+    # Separate by materials into single-material surfaces
+    surfaces = generate_surfaces(
+        escn_file,
+        export_settings,
+        mesh,
+        has_tangents
+    )
+
+    for surface_id, surface in enumerate(surfaces):
+        surface.id = surface_id
+        surface.armature = armature
+
+    bpy.data.meshes.remove(mesh)
+
+    return surfaces
+
+
+def generate_surfaces(escn_file, export_settings, mesh, has_tangents):
+    """Splits up the mesh into surfaces with a single material each.
+    Within this, it creates the Vertex structure to contain all data about
+    a single vertex
+    """
+    material_to_surface = {}
+    surfaces = []
+
     for face_index in range(len(mesh.polygons)):
         face = mesh.polygons[face_index]
 
+        # Find a surface that matches the material, otherwise create a new
+        # surface for it
         if face.material_index not in material_to_surface:
             material_to_surface[face.material_index] = len(surfaces)
-            surfaces.append(Surface())
+            surface = Surface()
+            surfaces.append(surface)
             if mesh.materials:
                 mat = mesh.materials[face.material_index]
-                ret_materials.append(mat)
-            else:
-                ret_materials.append(None)
+                if mat is not None:
+                    surface.material = export_material(
+                        escn_file,
+                        export_settings,
+                        mat
+                    )
 
         surface = surfaces[material_to_surface[face.material_index]]
-        vi = []
+        vertex_indices = []
 
-        for lt in range(face.loop_total):
-            loop_index = face.loop_start + lt
-            ml = mesh.loops[loop_index]
-            mv = mesh.vertices[ml.vertex_index]
+        for loop_id in range(face.loop_total):
+            loop_index = face.loop_start + loop_id
+            loop = mesh.loops[loop_index]
 
-            v = Vertex()
-            v.vertex = fix_vertex(mathutils.Vector(mv.co))
+            new_vert = Vertex()
+            new_vert.vertex = fix_vertex(mesh.vertices[loop.vertex_index].co)
 
-            for xt in mesh.uv_layers:
-                v.uv.append(mathutils.Vector(xt.data[loop_index].uv))
+            for uv_layer in mesh.uv_layers:
+                new_vert.uv.append(mathutils.Vector(
+                    uv_layer.data[loop_index].uv
+                ))
 
-            if has_colors:
-                v.color = mathutils.Vector(
+            if mesh.vertex_colors:
+                new_vert.color = mathutils.Vector(
                     mesh.vertex_colors[0].data[loop_index].color)
 
-            v.normal = fix_vertex(mathutils.Vector(ml.normal))
+            new_vert.normal = fix_vertex(loop.normal)
 
             if has_tangents:
-                v.tangent = fix_vertex(mathutils.Vector(ml.tangent))
-                v.bitangent = fix_vertex(mathutils.Vector(ml.bitangent))
+                new_vert.tangent = fix_vertex(loop.tangent)
+                new_vert.bitangent = fix_vertex(loop.bitangent)
 
-            tup = v.get_tup()
-            idx = 0
-            # Do not optmize if using shapekeys
-            if skeyindex == -1 and tup in surface.vertex_map:
-                idx = surface.vertex_map[tup]
-            else:
-                idx = len(surface.vertices)
-                surface.vertices.append(v)
-                surface.vertex_map[tup] = idx
+            # Merge similar vertices
+            tup = new_vert.get_tup()
+            if tup not in surface.vertex_map:
+                surface.vertex_map[tup] = len(surface.vertices)
+                surface.vertices.append(new_vert)
 
-            vi.append(idx)
+            vertex_indices.append(surface.vertex_map[tup])
 
-        if len(vi) > 2:  # Only triangles and above
-            surface.indices.append(vi)
+        if len(vertex_indices) > 2:  # Only triangles and above
+            surface.indices.append(vertex_indices)
 
-    for s in surfaces:
-        mesh_lines.append(s.generate_lines(has_tangents, has_colors, uv_layer_count, armature))
-
-    bpy.data.meshes.remove(mesh)
+    return surfaces
 
 
 class Surface:
@@ -191,6 +185,9 @@ class Surface:
         self.vertices = []
         self.vertex_map = {}
         self.indices = []
+        self.id = None
+        self.material = None
+        self.armature = None
 
     def calc_tangent_dp(self, vert):
         """Calculates the dot product of the tangent. I think this has
@@ -199,20 +196,10 @@ class Surface:
         dot_product = cross_product.dot(vert.bitangent)
         return 1.0 if dot_product > 0.0 else -1.0
 
-    def generate_lines(self, has_tangents, has_colors, uv_layer_count, armature):
-        surface_lines = []
-
-        position_vals = Array("Vector3Array(", values=[v.vertex for v in self.vertices])
-        normal_vals = Array("Vector3Array(", values=[v.normal for v in self.vertices])
-
-
-        if has_tangents:
-            tangent_vals = Array("FloatArray(")
-            for vert in self.vertices:
-                tangent_vals.extend(list(vert.tangent) + [self.calc_tangent_dp(vert)])
-        else:
-            tangent_vals = Array("null, ; No Tangents", "", "")
-
+    def get_color_array(self):
+        """Generate a single array that contains the colors of all the vertices
+        in this surface"""
+        has_colors = self.vertices[0].color is not None
         if has_colors:
             color_vals = Array("ColorArray(")
             for vert in self.vertices:
@@ -220,79 +207,131 @@ class Surface:
         else:
             color_vals = Array("null, ; no Vertex Colors", "", "")
 
+        return color_vals
+
+    def get_tangent_array(self):
+        """Generate a single array that contains the tangents of all the
+        vertices in this surface"""
+        has_tangents = self.vertices[0].tangent is not None
+        if has_tangents:
+            tangent_vals = Array("FloatArray(")
+            for vert in self.vertices:
+                tangent_vals.extend(
+                    list(vert.tangent) + [self.calc_tangent_dp(vert)]
+                )
+        else:
+            tangent_vals = Array("null, ; No Tangents", "", "")
+        return tangent_vals
+
+    def get_uv_array(self, uv_index):
+        """Returns an array representing the specified UV index"""
+        uv_layer_count = len(self.vertices[0].uv)
+        if uv_index >= uv_layer_count:
+            # If lacking 2 UV layers, mark them as null
+            return Array("null, ; No UV"+str(uv_index+1), "", "")
+
+        uv_vals = Array("Vector2Array(")
+        for vert in self.vertices:
+            uv_vals.extend([
+                vert.uv[uv_index].x,
+                1.0-vert.uv[uv_index].y
+            ])
+
+        return uv_vals
+
+    def generate_lines(self):
+        """Generates the various arrays that are part of the surface (eg
+        normals, position etc.)"""
+        surface_lines = []
+
+        position_vals = Array("Vector3Array(",
+                              values=[v.vertex for v in self.vertices])
+        normal_vals = Array("Vector3Array(",
+                            values=[v.normal for v in self.vertices])
+
         surface_lines.append(position_vals.to_string())
         surface_lines.append(normal_vals.to_string())
-        surface_lines.append(tangent_vals.to_string())
-        surface_lines.append(color_vals.to_string())
+        surface_lines.append(self.get_tangent_array().to_string())
+        surface_lines.append(self.get_color_array().to_string())
 
-        # UV Arrays
-        for i in range(2):  # Godot always expects two arrays for UV's
-            if i >= uv_layer_count:
-                # but if there aren't enough in blender, make one of them into null
-                surface_lines.append("null, ; No UV"+str(i+1))
-                continue
-            uv_vals = Array("Vector2Array(")
-            for vert in self.vertices:
-                uv_vals.extend([vert.uv[i].x, 1.0-vert.uv[i].y])
-
-            surface_lines.append(uv_vals.to_string())
+        surface_lines.append(self.get_uv_array(0).to_string())
+        surface_lines.append(self.get_uv_array(1).to_string())
 
         # Bones and Weights
         # Export armature data (if armature exists)
-        if armature is not None:
-            # Skin Weights!
-            float_values = "FloatArray("
-            float_valuesw = "FloatArray("
-            first = True
-            for vert in self.vertices:
-                #skin_weights_total += len(v.weights)
-                weights = []
-                for i in len(vert.bones):
-                    weights += (vert.bones[i], vert.weights[i])
+        bones, bone_weights = self._get_bone_arrays()
 
-                weights = sorted(weights, key=lambda x: -x[1])
-                totalw = 0.0
-                for weight in weights:
-                    totalw += weight[1]
-                if totalw == 0.0:
-                    totalw = 0.000000001
-
-                for i in range(4):
-                    if i > 0:
-                        float_values += ","
-                        float_valuesw += ","
-                    if i < len(weights):
-                        float_values += " {}".format(weights[i][0])
-                        float_valuesw += " {}".format(weights[i][1]/totalw)
-                    else:
-                        float_values += " 0"
-                        float_valuesw += " 0.0"
-
-                if not first:
-                    float_values += ","
-                    float_valuesw += ","
-                else:
-                    first = False
-
-            float_values += "),"
-            surface_lines.append(float_values)
-            float_valuesw += "),"
-            surface_lines.append(float_valuesw)
-
-        else:
-            surface_lines.append("null, ; No Bones")
-            surface_lines.append("null, ; No Weights")
+        surface_lines.append(bones.to_string())
+        surface_lines.append(bone_weights.to_string())
 
         # Indices- each face is made of 3 verts, and these are the indices
         # in the vertex arrays. The backface is computed from the winding
         # order, hence v[2] before v[1]
-        int_values = Array(
+        face_indices = Array(
             "IntArray(",
             values=[[v[0], v[2], v[1]] for v in self.indices]
         )
-        surface_lines.append(int_values.to_string())
+        surface_lines.append(face_indices.to_string())
 
         return surface_lines
+
+    def _get_bone_arrays(self):
+        """Returns the most influential bones and their weights"""
+        if self.armature is None:
+            return [
+                Array("null, ; No Bones", "", ""),
+                Array("null, ; No Weights", "", "")
+            ]
+
+        # Skin Weights!
+        float_values = Array("FloatArray(")
+        float_valuesw = Array("FloatArray(")
+        for vert in self.vertices:
+            # skin_weights_total += len(v.weights)
+            weights = []
+            for i in len(vert.bones):
+                weights += (vert.bones[i], vert.weights[i])
+
+            weights = sorted(weights, key=lambda x: -x[1])
+            totalw = 0.0
+            for weight in weights:
+                totalw += weight[1]
+            if totalw == 0.0:
+                totalw = 0.000000001
+
+            for i in range(4):
+                if i < len(weights):
+                    float_values.append(weights[i][0])
+                    float_valuesw.append(weights[i][1]/totalw)
+                else:
+                    float_values.append(0)
+                    float_valuesw.append(0.0)
+
+        return float_values, float_valuesw
+
+    @property
+    def name_str(self):
+        """Used to separate surfaces that are part of the same mesh by their
+        id"""
+        return "surfaces/" + str(self.id)
+
+    def to_string(self):
+        """Serialize"""
+        out_str = "{\n"
+        if self.material is not None:
+
+            out_str += "\t\"material\":" + self.material + ",\n"
+        out_str += "\t\"primitive\":4,\n"
+        out_str += "\t\"arrays\":[\n"
+
+        arrays = ",\n\t\t".join(self.generate_lines())
+        out_str += "\t\t" + arrays + "\n"
+
+        out_str += "\t" + "],\n"
+        out_str += "\t" + "\"morph_arrays\":[]\n"
+        out_str += "}\n"
+
+        return out_str
 
 
 def fix_vertex(vtx):
@@ -301,6 +340,7 @@ def fix_vertex(vtx):
 
 
 class Vertex:
+    """Stores all the attributes for a single vertex"""
     def get_tup(self):
         """Returns a tuple form of this vertex so that it can be hashed"""
         tup = (self.vertex.x, self.vertex.y, self.vertex.z, self.normal.x,
@@ -322,7 +362,7 @@ class Vertex:
         return tup
 
     __slots__ = ("vertex", "normal", "tangent", "bitangent", "color", "uv",
-                 "uv2", "bones", "weights")
+                 "bones", "weights")
 
     def __init__(self):
         self.vertex = mathutils.Vector((0.0, 0.0, 0.0))
@@ -331,6 +371,5 @@ class Vertex:
         self.bitangent = None
         self.color = None
         self.uv = []
-        self.uv2 = mathutils.Vector((0.0, 0.0))
         self.bones = []
         self.weights = []
