@@ -93,8 +93,11 @@ def export_collision_shape(escn_file, export_settings, node, parent_path,
         col_shape['radius'] = max(bounds.x, bounds.y) / 2
         col_shape['height'] = bounds.z - col_shape['radius'] * 2
         shape_id = escn_file.add_internal_resource(col_shape, rbd)
-    # elif rbd.collision_shape == "CONVEX_HULL":
-    #   pass
+    elif rbd.collision_shape == "CONVEX_HULL":
+        shape_id = generate_convex_mesh_array(
+            escn_file, export_settings,
+            node
+        )
     elif rbd.collision_shape == "MESH":
         shape_id = generate_triangle_mesh_array(
             escn_file, export_settings,
@@ -109,6 +112,40 @@ def export_collision_shape(escn_file, export_settings, node, parent_path,
     escn_file.add_node(col_node)
 
     return parent_path + "/" + col_name
+
+
+def generate_convex_mesh_array(escn_file, export_settings, node):
+    mesh = node.data
+    key = (mesh, "ConvexCollisionMesh")
+    resource_id = escn_file.get_internal_resource(key)
+    if resource_id is not None:
+        return resource_id
+
+    col_shape = InternalResource("ConvexPolygonShape")
+
+    mesh = node.to_mesh(bpy.context.scene,
+                        export_settings['use_mesh_modifiers'],
+                        "RENDER")
+    print(type(mesh))
+
+    # Triangulate
+    triangulated_mesh = bmesh.new()
+    triangulated_mesh.from_mesh(mesh)
+    #bmesh.ops.convex_hull(triangulated_mesh, input=triangulated_mesh.verts)
+    bmesh.ops.triangulate(triangulated_mesh, faces=triangulated_mesh.faces)
+    triangulated_mesh.to_mesh(mesh)
+    triangulated_mesh.free()
+
+    vert_array = list()
+    for poly in mesh.polygons:
+        for vert_id in poly.vertices:
+            vert_array.append(list(mesh.vertices[vert_id].co))
+
+    bpy.data.meshes.remove(mesh)
+
+    col_shape['points'] = Array("PoolVector3Array(", values=vert_array)
+
+    return escn_file.add_internal_resource(col_shape, key)
 
 
 def generate_triangle_mesh_array(escn_file, export_settings, node):
