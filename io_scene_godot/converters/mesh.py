@@ -23,7 +23,8 @@ def export_mesh_node(escn_file, export_settings, node, parent_path):
             escn_file, export_settings, node, parent_path
         )
 
-    if node.hide_render:
+    if (node.hide_render or
+            (physics.has_physics(node) and node.draw_type == "WIRE")):
         return parent_path
 
     else:
