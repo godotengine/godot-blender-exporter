@@ -24,7 +24,7 @@ def has_physics(node):
 def is_physics_root(node):
     """Checks to see if this object is the root of the physics tree. This is
     True if none of the parents of the object have physics."""
-    return get_physics_root(node)[0] is None
+    return get_physics_root(node) is None
 
 
 def get_physics_root(node):
@@ -33,14 +33,11 @@ def get_physics_root(node):
     this node and the parent """
     parent_rbd = None
     current_node = node
-    counter = 0
     while current_node.parent is not None:
-        counter += 1
         if current_node.parent.rigid_body is not None:
             parent_rbd = current_node.parent
-
         current_node = current_node.parent
-    return parent_rbd, counter
+    return parent_rbd
 
 
 def get_extents(node):
@@ -71,11 +68,11 @@ def export_collision_shape(escn_file, export_settings, node, parent_path,
         col_node['transform'] = mathutils.Matrix.Identity(4) * AXIS_CORRECT
     else:
         parent_to_world = parent_override.matrix_world.inverted()
-        col_node['transform'] = parent_to_world * node.matrix_world
+        col_node['transform'] = parent_to_world * node.matrix_world * AXIS_CORRECT
 
     rbd = node.rigid_body
 
-    col_shape = None
+    shape_id = None
     bounds = get_extents(node)
 
     if rbd.collision_shape == "BOX":
@@ -103,7 +100,6 @@ def export_collision_shape(escn_file, export_settings, node, parent_path,
             escn_file, export_settings,
             node
         )
-
     else:
         logging.warning("Unable to export physics shape for %s", node.name)
 
@@ -126,11 +122,11 @@ def generate_convex_mesh_array(escn_file, export_settings, node):
     mesh = node.to_mesh(bpy.context.scene,
                         export_settings['use_mesh_modifiers'],
                         "RENDER")
-    print(type(mesh))
 
     # Triangulate
     triangulated_mesh = bmesh.new()
     triangulated_mesh.from_mesh(mesh)
+    # For some reason, generateing the convex hull here causes Godot to crash
     #bmesh.ops.convex_hull(triangulated_mesh, input=triangulated_mesh.verts)
     bmesh.ops.triangulate(triangulated_mesh, faces=triangulated_mesh.faces)
     triangulated_mesh.to_mesh(mesh)
@@ -223,14 +219,18 @@ def export_physics_controller(escn_file, export_settings, node, parent_path):
 
 def export_physics_properties(escn_file, export_settings, node, parent_path):
     """Creates the necessary nodes for the physics"""
-    parent_rbd, counter = get_physics_root(node)
+    parent_rbd = get_physics_root(node)
 
     if parent_rbd is None:
         parent_path = export_physics_controller(
             escn_file, export_settings, node, parent_path
         )
-
-    tmp_parent_path = os.path.normpath(parent_path + "/.." * counter)
+    if parent_rbd is None:
+        tmp_parent_path = parent_path
+    else:
+        search_str = "/{}Physics".format(parent_rbd.name)
+        start_path = parent_path.rsplit(search_str, 1)[0]
+        tmp_parent_path = start_path + search_str
 
     export_collision_shape(
         escn_file, export_settings, node, tmp_parent_path,
