@@ -3,10 +3,10 @@ This file provides the conversion for a single blend object into one or
 more godot nodes. All the converters should take as input arguments:
  - The ESCN file (so you can use add_internal_resource() method etc.)
  - The exporter config (so you can see what options the user selected)
- - The node to export
- - The path to the parent node
+ - The blender node to export
+ - The parent Godot scene node of the node being processed
 
-All converters that convert nodes should return the path to the node. All
+All converters that convert nodes should return the node itself. All
 converters that convert resources should return the resource ID. Additional,
 converters for resources should have internal protection against importing
 twice

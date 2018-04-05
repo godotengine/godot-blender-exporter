@@ -13,24 +13,24 @@ from ..structures import NodeTemplate
 AXIS_CORRECT = mathutils.Matrix.Rotation(math.radians(-90), 4, 'X')
 
 
-def export_empty_node(escn_file, export_settings, node, parent_path):
+def export_empty_node(escn_file, export_settings, node, parent_gd_node):
     """Converts an empty (or any unknown node) into a spatial"""
     if "EMPTY" not in export_settings['object_types']:
-        return parent_path
-    empty_node = NodeTemplate(node.name, "Spatial", parent_path)
+        return parent_gd_node
+    empty_node = NodeTemplate(node.name, "Spatial", parent_gd_node)
     empty_node['transform'] = node.matrix_local
     escn_file.add_node(empty_node)
 
-    return parent_path + '/' + node.name
+    return empty_node
 
 
-def export_camera_node(escn_file, export_settings, node, parent_path):
+def export_camera_node(escn_file, export_settings, node, parent_gd_node):
     """Exports a camera"""
     if (node.data is None or node.hide_render or
             "CAMERA" not in export_settings['object_types']):
-        return parent_path
+        return parent_gd_node
 
-    cam_node = NodeTemplate(node.name, "Camera", parent_path)
+    cam_node = NodeTemplate(node.name, "Camera", parent_gd_node)
     camera = node.data
 
     cam_node['far'] = camera.clip_end
@@ -46,20 +46,20 @@ def export_camera_node(escn_file, export_settings, node, parent_path):
     cam_node['transform'] = node.matrix_local * AXIS_CORRECT
     escn_file.add_node(cam_node)
 
-    return parent_path + '/' + node.name
+    return cam_node
 
 
-def export_lamp_node(escn_file, export_settings, node, parent_path):
+def export_lamp_node(escn_file, export_settings, node, parent_gd_node):
     """Exports lights - well, the ones it knows about. Other light types
     just throw a warning"""
     if (node.data is None or node.hide_render or
             "LAMP" not in export_settings['object_types']):
-        return parent_path
+        return parent_gd_node
 
     light = node.data
 
     if light.type == "POINT":
-        light_node = NodeTemplate(node.name, "OmniLight", parent_path)
+        light_node = NodeTemplate(node.name, "OmniLight", parent_gd_node)
         light_node['omni_range'] = light.distance
         light_node['shadow_enabled'] = light.shadow_method != "NOSHADOW"
 
@@ -69,7 +69,7 @@ def export_lamp_node(escn_file, export_settings, node, parent_path):
             )
 
     elif light.type == "SPOT":
-        light_node = NodeTemplate(node.name, "SpotLight", parent_path)
+        light_node = NodeTemplate(node.name, "SpotLight", parent_gd_node)
         light_node['spot_range'] = light.distance
         light_node['spot_angle'] = math.degrees(light.spot_size/2)
         light_node['spot_angle_attenuation'] = 0.2/(light.spot_blend + 0.01)
@@ -81,7 +81,7 @@ def export_lamp_node(escn_file, export_settings, node, parent_path):
             )
 
     elif light.type == "SUN":
-        light_node = NodeTemplate(node.name, "DirectionalLight", parent_path)
+        light_node = NodeTemplate(node.name, "DirectionalLight", parent_gd_node)
         light_node['shadow_enabled'] = light.shadow_method != "NOSHADOW"
     else:
         light_node = None
@@ -99,4 +99,4 @@ def export_lamp_node(escn_file, export_settings, node, parent_path):
 
         escn_file.add_node(light_node)
 
-    return parent_path + '/' + node.name
+    return light_node

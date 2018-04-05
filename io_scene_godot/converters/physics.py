@@ -14,6 +14,7 @@ from ..structures import NodeTemplate, InternalResource, Array
 
 
 AXIS_CORRECT = mathutils.Matrix.Rotation(math.radians(-90), 4, 'X')
+PHYSICS_TYPES = {'KinematicBody', 'RigidBody', 'StaticBody'}
 
 
 def has_physics(node):
@@ -58,11 +59,11 @@ def get_extents(node):
     return maxs - mins
 
 
-def export_collision_shape(escn_file, export_settings, node, parent_path,
+def export_collision_shape(escn_file, export_settings, node, parent_gd_node,
                            parent_override=None):
     """Exports the collision primitives/geometry"""
     col_name = node.name + 'Collision'
-    col_node = NodeTemplate(col_name, "CollisionShape", parent_path)
+    col_node = NodeTemplate(col_name, "CollisionShape", parent_gd_node)
 
     if parent_override is None:
         col_node['transform'] = mathutils.Matrix.Identity(4) * AXIS_CORRECT
@@ -107,7 +108,7 @@ def export_collision_shape(escn_file, export_settings, node, parent_path,
         col_node['shape'] = "SubResource({})".format(shape_id)
     escn_file.add_node(col_node)
 
-    return parent_path + "/" + col_name
+    return col_node
 
 
 def generate_convex_mesh_array(escn_file, export_settings, node):
@@ -177,7 +178,7 @@ def generate_triangle_mesh_array(escn_file, export_settings, node):
     return escn_file.add_internal_resource(col_shape, key)
 
 
-def export_physics_controller(escn_file, export_settings, node, parent_path):
+def export_physics_controller(escn_file, export_settings, node, parent_gd_node):
     """Exports the physics body "type" as a separate node. In blender, the
     physics body type and the collision shape are one object, in godot they
     are two. This is the physics body type"""
@@ -192,7 +193,7 @@ def export_physics_controller(escn_file, export_settings, node, parent_path):
     else:
         phys_controller = 'StaticBody'
 
-    phys_obj = NodeTemplate(phys_name, phys_controller, parent_path)
+    phys_obj = NodeTemplate(phys_name, phys_controller, parent_gd_node)
 
     #  OPTIONS FOR ALL PHYSICS TYPES
     phys_obj['friction'] = rbd.friction
@@ -214,27 +215,27 @@ def export_physics_controller(escn_file, export_settings, node, parent_path):
 
     escn_file.add_node(phys_obj)
 
-    return parent_path + '/' + phys_name
+    return phys_obj
 
 
-def export_physics_properties(escn_file, export_settings, node, parent_path):
+def export_physics_properties(escn_file, export_settings, node, parent_gd_node):
     """Creates the necessary nodes for the physics"""
     parent_rbd = get_physics_root(node)
 
     if parent_rbd is None:
-        parent_path = export_physics_controller(
-            escn_file, export_settings, node, parent_path
+        parent_gd_node = export_physics_controller(
+            escn_file, export_settings, node, parent_gd_node
         )
-    if parent_rbd is None:
-        tmp_parent_path = parent_path
-    else:
-        search_str = "/{}Physics".format(parent_rbd.name)
-        start_path = parent_path.rsplit(search_str, 1)[0]
-        tmp_parent_path = start_path + search_str
+
+    # trace the path towards root, find the cloest physics node
+    gd_node_ptr = parent_gd_node
+    while gd_node_ptr.get_type() not in PHYSICS_TYPES:
+        gd_node_ptr = gd_node_ptr.parent
+    physics_gd_node = gd_node_ptr
 
     export_collision_shape(
-        escn_file, export_settings, node, tmp_parent_path,
+        escn_file, export_settings, node, physics_gd_node,
         parent_override=parent_rbd
     )
 
-    return parent_path
+    return parent_gd_node

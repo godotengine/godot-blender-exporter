@@ -147,19 +147,54 @@ class NodeTemplate(FileEntry):
     This is a template node that can be used to contruct nodes of any type.
     It is not intended that other classes in the exporter inherit from this,
     but rather that all the exported nodes use this template directly."""
-    def __init__(self, name, node_type, parent_path):
-        if parent_path.startswith("./"):
-            parent_path = parent_path[2:]
+    def __init__(self, name, node_type, parent_node):
+        # set child, parent relation
+        self.children = []
+        self.parent = parent_node
 
-        super().__init__(
-            "node",
-            collections.OrderedDict((
-                ("name", name),
-                ("type", node_type),
-                ("parent", parent_path)
-            ))
-        )
+        node_name = name.replace('.', '').replace('/', '')
 
+        if parent_node is not None:
+            parent_node.children.append(self)
+
+            super().__init__(
+                "node",
+                collections.OrderedDict((
+                    ("name", node_name),
+                    ("type", node_type),
+                    ("parent", parent_node.get_path())
+                ))
+            )
+        else:
+            # root node
+            super().__init__(
+                "node",
+                collections.OrderedDict((
+                    ("type", node_type),
+                    ("name", node_name)
+                ))
+            )
+
+
+    def get_name(self):
+        """Get the name of the node in Godot scene"""
+        return self.heading['name']
+
+    def get_path(self):
+        """Get the node path in the Godot scene"""
+        # root node
+        if 'parent' not in self.heading:
+            return '.'
+
+        # children of root node
+        if self.heading['parent'] == '.':
+            return self.heading['name']
+
+        return self.heading['parent'] + '/' + self.heading['name']
+
+    def get_type(self):
+        """Get the node type in Godot scene"""
+        return self.heading["type"]
 
 class ExternalResource(FileEntry):
     """External Resouces are references to external files. In the case of

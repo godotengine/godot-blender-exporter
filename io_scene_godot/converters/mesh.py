@@ -9,23 +9,23 @@ from . import physics
 
 
 # ------------------------------- The Mesh -----------------------------------
-def export_mesh_node(escn_file, export_settings, node, parent_path):
+def export_mesh_node(escn_file, export_settings, node, parent_gd_node):
     """Exports a MeshInstance. If the mesh is not already exported, it will
     trigger the export of that mesh"""
     if (node.data is None or
             "MESH" not in export_settings['object_types']):
-        return parent_path
+        return parent_gd_node
 
     # If this mesh object has physics properties, we need to export them first
     # because they need to be higher in the scene-tree
     if physics.has_physics(node):
-        parent_path = physics.export_physics_properties(
-            escn_file, export_settings, node, parent_path
+        parent_gd_node = physics.export_physics_properties(
+            escn_file, export_settings, node, parent_gd_node
         )
 
     if (node.hide_render or
             (physics.has_physics(node) and node.draw_type == "WIRE")):
-        return parent_path
+        return parent_gd_node
 
     else:
         armature = None
@@ -34,7 +34,7 @@ def export_mesh_node(escn_file, export_settings, node, parent_path):
 
         mesh_id = export_mesh(escn_file, export_settings, node, armature)
 
-        mesh_node = NodeTemplate(node.name, "MeshInstance", parent_path)
+        mesh_node = NodeTemplate(node.name, "MeshInstance", parent_gd_node)
         mesh_node['mesh'] = "SubResource({})".format(mesh_id)
         mesh_node['visible'] = not node.hide
         if not physics.has_physics(node) or not physics.is_physics_root(node):
@@ -43,7 +43,7 @@ def export_mesh_node(escn_file, export_settings, node, parent_path):
             mesh_node['transform'] = mathutils.Matrix.Identity(4)
         escn_file.add_node(mesh_node)
 
-        return parent_path + '/' + node.name
+        return mesh_node
 
 
 def export_mesh(escn_file, export_settings, node, armature):
