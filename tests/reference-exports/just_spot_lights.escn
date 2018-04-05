@@ -1,0 +1,179 @@
+[gd_scene load_steps=1 format=2]
+
+[sub_resource id=1 type="ArrayMesh"]
+
+surfaces/0 = {
+	"primitive":4,
+	"arrays":[
+		Vector3Array(-1.0, 1.0, 1.0, -1.0, -1.0, -1.0, -1.0, -1.0, 1.0, -1.0, 1.0, -1.0, 1.0, -1.0, -1.0, -1.0, -1.0, -1.0, 1.0, 1.0, -1.0, 1.0, -1.0, 1.0, 1.0, -1.0, -1.0, 1.0, 1.0, 1.0, -1.0, -1.0, 1.0, 1.0, -1.0, 1.0, 1.0, -1.0, -1.0, -1.0, -1.0, 1.0, -1.0, -1.0, -1.0, -1.0, 1.0, -1.0, 1.0, 1.0, 1.0, 1.0, 1.0, -1.0, -1.0, 1.0, -1.0, 1.0, 1.0, -1.0, 1.0, 1.0, 1.0, -1.0, 1.0, 1.0, 1.0, -1.0, 1.0, -1.0, 1.0, 1.0),
+		Vector3Array(-1.0, 0.0, -0.0, -1.0, 0.0, -0.0, -1.0, 0.0, -0.0, 0.0, 0.0, -1.0, 0.0, 0.0, -1.0, 0.0, 0.0, -1.0, 1.0, 0.0, -0.0, 1.0, 0.0, -0.0, 1.0, 0.0, -0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, -1.0, -0.0, 0.0, -1.0, -0.0, 0.0, -1.0, -0.0, 0.0, 1.0, -0.0, 0.0, 1.0, -0.0, 0.0, 1.0, -0.0, -1.0, 0.0, -0.0, 0.0, 0.0, -1.0, 1.0, 0.0, -0.0, 0.0, 0.0, 1.0, 0.0, -1.0, -0.0, 0.0, 1.0, -0.0),
+		null, ; No Tangents,
+		null, ; no Vertex Colors,
+		null, ; No UV1,
+		null, ; No UV2,
+		null, ; No Bones,
+		null, ; No Weights,
+		IntArray(0, 2, 1, 3, 5, 4, 6, 8, 7, 9, 11, 10, 12, 14, 13, 15, 17, 16, 0, 1, 18, 3, 4, 19, 6, 7, 20, 9, 10, 21, 12, 13, 22, 15, 16, 23)
+	],
+	"morph_arrays":[]
+}
+
+
+[sub_resource id=2 type="ArrayMesh"]
+
+surfaces/0 = {
+	"primitive":4,
+	"arrays":[
+		Vector3Array(-1.0, 1.0, 1.0, -1.0, -1.0, -1.0, -1.0, -1.0, 1.0, -1.0, 1.0, -1.0, 1.0, -1.0, -1.0, -1.0, -1.0, -1.0, 1.0, 1.0, -1.0, 1.0, -1.0, 1.0, 1.0, -1.0, -1.0, 1.0, 1.0, 1.0, -1.0, -1.0, 1.0, 1.0, -1.0, 1.0, 1.0, -1.0, -1.0, -1.0, -1.0, 1.0, -1.0, -1.0, -1.0, -1.0, 1.0, -1.0, 1.0, 1.0, 1.0, 1.0, 1.0, -1.0, -1.0, 1.0, -1.0, 1.0, 1.0, -1.0, 1.0, 1.0, 1.0, -1.0, 1.0, 1.0, 1.0, -1.0, 1.0, -1.0, 1.0, 1.0),
+		Vector3Array(-1.0, 0.0, -0.0, -1.0, 0.0, -0.0, -1.0, 0.0, -0.0, 0.0, 0.0, -1.0, 0.0, 0.0, -1.0, 0.0, 0.0, -1.0, 1.0, 0.0, -0.0, 1.0, 0.0, -0.0, 1.0, 0.0, -0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, -1.0, -0.0, 0.0, -1.0, -0.0, 0.0, -1.0, -0.0, 0.0, 1.0, -0.0, 0.0, 1.0, -0.0, 0.0, 1.0, -0.0, -1.0, 0.0, -0.0, 0.0, 0.0, -1.0, 1.0, 0.0, -0.0, 0.0, 0.0, 1.0, 0.0, -1.0, -0.0, 0.0, 1.0, -0.0),
+		null, ; No Tangents,
+		null, ; no Vertex Colors,
+		null, ; No UV1,
+		null, ; No UV2,
+		null, ; No Bones,
+		null, ; No Weights,
+		IntArray(0, 2, 1, 3, 5, 4, 6, 8, 7, 9, 11, 10, 12, 14, 13, 15, 17, 16, 0, 1, 18, 3, 4, 19, 6, 7, 20, 9, 10, 21, 12, 13, 22, 15, 16, 23)
+	],
+	"morph_arrays":[]
+}
+
+
+[sub_resource id=3 type="ArrayMesh"]
+
+surfaces/0 = {
+	"primitive":4,
+	"arrays":[
+		Vector3Array(1.0, 0.0, 1.0, -1.0, 0.0, -1.0, -1.0, 0.0, 1.0, 1.0, 0.0, -1.0),
+		Vector3Array(0.0, 1.0, -0.0, 0.0, 1.0, -0.0, 0.0, 1.0, -0.0, 0.0, 1.0, -0.0),
+		null, ; No Tangents,
+		null, ; no Vertex Colors,
+		null, ; No UV1,
+		null, ; No UV2,
+		null, ; No Bones,
+		null, ; No Weights,
+		IntArray(0, 2, 1, 0, 1, 3)
+	],
+	"morph_arrays":[]
+}
+
+[node type="Spatial" name="Scene"]
+
+
+[node name="Lamp.007" type="SpotLight" parent="."]
+
+spot_range = 3.0
+spot_angle = 9.99999970909292
+spot_angle_attenuation = 20.0
+shadow_enabled = false
+light_color = Color( 0.0, 1.0, 0.7969905138015747, 1.0 )
+transform = Transform(  1.0, 0.0, -0.0, 0.0, -4.371138828673793e-08, 1.0, -0.0, -1.0, -4.371138828673793e-08, 1.0, 2.0, -3.0 )
+light_negative = false
+light_specular = 1.0
+light_energy = 5.0
+
+[node name="Lamp.006" type="SpotLight" parent="."]
+
+spot_range = 3.0
+spot_angle = 9.99999970909292
+spot_angle_attenuation = 0.19801980198019803
+shadow_enabled = false
+light_color = Color( 0.0, 1.0, 0.7969905138015747, 1.0 )
+transform = Transform(  1.0, 0.0, -0.0, 0.0, -4.371138828673793e-08, 1.0, -0.0, -1.0, -4.371138828673793e-08, 2.0, 2.0, -3.0 )
+light_negative = false
+light_specular = 1.0
+light_energy = 5.0
+
+[node name="Lamp.005" type="SpotLight" parent="."]
+
+spot_range = 3.0
+spot_angle = 9.99999970909292
+spot_angle_attenuation = 0.19801980198019803
+shadow_enabled = false
+light_color = Color( 0.0, 1.0, 0.7969905138015747, 1.0 )
+transform = Transform(  1.0, 0.0, -0.0, 0.0, -4.371138828673793e-08, 1.0, -0.0, -1.0, -4.371138828673793e-08, 2.0, 2.0, -2.0 )
+light_negative = false
+light_specular = 1.0
+light_energy = 1.0
+
+[node name="Lamp.002" type="SpotLight" parent="."]
+
+spot_range = 3.0
+spot_angle = 9.99999970909292
+spot_angle_attenuation = 20.0
+shadow_enabled = false
+light_color = Color( 0.0, 1.0, 0.7969905138015747, 1.0 )
+transform = Transform(  1.0, 0.0, -0.0, 0.0, -4.371138828673793e-08, 1.0, -0.0, -1.0, -4.371138828673793e-08, 1.0, 2.0, -2.0 )
+light_negative = false
+light_specular = 1.0
+light_energy = 1.0
+
+[node name="Lamp.001" type="SpotLight" parent="."]
+
+spot_range = 3.0
+spot_angle = 60.000001669652114
+spot_angle_attenuation = 1.249999953433873
+shadow_enabled = false
+light_color = Color( 0.0, 1.0, 0.7969905138015747, 1.0 )
+transform = Transform(  1.0, 0.0, -0.0, 0.0, 0.9063078165054321, 0.4226182699203491, -0.0, -0.4226182699203491, 0.9063078165054321, 1.0, 1.0, 2.0 )
+light_negative = false
+light_specular = 1.0
+light_energy = 1.0
+
+[node name="Lamp.000" type="SpotLight" parent="."]
+
+spot_range = 5.0
+spot_angle = 9.99999970909292
+spot_angle_attenuation = 1.249999953433873
+shadow_enabled = false
+light_color = Color( 0.009934368543326855, 1.0, 0.0, 1.0 )
+transform = Transform(  1.0, 0.0, -0.0, 0.0, 0.9063078165054321, 0.4226182699203491, -0.0, -0.4226182699203491, 0.9063078165054321, -1.0, 1.0, 2.0 )
+light_negative = false
+light_specular = 1.0
+light_energy = 1.0
+
+[node name="Cube.001" type="MeshInstance" parent="."]
+
+mesh = SubResource(1)
+transform = Transform(  0.30000001192092896, 0.0, -0.0, 0.0, 0.6000000238418579, -0.0, -0.0, -0.0, 0.30000001192092896, -6.0, 0.0, 0.35525739192962646 )
+
+[node name="Cube" type="MeshInstance" parent="."]
+
+mesh = SubResource(2)
+transform = Transform(  0.30000001192092896, 0.0, -0.0, 0.0, 0.6000000238418579, -0.0, -0.0, -0.0, 0.30000001192092896, -4.0, 0.0, 0.35525739192962646 )
+
+[node name="Lamp.004" type="SpotLight" parent="."]
+
+spot_range = 5.0
+spot_angle = 37.49999933598528
+spot_angle_attenuation = 1.249999953433873
+shadow_enabled = true
+light_color = Color( 0.9903545379638672, 0.0, 1.0, 1.0 )
+transform = Transform(  1.0, 0.0, -0.0, 0.0, 0.9063078165054321, 0.4226182699203491, -0.0, -0.4226182699203491, 0.9063078165054321, -4.0, 1.0, 2.0 )
+light_negative = false
+light_specular = 1.0
+light_energy = 1.0
+
+[node name="Lamp.003" type="SpotLight" parent="."]
+
+spot_range = 5.0
+spot_angle = 37.49999933598528
+spot_angle_attenuation = 1.249999953433873
+shadow_enabled = false
+light_color = Color( 0.0, 0.3401070833206177, 1.0, 1.0 )
+transform = Transform(  1.0, 0.0, -0.0, 0.0, 0.9063078165054321, 0.4226182699203491, -0.0, -0.4226182699203491, 0.9063078165054321, -6.0, 1.0, 2.0 )
+light_negative = false
+light_specular = 1.0
+light_energy = 1.0
+
+[node name="Plane" type="MeshInstance" parent="."]
+
+mesh = SubResource(3)
+transform = Transform(  10.0, 0.0, -0.0, 0.0, 10.0, -0.0, -0.0, -0.0, 10.0, 0.0, 0.0, -0.0 )
+
+[node name="Camera" type="Camera" parent="."]
+
+far = 100.0
+near = 0.10000000149011612
+projection = 0
+fov = 49.13434207760448
+transform = Transform(  0.6859206557273865, -0.32401350140571594, 0.6515582203865051, 0.0, 0.8953956365585327, 0.44527143239974976, -0.7276763319969177, -0.3054208755493164, 0.6141703724861145, 7.481131553649902, 5.34366512298584, 6.5076398849487305 )

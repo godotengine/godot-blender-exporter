@@ -1,0 +1,8 @@
+*.pyc
+__pycache__
+
+*.blend[0-9]
+tests/exports/*.escn
+
+.import 
+*.import
