@@ -73,7 +73,8 @@ class GodotExporter:
             exporter = converters.BLENDER_TYPE_TO_EXPORTER["EMPTY"]
 
         # Perform the export
-        parent_gd_node = exporter(self.escn_file, self.config, node, parent_gd_node)
+        parent_gd_node = exporter(self.escn_file, self.config, node,
+                                  parent_gd_node)
 
         for child in node.children:
             self.export_node(child, parent_gd_node)
@@ -102,7 +103,11 @@ class GodotExporter:
     def export_scene(self):
         """Decide what objects to export, and export them!"""
         # Scene root
-        root_gd_node = structures.NodeTemplate(self.scene.name, "Spatial", None)
+        root_gd_node = structures.NodeTemplate(
+            self.scene.name,
+            "Spatial",
+            None
+        )
         self.escn_file.add_node(root_gd_node)
         logging.info("Exporting scene: %s", self.scene.name)
 

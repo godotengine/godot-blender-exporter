@@ -4,7 +4,6 @@ object is exported. In blender, the object owns the physics. In Godot, the
 physics owns the object.
 """
 
-import os
 import math
 import logging
 import bpy
@@ -69,7 +68,8 @@ def export_collision_shape(escn_file, export_settings, node, parent_gd_node,
         col_node['transform'] = mathutils.Matrix.Identity(4) * AXIS_CORRECT
     else:
         parent_to_world = parent_override.matrix_world.inverted()
-        col_node['transform'] = parent_to_world * node.matrix_world * AXIS_CORRECT
+        col_node['transform'] = (
+            parent_to_world * node.matrix_world * AXIS_CORRECT)
 
     rbd = node.rigid_body
 
@@ -112,6 +112,7 @@ def export_collision_shape(escn_file, export_settings, node, parent_gd_node,
 
 
 def generate_convex_mesh_array(escn_file, export_settings, node):
+    """Generates godots ConvexPolygonShape from an object"""
     mesh = node.data
     key = (mesh, "ConvexCollisionMesh")
     resource_id = escn_file.get_internal_resource(key)
@@ -128,7 +129,7 @@ def generate_convex_mesh_array(escn_file, export_settings, node):
     triangulated_mesh = bmesh.new()
     triangulated_mesh.from_mesh(mesh)
     # For some reason, generateing the convex hull here causes Godot to crash
-    #bmesh.ops.convex_hull(triangulated_mesh, input=triangulated_mesh.verts)
+    # bmesh.ops.convex_hull(triangulated_mesh, input=triangulated_mesh.verts)
     bmesh.ops.triangulate(triangulated_mesh, faces=triangulated_mesh.faces)
     triangulated_mesh.to_mesh(mesh)
     triangulated_mesh.free()
@@ -178,7 +179,8 @@ def generate_triangle_mesh_array(escn_file, export_settings, node):
     return escn_file.add_internal_resource(col_shape, key)
 
 
-def export_physics_controller(escn_file, export_settings, node, parent_gd_node):
+def export_physics_controller(escn_file, export_settings, node,
+                              parent_gd_node):
     """Exports the physics body "type" as a separate node. In blender, the
     physics body type and the collision shape are one object, in godot they
     are two. This is the physics body type"""
@@ -218,7 +220,8 @@ def export_physics_controller(escn_file, export_settings, node, parent_gd_node):
     return phys_obj
 
 
-def export_physics_properties(escn_file, export_settings, node, parent_gd_node):
+def export_physics_properties(escn_file, export_settings, node,
+                              parent_gd_node):
     """Creates the necessary nodes for the physics"""
     parent_rbd = get_physics_root(node)
 

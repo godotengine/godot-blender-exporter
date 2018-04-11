@@ -175,7 +175,6 @@ class NodeTemplate(FileEntry):
                 ))
             )
 
-
     def get_name(self):
         """Get the name of the node in Godot scene"""
         return self.heading['name']
@@ -195,6 +194,7 @@ class NodeTemplate(FileEntry):
     def get_type(self):
         """Get the node type in Godot scene"""
         return self.heading["type"]
+
 
 class ExternalResource(FileEntry):
     """External Resouces are references to external files. In the case of

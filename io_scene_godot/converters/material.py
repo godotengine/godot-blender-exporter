@@ -71,9 +71,9 @@ def _find_material_in_subtree(folder, material):
     candidates = []
 
     material_file_name = material.name + '.tres'
-    for folder, _subdirs, files in os.walk(folder):
+    for dir_path, _subdirs, files in os.walk(folder):
         if material_file_name in files:
-            candidates.append(os.path.join(folder, material_file_name))
+            candidates.append(os.path.join(dir_path, material_file_name))
 
     # Checks it is a material and finds out what type
     valid_candidates = []

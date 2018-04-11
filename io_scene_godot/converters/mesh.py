@@ -91,7 +91,7 @@ def make_arrays(escn_file, export_settings, node, armature):
     if uv_layer_count > 2:
         uv_layer_count = 2
 
-    if len(mesh.uv_textures):
+    if mesh.uv_textures:
         has_tangents = True
         mesh.calc_tangents()
     else:

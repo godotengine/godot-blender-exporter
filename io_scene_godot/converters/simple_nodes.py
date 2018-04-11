@@ -81,7 +81,8 @@ def export_lamp_node(escn_file, export_settings, node, parent_gd_node):
             )
 
     elif light.type == "SUN":
-        light_node = NodeTemplate(node.name, "DirectionalLight", parent_gd_node)
+        light_node = NodeTemplate(node.name, "DirectionalLight",
+                                  parent_gd_node)
         light_node['shadow_enabled'] = light.shadow_method != "NOSHADOW"
     else:
         light_node = None
