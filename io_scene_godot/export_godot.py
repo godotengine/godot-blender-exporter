@@ -52,7 +52,7 @@ def find_godot_project_dir(export_path):
 class GodotExporter:
     """Handles picking what nodes to export and kicks off the export process"""
 
-    def export_node(self, node, parent_path):
+    def export_node(self, node, parent_gd_node):
         """Recursively export a node. It calls the export_node function on
         all of the nodes children. If you have heirarchies more than 1000 nodes
         deep, this will fail with a recursion error"""
@@ -73,10 +73,11 @@ class GodotExporter:
             exporter = converters.BLENDER_TYPE_TO_EXPORTER["EMPTY"]
 
         # Perform the export
-        parent_path = exporter(self.escn_file, self.config, node, parent_path)
+        parent_gd_node = exporter(self.escn_file, self.config, node,
+                                  parent_gd_node)
 
         for child in node.children:
-            self.export_node(child, parent_path)
+            self.export_node(child, parent_gd_node)
 
         bpy.context.scene.objects.active = prev_node
 
@@ -102,12 +103,12 @@ class GodotExporter:
     def export_scene(self):
         """Decide what objects to export, and export them!"""
         # Scene root
-        self.escn_file.add_node(structures.FileEntry(
-            "node", collections.OrderedDict((
-                ("type", "Spatial"),
-                ("name", self.scene.name)
-            ))
-        ))
+        root_gd_node = structures.NodeTemplate(
+            self.scene.name,
+            "Spatial",
+            None
+        )
+        self.escn_file.add_node(root_gd_node)
         logging.info("Exporting scene: %s", self.scene.name)
 
         # Decide what objects to export
@@ -126,7 +127,7 @@ class GodotExporter:
 
         for obj in self.scene.objects:
             if obj in self.valid_nodes and obj.parent is None:
-                self.export_node(obj, ".")
+                self.export_node(obj, root_gd_node)
 
     def export(self):
         """Begin the export"""
