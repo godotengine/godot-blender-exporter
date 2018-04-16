@@ -7,12 +7,13 @@ export process to [Godot Engine](https://godotengine.org) as straightforward as 
 
 ## Installation
 
-1. Copy the `io_scene_godot` directory the location where Blender stores the
-   scripts/addons folder on your system (you should see other io_scene_*
-   folders there from other addons). Copy the entire dir and not just its
-   contents.
-2. Go to the Blender settings and enable the "Godot Exporter" plugin.
-3. Enjoy hassle-free export.
+1. Run `python build.py` in project directory. `io_scene_godot.zip` file will be created.
+2. Launch Blender and open `File > User Preferences`.
+    - (**Ctrl+Atl+U**) under Linux
+    - (**Cmd+,**) under OSX
+3. Click on `Install from File...` and upload the above zip file.
+4. Search for "*godot*" in Add-ons section and enable the plugin called "*Godot Engine Exporter* ".
+5. Enjoy hassle-free export.
 
 If you find bugs or want to suggest improvements, please open an issue on the
 upstream [GitHub repository](https://github.com/godotengine/blender-exporter).
