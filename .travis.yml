@@ -8,11 +8,12 @@ cache:
 
 before_install:
     - sudo apt-get update
-    - sudo apt-get install --no-install-recommends -y libsdl1.2debian
+    - sudo apt-get install --no-install-recommends -y libsdl1.2debian pep8 python3-pip
+    - sudo pip3 install pylint
 
 install:
     - tests/install_blender.sh
     - source .envs
 
 script:
-    - make all BLENDER=$BLENDER_BIN
+    - make all BLENDER=$BLENDER_BIN PYLINT=pylint
