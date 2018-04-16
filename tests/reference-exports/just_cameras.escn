@@ -4,7 +4,7 @@
 [node type="Spatial" name="Scene"]
 
 
-[node name="Camera.004" type="Camera" parent="."]
+[node name="Camera004" type="Camera" parent="."]
 
 far = 10.0
 near = 5.0
@@ -12,7 +12,7 @@ projection = 0
 fov = 90.00000250447816
 transform = Transform(  1.0, 0.0, -0.0, 0.0, 1.0, -0.0, -0.0, -0.0, 1.0, 5.0, 0.0, -0.0 )
 
-[node name="Camera.003" type="Camera" parent="."]
+[node name="Camera003" type="Camera" parent="."]
 
 far = 100.0
 near = 0.10000000149011612
@@ -20,7 +20,7 @@ projection = 1
 size = 6.0
 transform = Transform(  1.0, 0.0, -0.0, 0.0, 1.0, -0.0, -0.0, -0.0, 1.0, 1.0, 0.0, -0.0 )
 
-[node name="Camera.002" type="Camera" parent="."]
+[node name="Camera002" type="Camera" parent="."]
 
 far = 100.0
 near = 0.10000000149011612
@@ -28,7 +28,7 @@ projection = 1
 size = 2.0
 transform = Transform(  1.0, 0.0, -0.0, 0.0, 1.0, -0.0, -0.0, -0.0, 1.0, -2.0, 0.0, -0.0 )
 
-[node name="Camera.001" type="Camera" parent="."]
+[node name="Camera001" type="Camera" parent="."]
 
 far = 100.0
 near = 0.10000000149011612

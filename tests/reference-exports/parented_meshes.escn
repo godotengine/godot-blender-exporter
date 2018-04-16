@@ -21,37 +21,44 @@ surfaces/0 = {
 [node type="Spatial" name="Scene"]
 
 
-[node name="Suzanne.006" type="MeshInstance" parent="."]
+[node name="Suzanne006" type="MeshInstance" parent="."]
 
 mesh = SubResource(1)
+visible = true
 transform = Transform(  1.0, 0.0, -0.0, 0.0, 1.0, -0.0, -0.0, -0.0, 1.0, 0.0, 0.0, -0.0 )
 
-[node name="Suzanne.001" type="MeshInstance" parent="."]
+[node name="Suzanne001" type="MeshInstance" parent="."]
 
 mesh = SubResource(1)
+visible = true
 transform = Transform(  1.0, 0.0, -0.0, 0.0, 1.0, -0.0, -0.0, -0.0, 1.0, -4.0, 0.0, -0.0 )
 
-[node name="Suzanne.002" type="MeshInstance" parent="Suzanne.001"]
+[node name="Suzanne002" type="MeshInstance" parent="Suzanne001"]
 
 mesh = SubResource(1)
+visible = true
 transform = Transform(  1.0, 0.0, -0.0, 0.0, 1.0, -0.0, -0.0, -0.0, 1.0, 0.0, 3.0, -0.0 )
 
-[node name="Suzanne.003" type="MeshInstance" parent="Suzanne.001/Suzanne.002"]
+[node name="Suzanne003" type="MeshInstance" parent="Suzanne001/Suzanne002"]
 
 mesh = SubResource(1)
+visible = true
 transform = Transform(  -4.371138828673793e-08, 0.0, 1.0, 0.0, 1.0, -0.0, -1.0, -0.0, -4.371138828673793e-08, -3.0, 0.0, -0.0 )
 
-[node name="Suzanne.004" type="MeshInstance" parent="Suzanne.001/Suzanne.002/Suzanne.003"]
+[node name="Suzanne004" type="MeshInstance" parent="Suzanne001/Suzanne002/Suzanne003"]
 
 mesh = SubResource(1)
+visible = true
 transform = Transform(  1.0, 1.1920928955078125e-07, 4.371137762859689e-08, -4.3711395392165286e-08, 1.351025389340066e-07, 1.0, 1.1920928955078125e-07, -1.0, 7.549790126404332e-08, 4.3711395392165286e-08, -1.9999995231628418, -1.0000004768371582 )
 
 [node name="Suzanne" type="MeshInstance" parent="."]
 
 mesh = SubResource(1)
+visible = true
 transform = Transform(  1.0, 0.0, -0.0, 0.0, 0.6427876353263855, -0.7660443782806396, -0.0, 0.7660443782806396, 0.6427876353263855, 4.0, 0.0, -0.0 )
 
-[node name="Suzanne.005" type="MeshInstance" parent="Suzanne"]
+[node name="Suzanne005" type="MeshInstance" parent="Suzanne"]
 
 mesh = SubResource(1)
+visible = true
 transform = Transform(  1.0, 0.0, -0.0, 0.0, 1.0, -2.9802322387695312e-08, -0.0, -0.0, 1.0, 0.0, 3.0, 1.1920928955078125e-07 )

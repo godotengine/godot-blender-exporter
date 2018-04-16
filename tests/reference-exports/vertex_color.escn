@@ -24,4 +24,5 @@ surfaces/0 = {
 [node name="Plane" type="MeshInstance" parent="."]
 
 mesh = SubResource(1)
+visible = true
 transform = Transform(  1.0, 0.0, -0.0, 0.0, 1.0, -0.0, -0.0, -0.0, 1.0, 0.0, 0.0, -0.0 )

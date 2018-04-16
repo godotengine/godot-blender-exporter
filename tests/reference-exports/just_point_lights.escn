@@ -59,7 +59,7 @@ surfaces/0 = {
 [node type="Spatial" name="Scene"]
 
 
-[node name="Lamp.003" type="OmniLight" parent="."]
+[node name="Lamp003" type="OmniLight" parent="."]
 
 omni_range = 5.0
 shadow_enabled = true
@@ -69,17 +69,19 @@ light_negative = false
 light_specular = 1.0
 light_energy = 1.0
 
-[node name="Cube.001" type="MeshInstance" parent="."]
+[node name="Cube001" type="MeshInstance" parent="."]
 
 mesh = SubResource(1)
+visible = true
 transform = Transform(  0.30000001192092896, 0.0, -0.0, 0.0, 0.6000000238418579, -0.0, -0.0, -0.0, 0.30000001192092896, 0.0, 0.0, 0.35525739192962646 )
 
 [node name="Cube" type="MeshInstance" parent="."]
 
 mesh = SubResource(2)
+visible = true
 transform = Transform(  0.30000001192092896, 0.0, -0.0, 0.0, 0.6000000238418579, -0.0, -0.0, -0.0, 0.30000001192092896, -2.0, 0.0, 0.35525739192962646 )
 
-[node name="Lamp.002" type="OmniLight" parent="."]
+[node name="Lamp002" type="OmniLight" parent="."]
 
 omni_range = 5.0
 shadow_enabled = false
@@ -89,7 +91,7 @@ light_negative = false
 light_specular = 1.0
 light_energy = 1.0
 
-[node name="Lamp.001" type="OmniLight" parent="."]
+[node name="Lamp001" type="OmniLight" parent="."]
 
 omni_range = 2.0
 shadow_enabled = false
@@ -102,6 +104,7 @@ light_energy = 1.0
 [node name="Plane" type="MeshInstance" parent="."]
 
 mesh = SubResource(3)
+visible = true
 transform = Transform(  10.0, 0.0, -0.0, 0.0, 10.0, -0.0, -0.0, -0.0, 10.0, 0.0, 0.0, -0.0 )
 
 [node name="Lamp" type="OmniLight" parent="."]

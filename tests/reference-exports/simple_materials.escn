@@ -60,6 +60,7 @@ surfaces/1 = {
 [node name="Cube" type="MeshInstance" parent="."]
 
 mesh = SubResource(3)
+visible = true
 transform = Transform(  1.0, 0.0, -0.0, 0.0, 1.0, -0.0, -0.0, -0.0, 1.0, 0.0, 0.0, -0.0 )
 
 [node name="Lamp" type="OmniLight" parent="."]

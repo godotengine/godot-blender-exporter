@@ -59,17 +59,20 @@ surfaces/0 = {
 [node type="Spatial" name="Scene"]
 
 
-[node name="Cylinder.002" type="MeshInstance" parent="."]
+[node name="Cylinder002" type="MeshInstance" parent="."]
 
 mesh = SubResource(1)
+visible = true
 transform = Transform(  1.0, 0.0, -0.0, 0.0, 1.0, -0.0, -0.0, -0.0, 1.0, 2.0, 0.0, -0.0 )
 
-[node name="Cylinder.001" type="MeshInstance" parent="."]
+[node name="Cylinder001" type="MeshInstance" parent="."]
 
 mesh = SubResource(2)
+visible = true
 transform = Transform(  1.0, 0.0, -0.0, 0.0, 1.0, -0.0, -0.0, -0.0, 1.0, 0.0, 0.0, -0.0 )
 
 [node name="Cylinder" type="MeshInstance" parent="."]
 
 mesh = SubResource(3)
+visible = true
 transform = Transform(  1.0, 0.0, -0.0, 0.0, 1.0, -0.0, -0.0, -0.0, 1.0, -2.0, 0.0, -0.0 )

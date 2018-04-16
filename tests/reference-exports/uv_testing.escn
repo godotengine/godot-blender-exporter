@@ -78,22 +78,26 @@ surfaces/0 = {
 [node type="Spatial" name="Scene"]
 
 
-[node name="Cube.001" type="MeshInstance" parent="."]
+[node name="Cube001" type="MeshInstance" parent="."]
 
 mesh = SubResource(1)
+visible = true
 transform = Transform(  1.0, 0.0, -0.0, 0.0, 1.0, -0.0, -0.0, -0.0, 1.0, 4.0, 0.0, 4.0 )
 
 [node name="MultiUV" type="MeshInstance" parent="."]
 
 mesh = SubResource(2)
+visible = true
 transform = Transform(  1.0, 0.0, -0.0, 0.0, 1.0, -0.0, -0.0, -0.0, 1.0, 0.0, 0.0, 4.0 )
 
 [node name="Cube" type="MeshInstance" parent="."]
 
 mesh = SubResource(3)
+visible = true
 transform = Transform(  1.0, 0.0, -0.0, 0.0, 1.0, -0.0, -0.0, -0.0, 1.0, 4.0, 0.0, -0.0 )
 
 [node name="Plane" type="MeshInstance" parent="."]
 
 mesh = SubResource(4)
+visible = true
 transform = Transform(  1.0, 0.0, -0.0, 0.0, 1.0, -0.0, -0.0, -0.0, 1.0, 0.0, 0.0, -0.0 )
