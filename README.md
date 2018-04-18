@@ -27,8 +27,9 @@ This repository includes a Makefile to assist with development. Running
    the `tests/scenes` directory that uses this feature.
 2. Runs `diff` on the output files conpared to the reference exports. This acts
    as a regression test.
-3. Tuns a style check using pep8 and pylint. Your code must pass the style 
-   checks to be elegible to merge.
+3. Runs [pycodestyle](http://pycodestyle.pycqa.org/en/latest/) and
+   [pylint](https://www.pylint.org/) style tests. Your code must pass these to
+   be elegible to merge.
 
 
 Due to differences in blender versions creating minor differences in the 
