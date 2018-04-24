@@ -18,10 +18,12 @@ are stored in individual files.
 from .simple_nodes import *  # pylint: disable=wildcard-import
 from .mesh import export_mesh_node
 from .physics import export_physics_properties
+from .armature import export_armature_node
 
 
 BLENDER_TYPE_TO_EXPORTER = {
     "MESH": export_mesh_node,
+    "ARMATURE": export_armature_node,
     "CAMERA": export_camera_node,
     "LAMP": export_lamp_node,
     "EMPTY": export_empty_node

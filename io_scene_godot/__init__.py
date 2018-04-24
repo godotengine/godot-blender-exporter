@@ -57,7 +57,7 @@ class ExportGodot(bpy.types.Operator, ExportHelper):
             ("EMPTY", "Empty", ""),
             ("CAMERA", "Camera", ""),
             ("LAMP", "Lamp", ""),
-            # ("ARMATURE", "Armature", ""),
+            ("ARMATURE", "Armature", ""),
             ("MESH", "Mesh", ""),
             # ("CURVE", "Curve", ""),
         ),
@@ -65,7 +65,7 @@ class ExportGodot(bpy.types.Operator, ExportHelper):
             "EMPTY",
             "CAMERA",
             "LAMP",
-            # "ARMATURE",
+            "ARMATURE",
             "MESH",
             # "CURVE"
         },

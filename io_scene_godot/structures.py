@@ -263,3 +263,18 @@ class Array(list):
             self.seperator.join([str(v) for v in self]),
             self.suffix
         )
+
+
+class NodePath:
+    """Nodes in scene refers to other nodes or nodes' attribute,
+    for example MeshInstane refers Skeleton. """
+    def __init__(self, referee_path, referrer_path, referrer_attr=''):
+        self.ref_path = os.path.relpath(referee_path, referrer_path)
+        self.attr_name = referrer_attr
+
+    def to_string(self):
+        """Serialize a node path"""
+        return 'NodePath("{}:{}")'.format(
+            self.ref_path,
+            self.attr_name
+        )

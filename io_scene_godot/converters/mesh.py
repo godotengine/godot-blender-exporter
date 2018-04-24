@@ -4,8 +4,11 @@ import bmesh
 import mathutils
 
 from .material import export_material
-from ..structures import Array, NodeTemplate, InternalResource
+from ..structures import Array, NodeTemplate, InternalResource, NodePath
 from . import physics
+from . import armature
+
+MAX_BONE_PER_VERTEX = 4
 
 
 # ------------------------------- The Mesh -----------------------------------
@@ -28,15 +31,31 @@ def export_mesh_node(escn_file, export_settings, node, parent_gd_node):
         return parent_gd_node
 
     else:
-        armature = None
-        if node.parent is not None and node.parent.type == "ARMATURE":
-            armature = node.parent
+        armature_data = armature.get_armature_data(node)
 
-        mesh_id = export_mesh(escn_file, export_settings, node, armature)
+        skeleton_node = None
+        if ("ARMATURE" in export_settings['object_types'] and
+                armature_data is not None):
+            # trace up the godot scene tree to find the binded skeleton node
+            gd_node_ptr = parent_gd_node
+            while (gd_node_ptr is not None and
+                   gd_node_ptr.get_type() != "Skeleton"):
+                gd_node_ptr = gd_node_ptr.get_parent()
+            skeleton_node = gd_node_ptr
+
+        mesh_id = export_mesh(
+            escn_file,
+            export_settings,
+            node,
+            armature_data
+        )
 
         mesh_node = NodeTemplate(node.name, "MeshInstance", parent_gd_node)
         mesh_node['mesh'] = "SubResource({})".format(mesh_id)
         mesh_node['visible'] = not node.hide
+        if skeleton_node is not None:
+            mesh_node['skeleton'] = NodePath(
+                skeleton_node.get_path(), mesh_node.get_path())
         if not physics.has_physics(node) or not physics.is_physics_root(node):
             mesh_node['transform'] = node.matrix_local
         else:
@@ -46,7 +65,7 @@ def export_mesh_node(escn_file, export_settings, node, parent_gd_node):
         return mesh_node
 
 
-def export_mesh(escn_file, export_settings, node, armature):
+def export_mesh(escn_file, export_settings, node, armature_data):
     """Saves a mesh into the escn file """
     # Check if it exists so we don't bother to export it twice
     mesh = node.data
@@ -61,7 +80,7 @@ def export_mesh(escn_file, export_settings, node, armature):
         escn_file,
         export_settings,
         node,
-        armature)
+        armature_data)
 
     for surface in surfaces:
         mesh_resource[surface.name_str] = surface
@@ -72,11 +91,20 @@ def export_mesh(escn_file, export_settings, node, armature):
     return mesh_id
 
 
-def make_arrays(escn_file, export_settings, node, armature):
+def make_arrays(escn_file, export_settings, node, armature_data):
     """Generates arrays of positions, normals etc"""
+    if armature_data is not None:
+        original_pose_position = armature_data.pose_position
+        armature_data.pose_position = 'REST'
+        bpy.context.scene.update()
+
     mesh = node.to_mesh(bpy.context.scene,
                         export_settings['use_mesh_modifiers'],
                         "RENDER")
+
+    if armature_data is not None:
+        armature_data.pose_position = original_pose_position
+        bpy.context.scene.update()
 
     # Prepare the mesh for export
     tri_mesh = bmesh.new()
@@ -106,9 +134,11 @@ def make_arrays(escn_file, export_settings, node, armature):
         has_tangents
     )
 
+    has_bone = True if armature_data is not None else False
+
     for surface_id, surface in enumerate(surfaces):
         surface.id = surface_id
-        surface.armature = armature
+        surface.has_bone = has_bone
 
     bpy.data.meshes.remove(mesh)
 
@@ -166,6 +196,10 @@ def generate_surfaces(escn_file, export_settings, mesh, has_tangents):
                 new_vert.tangent = fix_vertex(loop.tangent)
                 new_vert.bitangent = fix_vertex(loop.bitangent)
 
+            for vertex_group in mesh.vertices[loop.vertex_index].groups:
+                new_vert.bones.append(vertex_group.group)
+                new_vert.weights.append(vertex_group.weight)
+
             # Merge similar vertices
             tup = new_vert.get_tup()
             if tup not in surface.vertex_map:
@@ -189,7 +223,7 @@ class Surface:
         self.indices = []
         self.id = None
         self.material = None
-        self.armature = None
+        self.has_bone = False
 
     def calc_tangent_dp(self, vert):
         """Calculates the dot product of the tangent. I think this has
@@ -279,37 +313,36 @@ class Surface:
 
     def _get_bone_arrays(self):
         """Returns the most influential bones and their weights"""
-        if self.armature is None:
+        if not self.has_bone:
             return [
                 Array("null, ; No Bones", "", ""),
                 Array("null, ; No Weights", "", "")
             ]
 
-        # Skin Weights!
-        float_values = Array("FloatArray(")
-        float_valuesw = Array("FloatArray(")
+        # Skin Weights
+        bone_idx_array = Array("IntArray(")
+        bone_ws_array = Array("FloatArray(")
         for vert in self.vertices:
-            # skin_weights_total += len(v.weights)
             weights = []
-            for i in len(vert.bones):
-                weights += (vert.bones[i], vert.weights[i])
+            for i in range(len(vert.bones)):
+                weights.append((vert.bones[i], vert.weights[i]))
 
-            weights = sorted(weights, key=lambda x: -x[1])
+            weights = sorted(weights, key=lambda x: x[1], reverse=True)
             totalw = 0.0
             for weight in weights:
                 totalw += weight[1]
             if totalw == 0.0:
                 totalw = 0.000000001
 
-            for i in range(4):
+            for i in range(MAX_BONE_PER_VERTEX):
                 if i < len(weights):
-                    float_values.append(weights[i][0])
-                    float_valuesw.append(weights[i][1]/totalw)
+                    bone_idx_array.append(weights[i][0])
+                    bone_ws_array.append(weights[i][1]/totalw)
                 else:
-                    float_values.append(0)
-                    float_valuesw.append(0.0)
+                    bone_idx_array.append(0)
+                    bone_ws_array.append(0.0)
 
-        return float_values, float_valuesw
+        return bone_idx_array, bone_ws_array
 
     @property
     def name_str(self):
