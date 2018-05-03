@@ -81,6 +81,20 @@ class ExportGodot(bpy.types.Operator, ExportHelper):
                     "layers if that applies).",
         default=False,
         )
+    use_export_animation = BoolProperty(
+        name="Export Animation",
+        description="Export all the animation actions (include those "
+                    "in nla_tracks), notice if an animated object has "
+                    "an ancestor also has animated, its animation would "
+                    "go into the ancetor's AnimationPlayer",
+        default=True,
+        )
+    use_seperate_animation_player = BoolProperty(
+        name="Seperate AnimationPlayer For Each Object",
+        description="Create a seperate AnimationPlayer node for every"
+                    "blender object which has animtion data",
+        default=False,
+    )
     use_mesh_modifiers = BoolProperty(
         name="Apply Modifiers",
         description="Apply modifiers to mesh objects (on a copy!).",

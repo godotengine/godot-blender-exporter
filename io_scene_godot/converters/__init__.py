@@ -19,6 +19,7 @@ from .simple_nodes import *  # pylint: disable=wildcard-import
 from .mesh import export_mesh_node
 from .physics import export_physics_properties
 from .armature import export_armature_node, export_bone_attachment
+from .animation import export_animation_data
 
 
 BLENDER_TYPE_TO_EXPORTER = {
@@ -30,3 +31,5 @@ BLENDER_TYPE_TO_EXPORTER = {
 }
 
 BONE_ATTACHMENT_EXPORTER = export_bone_attachment
+
+ANIMATION_DATA_EXPORTER = export_animation_data
