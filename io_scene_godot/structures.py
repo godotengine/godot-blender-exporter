@@ -152,9 +152,18 @@ class NodeTemplate(FileEntry):
         self.children = []
         self.parent = parent_node
 
+        # filter out special character
         node_name = name.replace('.', '').replace('/', '')
 
         if parent_node is not None:
+            # solve duplication
+            counter = 1
+            child_name_set = set([c.get_name() for c in self.parent.children])
+            node_name_base = node_name
+            while node_name in child_name_set:
+                node_name = node_name_base + str(counter).zfill(3)
+                counter += 1
+
             parent_node.children.append(self)
 
             super().__init__(
