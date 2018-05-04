@@ -1,7 +1,7 @@
 import bpy
 import os
 import sys
-
+import traceback
 
 sys.path = [os.getcwd()] + sys.path  # Ensure exporter from this folder
 from io_scene_godot import export_godot
@@ -42,5 +42,16 @@ def main():
             print("Exported")
 
 
+def run_with_abort(function):
+    """Runs a function such that an abort causes blender to quit with an error
+    code. Otherwise, even a failed script will allow the Makefile to continue
+    running"""
+    try:
+        function()
+    except:
+        traceback.print_exc()
+        exit(1)
+
+
 if __name__ == "__main__":
-    main()
+    run_with_abort(main)
