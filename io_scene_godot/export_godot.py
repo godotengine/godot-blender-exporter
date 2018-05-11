@@ -73,11 +73,11 @@ class GodotExporter:
             exporter = converters.BLENDER_TYPE_TO_EXPORTER["EMPTY"]
 
         # Perform the export
-        parent_gd_node = exporter(self.escn_file, self.config, node,
-                                  parent_gd_node)
+        exported_node = exporter(self.escn_file, self.config, node,
+                                 parent_gd_node)
 
         for child in node.children:
-            self.export_node(child, parent_gd_node)
+            self.export_node(child, exported_node)
 
         bpy.context.scene.objects.active = prev_node
 
