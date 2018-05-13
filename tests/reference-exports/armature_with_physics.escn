@@ -50,31 +50,37 @@ bones/0/parent = -1
 bones/0/rest = Transform(1.0, 0.0, 0.0, 0.0, 0.0, -1.0, 0.0, 1.0, 0.0, 0.0, -0.1, 0.0)
 bones/0/pose = Transform(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0)
 bones/0/enabled = true
+bones/0/bound_children = []
 bones/1/name = "Bone.001"
 bones/1/parent = 0
 bones/1/rest = Transform(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, -1.3)
 bones/1/pose = Transform(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0)
 bones/1/enabled = true
+bones/1/bound_children = []
 bones/2/name = "Bone.002"
 bones/2/parent = 0
 bones/2/rest = Transform(0.0, 0.0, 1.0, -1.0, -4.37114e-08, 0.0, 4.37114e-08, -1.0, 0.0, 0.0, 0.0, -1.3)
 bones/2/pose = Transform(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0)
 bones/2/enabled = true
+bones/2/bound_children = []
 bones/3/name = "Bone.003"
 bones/3/parent = 0
 bones/3/rest = Transform(0.0, 0.0, -1.0, 1.0, -4.37114e-08, 0.0, -4.37114e-08, -1.0, 0.0, 0.0, 0.0, -1.3)
 bones/3/pose = Transform(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0)
 bones/3/enabled = true
+bones/3/bound_children = []
 bones/4/name = "Bone.004"
 bones/4/parent = 0
 bones/4/rest = Transform(-8.9407e-08, -0.393919, 0.919145, -1.0, 7.54979e-08, 0.0, -2.98023e-08, -0.919145, -0.393919, 0.0, 0.0, 0.0)
 bones/4/pose = Transform(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0)
 bones/4/enabled = true
+bones/4/bound_children = []
 bones/5/name = "Bone.005"
 bones/5/parent = 0
 bones/5/rest = Transform(-8.9407e-08, 0.393919, -0.919145, 1.0, 7.54979e-08, 0.0, 2.98023e-08, -0.919145, -0.393919, 0.0, 0.0, 0.0)
 bones/5/pose = Transform(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0)
 bones/5/enabled = true
+bones/5/bound_children = []
 
 [node name="Mesh" type="MeshInstance" parent="PhysicsPhysics/Rig"]
 

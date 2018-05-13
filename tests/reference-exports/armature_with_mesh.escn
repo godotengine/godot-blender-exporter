@@ -29,11 +29,13 @@ bones/0/parent = -1
 bones/0/rest = Transform(1.0, 0.0, 0.0, 0.0, 0.0, -1.0, 0.0, 1.0, 0.0, 0.038694, 0.252999, 0.0877165)
 bones/0/pose = Transform(1.0, 0.0, 0.0, 0.0, 0.999905, 0.0137515, 0.0, -0.0137515, 0.999905, 0.0, 0.0, 0.0)
 bones/0/enabled = true
+bones/0/bound_children = []
 bones/1/name = "Bone.002"
 bones/1/parent = 0
 bones/1/rest = Transform(0.0349042, 0.99939, 0.000512928, -0.721447, 0.0248417, 0.692024, 0.691589, -0.0245245, 0.721874, 0.0, 0.0, -1.22688)
 bones/1/pose = Transform(0.998669, -0.00219534, 0.0515305, 0.00228814, 0.999996, -0.0017419, -0.0515265, 0.00185749, 0.99867, 0.0, 0.0, 0.0)
 bones/1/enabled = true
+bones/1/bound_children = []
 
 [node name="Suzanne" type="MeshInstance" parent="Armature001"]
 
