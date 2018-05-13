@@ -87,6 +87,11 @@ class ExportGodot(bpy.types.Operator, ExportHelper):
         description="Export only objects on the active layers.",
         default=True,
         )
+    export_parent_bone_constraint = BoolProperty(
+        name="Parent Bone",
+        description="Export parent relation to armature bones",
+        default=True,
+        )
     material_search_paths = EnumProperty(
         name="Material Search Paths",
         description="Search for existing godot materials with names that match"

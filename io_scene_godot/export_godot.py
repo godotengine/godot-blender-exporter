@@ -72,6 +72,14 @@ class GodotExporter:
             )
             exporter = converters.BLENDER_TYPE_TO_EXPORTER["EMPTY"]
 
+        if (self.config['export_parent_bone_constraint'] and
+                node.parent_bone != ''):
+            parent_gd_node = converters.BONE_ATTACHMENT_EXPORTER(
+                self.escn_file,
+                node,
+                parent_gd_node
+            )
+
         # Perform the export
         exported_node = exporter(self.escn_file, self.config, node,
                                  parent_gd_node)

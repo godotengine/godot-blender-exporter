@@ -1,6 +1,28 @@
 """Export a armature node"""
 import mathutils
-from ..structures import NodeTemplate
+from ..structures import NodeTemplate, NodePath, Array
+
+
+def export_bone_attachment(escn_file, node, parent_gd_node):
+    """Export a blender object with parent_bone to a BoneAttachment"""
+    bone_attachment = NodeTemplate('BoneAttachment',
+                                   'BoneAttachment', parent_gd_node)
+
+    # node.parent_bone is exactly the bone name
+    # in the parent armature node
+    bone_attachment['bone_name'] = "\"{}\"".format(node.parent_bone)
+
+    # regard to ```export_armature_node()```, the exported bone id
+    # is the index of the bone in node.parent.pose.bones list
+    bone_id = node.parent.pose.bones.find(node.parent_bone)
+
+    # append node to its parent bone's bound_children list
+    parent_gd_node["bones/{}/{}".format(bone_id, 'bound_children')].append(
+        NodePath(parent_gd_node.get_path(), bone_attachment.get_path())
+    )
+
+    escn_file.add_node(bone_attachment)
+    return bone_attachment
 
 
 def get_armature_data(node):
@@ -36,7 +58,7 @@ class Bone:
         self.rest = mathutils.Matrix()
         self.pose = mathutils.Matrix()
         self.enabled = True
-        self.bound_children = None
+        self.bound_children = Array(prefix='[', suffix=']')
 
     def attr_to_key(self, attr_name):
         """Add bone id to bone attribute"""

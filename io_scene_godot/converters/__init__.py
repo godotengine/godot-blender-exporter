@@ -18,7 +18,7 @@ are stored in individual files.
 from .simple_nodes import *  # pylint: disable=wildcard-import
 from .mesh import export_mesh_node
 from .physics import export_physics_properties
-from .armature import export_armature_node
+from .armature import export_armature_node, export_bone_attachment
 
 
 BLENDER_TYPE_TO_EXPORTER = {
@@ -28,3 +28,5 @@ BLENDER_TYPE_TO_EXPORTER = {
     "LAMP": export_lamp_node,
     "EMPTY": export_empty_node
 }
+
+BONE_ATTACHMENT_EXPORTER = export_bone_attachment
