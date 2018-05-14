@@ -269,17 +269,17 @@ class Array(list):
 
 
 class NodePath:
-    """Nodes in scene refers to other nodes or nodes' attribute,
-    for example MeshInstane refers Skeleton. """
-    def __init__(self, referee_path, referrer_path, referrer_attr=''):
-        self.ref_path = os.path.relpath(referee_path, referrer_path)
-        self.attr_name = referrer_attr
+    """Node in scene points to other node or node's attribute,
+    for example, a MeshInstane points to a Skeleton. """
+    def __init__(self, from_here, to_there, attribute_pointed=''):
+        self.relative_path = os.path.relpath(to_there, from_here)
+        self.attribute_name = attribute_pointed
 
     def to_string(self):
         """Serialize a node path"""
         return 'NodePath("{}:{}")'.format(
-            self.ref_path,
-            self.attr_name
+            self.relative_path,
+            self.attribute_name
         )
 
 

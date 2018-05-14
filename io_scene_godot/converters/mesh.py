@@ -55,7 +55,7 @@ def export_mesh_node(escn_file, export_settings, node, parent_gd_node):
         mesh_node['visible'] = not node.hide
         if skeleton_node is not None:
             mesh_node['skeleton'] = NodePath(
-                skeleton_node.get_path(), mesh_node.get_path())
+                mesh_node.get_path(), skeleton_node.get_path())
         if not physics.has_physics(node) or not physics.is_physics_root(node):
             mesh_node['transform'] = node.matrix_local
         else:
