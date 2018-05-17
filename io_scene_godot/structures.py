@@ -283,30 +283,31 @@ class NodePath:
         )
 
 
+def fix_matrix(mtx):
+    """ Shuffles a matrix to change from y-up to z-up"""
+    # Todo: can this be replaced my a matrix multiplcation?
+    trans = mathutils.Matrix(mtx)
+    up_axis = 2
+
+    for i in range(3):
+        trans[1][i], trans[up_axis][i] = trans[up_axis][i], trans[1][i]
+    for i in range(3):
+        trans[i][1], trans[i][up_axis] = trans[i][up_axis], trans[i][1]
+
+    trans[1][3], trans[up_axis][3] = trans[up_axis][3], trans[1][3]
+
+    trans[up_axis][0] = -trans[up_axis][0]
+    trans[up_axis][1] = -trans[up_axis][1]
+    trans[0][up_axis] = -trans[0][up_axis]
+    trans[1][up_axis] = -trans[1][up_axis]
+    trans[up_axis][3] = -trans[up_axis][3]
+
+    return trans
+
+
 # ------------------ Implicit Conversions of Blender Types --------------------
 def mat4_to_string(mtx):
     """Converts a matrix to a "Transform" string that can be parsed by Godot"""
-    def fix_matrix(mtx):
-        """ Shuffles a matrix to change from y-up to z-up"""
-        # Todo: can this be replaced my a matrix multiplcation?
-        trans = mathutils.Matrix(mtx)
-        up_axis = 2
-
-        for i in range(3):
-            trans[1][i], trans[up_axis][i] = trans[up_axis][i], trans[1][i]
-        for i in range(3):
-            trans[i][1], trans[i][up_axis] = trans[i][up_axis], trans[i][1]
-
-        trans[1][3], trans[up_axis][3] = trans[up_axis][3], trans[1][3]
-
-        trans[up_axis][0] = -trans[up_axis][0]
-        trans[up_axis][1] = -trans[up_axis][1]
-        trans[0][up_axis] = -trans[0][up_axis]
-        trans[1][up_axis] = -trans[1][up_axis]
-        trans[up_axis][3] = -trans[up_axis][3]
-
-        return trans
-
     mtx = fix_matrix(mtx)
     array = Array('Transform(')
     for row in range(3):
