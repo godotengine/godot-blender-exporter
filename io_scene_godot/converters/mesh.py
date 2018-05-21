@@ -91,6 +91,19 @@ def export_mesh(escn_file, export_settings, node, armature_data):
     return mesh_id
 
 
+def find_bone_vertex_groups(vertex_groups, armature_data):
+    """Find the id of vertex groups connected to bone weights,
+    return a dict() mapping from vertex_group id to bone id"""
+    ret = dict()
+    if armature_data is not None:
+        # the bone's index in the bones list is exported as the id
+        for bone_id, bone in enumerate(armature_data.bones):
+            group = vertex_groups.get(bone.name)
+            if group is not None:
+                ret[group.index] = bone_id
+    return ret
+
+
 def make_arrays(escn_file, export_settings, node, armature_data):
     """Generates arrays of positions, normals etc"""
     if armature_data is not None:
@@ -126,12 +139,16 @@ def make_arrays(escn_file, export_settings, node, armature_data):
         mesh.calc_normals_split()
         has_tangents = False
 
+    # find the vertex group id of bone weights
+    gid_to_bid_map = find_bone_vertex_groups(node.vertex_groups, armature_data)
+
     # Separate by materials into single-material surfaces
     surfaces = generate_surfaces(
         escn_file,
         export_settings,
         mesh,
-        has_tangents
+        has_tangents,
+        gid_to_bid_map
     )
 
     has_bone = True if armature_data is not None else False
@@ -145,7 +162,8 @@ def make_arrays(escn_file, export_settings, node, armature_data):
     return surfaces
 
 
-def generate_surfaces(escn_file, export_settings, mesh, has_tangents):
+def generate_surfaces(escn_file, export_settings, mesh, has_tangents,
+                      gid_to_bid_map):
     """Splits up the mesh into surfaces with a single material each.
     Within this, it creates the Vertex structure to contain all data about
     a single vertex
@@ -197,8 +215,9 @@ def generate_surfaces(escn_file, export_settings, mesh, has_tangents):
                 new_vert.bitangent = fix_vertex(loop.bitangent)
 
             for vertex_group in mesh.vertices[loop.vertex_index].groups:
-                new_vert.bones.append(vertex_group.group)
-                new_vert.weights.append(vertex_group.weight)
+                if vertex_group.group in gid_to_bid_map:
+                    new_vert.bones.append(gid_to_bid_map[vertex_group.group])
+                    new_vert.weights.append(vertex_group.weight)
 
             # Merge similar vertices
             tup = new_vert.get_tup()
