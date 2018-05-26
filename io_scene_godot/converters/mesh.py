@@ -82,6 +82,13 @@ def export_mesh(escn_file, export_settings, node, armature_data):
         node,
         armature_data)
 
+    if export_settings['export_shape_key'] and node.data.shape_keys:
+        mesh_resource["blend_shape/names"] = Array(prefix="PoolStringArray(")
+        mesh_resource["blend_shape/mode"] = 0
+        for _, shape_key in extract_shape_keys(node.data.shape_keys):
+            mesh_resource["blend_shape/names"].append(
+                '"{}"'.format(shape_key.name))
+
     for surface in surfaces:
         mesh_resource[surface.name_str] = surface
 
@@ -89,6 +96,17 @@ def export_mesh(escn_file, export_settings, node, armature_data):
     assert mesh_id is not None
 
     return mesh_id
+
+
+def triangulate_mesh(mesh):
+    """Triangulate a mesh"""
+    tri_mesh = bmesh.new()
+    tri_mesh.from_mesh(mesh)
+    bmesh.ops.triangulate(tri_mesh, faces=tri_mesh.faces, quad_method=2)
+    tri_mesh.to_mesh(mesh)
+    tri_mesh.free()
+
+    mesh.update(calc_tessface=True)
 
 
 def find_bone_vertex_groups(vertex_groups, armature_data):
@@ -115,18 +133,8 @@ def make_arrays(escn_file, export_settings, node, armature_data):
                         export_settings['use_mesh_modifiers'],
                         "RENDER")
 
-    if armature_data is not None:
-        armature_data.pose_position = original_pose_position
-        bpy.context.scene.update()
-
     # Prepare the mesh for export
-    tri_mesh = bmesh.new()
-    tri_mesh.from_mesh(mesh)
-    bmesh.ops.triangulate(tri_mesh, faces=tri_mesh.faces)
-    tri_mesh.to_mesh(mesh)
-    tri_mesh.free()
-
-    mesh.update(calc_tessface=True)
+    triangulate_mesh(mesh)
 
     uv_layer_count = len(mesh.uv_textures)
     if uv_layer_count > 2:
@@ -151,15 +159,98 @@ def make_arrays(escn_file, export_settings, node, armature_data):
         gid_to_bid_map
     )
 
+    if (export_settings['export_shape_key'] and
+            node.data.shape_keys is not None):
+        export_morphs(
+            export_settings, node, surfaces, has_tangents, gid_to_bid_map)
+
     has_bone = True if armature_data is not None else False
 
     for surface_id, surface in enumerate(surfaces):
         surface.id = surface_id
-        surface.has_bone = has_bone
+        surface.vertex_data.has_bone = has_bone
+        for vert_data in surface.morph_arrays:
+            vert_data.has_bone = has_bone
 
     bpy.data.meshes.remove(mesh)
 
+    if armature_data is not None:
+        armature_data.pose_position = original_pose_position
+        bpy.context.scene.update()
+
     return surfaces
+
+
+def extract_shape_keys(blender_shape_keys):
+    """Return a list of (shape_key_index, shape_key_object) each of them
+    is a shape key needs exported"""
+    # base shape key needn't be exported
+    ret = list()
+    base_key = blender_shape_keys.reference_key
+    for index, shape_key in enumerate(blender_shape_keys.key_blocks):
+        if shape_key != base_key:
+            ret.append((index, shape_key))
+    return ret
+
+
+def intialize_surfaces_morph_data(surfaces):
+    """Initialize a list of empty morph for surfaces"""
+    surfaces_morph_list = [VerticesArrays() for _ in range(len(surfaces))]
+
+    for index, morph in enumerate(surfaces_morph_list):
+        morph.vertices = [None] * len(surfaces[index].vertex_data.vertices)
+
+    return surfaces_morph_list
+
+
+def export_morphs(export_settings, node, surfaces, has_tangents,
+                  gid_to_bid_map):
+    """Export shape keys in mesh node and append them to surfaces"""
+    for index, shape_key in extract_shape_keys(node.data.shape_keys):
+
+        node.show_only_shape_key = True
+        node.active_shape_key_index = index
+        shape_key.value = 1.0
+
+        mesh = node.to_mesh(bpy.context.scene,
+                            export_settings['use_mesh_modifiers'],
+                            "RENDER")
+        triangulate_mesh(mesh)
+
+        if has_tangents:
+            mesh.calc_tangents()
+        else:
+            mesh.calc_normals_split()
+
+        surfaces_morph_data = intialize_surfaces_morph_data(surfaces)
+
+        for face in mesh.polygons:
+            surface_index = -1
+            for surf_index, surf in enumerate(surfaces):
+                # todo:
+                # use the `material_to_surface` map from `generate_surfaces`
+                if surf.face_material_index == face.material_index:
+                    surface_index = surf_index
+                    break
+
+            if surface_index != -1:
+                surface = surfaces[surface_index]
+                morph = surfaces_morph_data[surface_index]
+
+                for loop_id in range(face.loop_total):
+                    loop_index = face.loop_start + loop_id
+                    new_vert = VerticesArrays.create_vertex_from_loop(
+                        mesh, loop_index, has_tangents, gid_to_bid_map
+                    )
+
+                    vertex_index = surface.vertex_index_map[loop_index]
+
+                    morph.vertices[vertex_index] = new_vert
+
+        for surf_index, surf in enumerate(surfaces):
+            surf.morph_arrays.append(surfaces_morph_data[surf_index])
+
+        bpy.data.meshes.remove(mesh)
 
 
 def generate_surfaces(escn_file, export_settings, mesh, has_tangents,
@@ -179,6 +270,7 @@ def generate_surfaces(escn_file, export_settings, mesh, has_tangents,
         if face.material_index not in material_to_surface:
             material_to_surface[face.material_index] = len(surfaces)
             surface = Surface()
+            surface.face_material_index = face.material_index
             surfaces.append(surface)
             if mesh.materials:
                 mat = mesh.materials[face.material_index]
@@ -194,55 +286,66 @@ def generate_surfaces(escn_file, export_settings, mesh, has_tangents,
 
         for loop_id in range(face.loop_total):
             loop_index = face.loop_start + loop_id
-            loop = mesh.loops[loop_index]
 
-            new_vert = Vertex()
-            new_vert.vertex = fix_vertex(mesh.vertices[loop.vertex_index].co)
-
-            for uv_layer in mesh.uv_layers:
-                new_vert.uv.append(mathutils.Vector(
-                    uv_layer.data[loop_index].uv
-                ))
-
-            if mesh.vertex_colors:
-                new_vert.color = mathutils.Vector(
-                    mesh.vertex_colors[0].data[loop_index].color)
-
-            new_vert.normal = fix_vertex(loop.normal)
-
-            if has_tangents:
-                new_vert.tangent = fix_vertex(loop.tangent)
-                new_vert.bitangent = fix_vertex(loop.bitangent)
-
-            for vertex_group in mesh.vertices[loop.vertex_index].groups:
-                if vertex_group.group in gid_to_bid_map:
-                    new_vert.bones.append(gid_to_bid_map[vertex_group.group])
-                    new_vert.weights.append(vertex_group.weight)
+            new_vert = VerticesArrays.create_vertex_from_loop(
+                mesh, loop_index, has_tangents, gid_to_bid_map)
 
             # Merge similar vertices
             tup = new_vert.get_tup()
             if tup not in surface.vertex_map:
-                surface.vertex_map[tup] = len(surface.vertices)
-                surface.vertices.append(new_vert)
+                surface.vertex_map[tup] = len(surface.vertex_data.vertices)
+                surface.vertex_data.vertices.append(new_vert)
 
-            vertex_indices.append(surface.vertex_map[tup])
+            vertex_index = surface.vertex_map[tup]
+            surface.vertex_index_map[loop_index] = vertex_index
+
+            vertex_indices.append(vertex_index)
 
         if len(vertex_indices) > 2:  # Only triangles and above
-            surface.indices.append(vertex_indices)
+            surface.vertex_data.indices.append(vertex_indices)
 
     return surfaces
 
 
-class Surface:
-    """A surface is a single part of a mesh (eg in blender, one mesh can have
-    multiple materials. Godot calls these separate parts separate surfaces"""
+class VerticesArrays:
+    """Godot use several arrays to store the data of a surface(e.g. vertices,
+    indices, bone weights). A surface object has a single VerticesArrays as its
+    default and also may have a morph array with a list of VerticesArrays"""
     def __init__(self):
         self.vertices = []
-        self.vertex_map = {}
         self.indices = []
-        self.id = None
-        self.material = None
         self.has_bone = False
+
+    @staticmethod
+    def create_vertex_from_loop(mesh, loop_index, has_tangents,
+                                gid_to_bid_map):
+        """Create a vertex from a blender mesh loop"""
+        new_vert = Vertex()
+
+        loop = mesh.loops[loop_index]
+        new_vert.vertex = fix_vertex(mesh.vertices[loop.vertex_index].co)
+
+        for uv_layer in mesh.uv_layers:
+            new_vert.uv.append(mathutils.Vector(
+                uv_layer.data[loop_index].uv
+            ))
+
+        if mesh.vertex_colors:
+            new_vert.color = mathutils.Vector(
+                mesh.vertex_colors[0].data[loop_index].color)
+
+        new_vert.normal = fix_vertex(loop.normal)
+
+        if has_tangents:
+            new_vert.tangent = fix_vertex(loop.tangent)
+            new_vert.bitangent = fix_vertex(loop.bitangent)
+
+        for vertex_group in mesh.vertices[loop.vertex_index].groups:
+            if vertex_group.group in gid_to_bid_map:
+                new_vert.bones.append(gid_to_bid_map[vertex_group.group])
+                new_vert.weights.append(vertex_group.weight)
+
+        return new_vert
 
     def calc_tangent_dp(self, vert):
         """Calculates the dot product of the tangent. I think this has
@@ -325,10 +428,17 @@ class Surface:
         # Indices- each face is made of 3 verts, and these are the indices
         # in the vertex arrays. The backface is computed from the winding
         # order, hence v[2] before v[1]
-        face_indices = Array(
-            "IntArray(",
-            values=[[v[0], v[2], v[1]] for v in self.indices]
-        )
+        if self.indices:
+            face_indices = Array(
+                "IntArray(",
+                values=[[v[0], v[2], v[1]] for v in self.indices]
+            )
+        else:
+            # in morph, it has no indices
+            face_indices = Array(
+                "null, ; Morph Object", "", ""
+            )
+
         surface_lines.append(face_indices.to_string())
 
         return surface_lines
@@ -366,6 +476,25 @@ class Surface:
 
         return bone_idx_array, bone_ws_array
 
+    def to_string(self):
+        """Serialize"""
+        return "[\n\t\t{}\n\t]".format(",\n\t\t".join(self.generate_lines()))
+
+
+class Surface:
+    """A surface is a single part of a mesh (eg in blender, one mesh can have
+    multiple materials. Godot calls these separate parts separate surfaces"""
+    def __init__(self):
+        # map from a Vertex.tup() to surface.vertex_data.indices
+        self.vertex_map = dict()
+        self.vertex_data = VerticesArrays()
+        self.morph_arrays = Array(prefix="[", seperator=",\n", suffix="]")
+        # map from mesh.loop_index to surface.vertex_data.indices
+        self.vertex_index_map = dict()
+        self.id = None
+        self.material = None
+        self.face_material_index = -1
+
     @property
     def name_str(self):
         """Used to separate surfaces that are part of the same mesh by their
@@ -379,13 +508,10 @@ class Surface:
 
             out_str += "\t\"material\":" + self.material + ",\n"
         out_str += "\t\"primitive\":4,\n"
-        out_str += "\t\"arrays\":[\n"
-
-        arrays = ",\n\t\t".join(self.generate_lines())
-        out_str += "\t\t" + arrays + "\n"
-
-        out_str += "\t" + "],\n"
-        out_str += "\t" + "\"morph_arrays\":[]\n"
+        out_str += "\t\"arrays\":" + self.vertex_data.to_string() + ",\n"
+        out_str += "\t" + "\"morph_arrays\":"
+        out_str += self.morph_arrays.to_string()
+        out_str += "\n"
         out_str += "}\n"
 
         return out_str

@@ -75,6 +75,11 @@ class ExportGodot(bpy.types.Operator, ExportHelper):
         },
     )
 
+    export_shape_key = BoolProperty(
+        name="Export Shape Key",
+        description="Export all the shape keys in mesh objects",
+        default=True,
+    )
     use_export_selected = BoolProperty(
         name="Selected Objects",
         description="Export only selected objects (and visible in active "

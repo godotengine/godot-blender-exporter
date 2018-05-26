@@ -15,6 +15,7 @@ def export_escn(out_file):
             
     res = export_godot.save(op(), bpy.context, out_file, 
         object_types={"EMPTY", "CAMERA", "LAMP", "ARMATURE", "MESH", "CURVE"},
+        export_shape_key=True,
         use_active_layers=False,
         use_export_selected=False,
         use_mesh_modifiers=True,
