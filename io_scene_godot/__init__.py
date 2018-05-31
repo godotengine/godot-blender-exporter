@@ -39,6 +39,10 @@ bl_info = {  # pylint: disable=invalid-name
 }
 
 
+class ValidationError(Exception):
+    """An error type for explicitly delivering error messages to user."""
+
+
 class ExportGodot(bpy.types.Operator, ExportHelper):
     """Selection to Godot"""
     bl_idname = "export_godot.escn"
@@ -117,20 +121,24 @@ class ExportGodot(bpy.types.Operator, ExportHelper):
 
     def execute(self, context):
         """Begin the export"""
-        if not self.filepath:
-            raise Exception("filepath not set")
+        try:
+            if not self.filepath:
+                raise Exception("filepath not set")
 
-        keywords = self.as_keywords(ignore=(
-            "axis_forward",
-            "axis_up",
-            "global_scale",
-            "check_existing",
-            "filter_glob",
-            "xna_validate",
-        ))
+            keywords = self.as_keywords(ignore=(
+                "axis_forward",
+                "axis_up",
+                "global_scale",
+                "check_existing",
+                "filter_glob",
+                "xna_validate",
+            ))
 
-        from . import export_godot
-        return export_godot.save(self, context, **keywords)
+            from . import export_godot
+            return export_godot.save(self, context, **keywords)
+        except ValidationError as error:
+            self.report({'ERROR'}, str(error))
+            return {'CANCELLED'}
 
 
 def menu_func(self, context):

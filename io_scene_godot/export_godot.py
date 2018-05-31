@@ -38,13 +38,18 @@ logging.basicConfig(level=logging.INFO, format="[%(levelname)s]: %(message)s")
 def find_godot_project_dir(export_path):
     """Finds the project.godot file assuming that the export path
     is inside a project (looks for a project.godot file)"""
+    from . import ValidationError
     project_dir = export_path
 
+    # Search up until we get to the top, which is "/" in *nix.
+    # Standard Windows ends up as, e.g., "C:\", and independent of what else is
+    # in the world, we can at least watch for repeats, because that's bad.
+    last = None
     while not os.path.isfile(os.path.join(project_dir, "project.godot")):
         project_dir = os.path.split(project_dir)[0]
-        if project_dir == "/" or len(project_dir) < 3:
-            logging.error("Unable to find godot project file")
-            return None
+        if project_dir == "/" or project_dir == last:
+            raise ValidationError("Unable to find godot project file")
+        last = project_dir
     logging.info("Found godot project directory at %s", project_dir)
     return project_dir
 
