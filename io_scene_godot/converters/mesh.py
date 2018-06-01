@@ -258,7 +258,10 @@ class Surface:
         if has_colors:
             color_vals = Array("ColorArray(")
             for vert in self.vertices:
-                color_vals.extend(list(vert.color)+[1.0])
+                col = list(vert.color)
+                if len(col) == 3:
+                    col += [1.0]
+                color_vals.extend(col)
         else:
             color_vals = Array("null, ; no Vertex Colors", "", "")
 
