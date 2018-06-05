@@ -34,63 +34,77 @@ def get_armature_data(node):
     return None
 
 
+def find_skeletion_node(node):
+    """Return the cloest Skeleton from node to root,
+    if not found, return None"""
+    node_ptr = node
+    while (node_ptr is not None and
+           node_ptr.get_type() != "Skeleton"):
+        node_ptr = node_ptr.parent
+    return node_ptr
+
+
 class Bone:
     """A Bone has almost same attributes as Godot bones"""
-
-    # must be ordered, Godot scene exporter force the first
-    # attribute of bone be 'name'
-    attributes = (
-        "name",
-        "parent",
-        "rest",
-        "pose",
-        "enabled",
-        "bound_children",
-    )
-
-    def __init__(self, bone_id, name, parent_id):
-        # name needs wrapped by double quotes
-        self.id = bone_id
-        self.name = '"{}"'.format(name)
-
-        # attributes
-        self.parent = parent_id
+    def __init__(self, bone_name, parent_name):
+        # id assigned when add to skeleton
+        self.id = None
+        self.name = bone_name
+        self.parent_name = parent_name
         self.rest = mathutils.Matrix()
         self.pose = mathutils.Matrix()
-        self.enabled = True
-        self.bound_children = Array(prefix='[', suffix=']')
-
-    def attr_to_key(self, attr_name):
-        """Add bone id to bone attribute"""
-        assert attr_name in Bone.attributes
-
-        return "bones/{}/{}".format(self.id, attr_name).lower()
 
 
-def export_bone(pose_bone, self_id, parent_id):
+def export_bone(pose_bone, exclude_ctrl_bone):
     """Convert a Blender bone to a escn bone"""
     bone_name = pose_bone.name
+    parent_bone_name = ""
 
     rest_bone = pose_bone.bone
-    if pose_bone.parent is None:
+    if (pose_bone.parent is None or
+            (exclude_ctrl_bone and not pose_bone.bone.parent.use_deform)):
         rest_mat = rest_bone.matrix_local
     else:
+        parent_bone_name = pose_bone.parent.name
         rest_mat = (rest_bone.parent.matrix_local.inverted_safe() *
                     rest_bone.matrix_local)
     pose_mat = pose_bone.matrix_basis
 
-    bone = Bone(self_id, bone_name, parent_id)
+    bone = Bone(bone_name, parent_bone_name)
     bone.rest = rest_mat
     bone.pose = pose_mat
     return bone
 
 
-def attach_bones_to_skeleton(skeleton_node, bone_list):
-    """Convert Bone list to attributes of skeleton node"""
-    for bone in bone_list:
-        for attr in Bone.attributes:
-            if not getattr(bone, attr) is None:
-                skeleton_node[bone.attr_to_key(attr)] = getattr(bone, attr)
+class SkeletonNode(NodeTemplate):
+    """tscn node with type Skeleton"""
+    def __init__(self, name, parent):
+        super().__init__(name, "Skeleton", parent)
+        self.bone_name_to_id_map = dict()
+
+    def find_bone_id(self, bone_name):
+        """"Given bone name find the bone id in Skeleton node"""
+        return self.bone_name_to_id_map.get(bone_name, -1)
+
+    def add_bones(self, bone_list):
+        """Add a list of bone to skeleton node"""
+        # need first add all bones into name_to_id_map,
+        # otherwise the parent bone finding would be incorrect
+        for bone in bone_list:
+            bone.id = len(self.bone_name_to_id_map)
+            self.bone_name_to_id_map[bone.name] = bone.id
+
+        for bone in bone_list:
+            bone_prefix = 'bones/{}'.format(bone.id)
+
+            # bone name must be the first property
+            self[bone_prefix + '/name'] = '"{}"'.format(bone.name)
+            self[bone_prefix + '/parent'] = self.find_bone_id(bone.parent_name)
+            self[bone_prefix + '/rest'] = bone.rest
+            self[bone_prefix + '/pose'] = bone.pose
+            self[bone_prefix + '/enabled'] = True
+            self[bone_prefix + '/bound_children'] = Array(
+                prefix='[', suffix=']')
 
 
 def export_armature_node(escn_file, export_settings, node, parent_gd_node):
@@ -98,18 +112,18 @@ def export_armature_node(escn_file, export_settings, node, parent_gd_node):
     if "ARMATURE" not in export_settings['object_types']:
         return parent_gd_node
 
-    skeleton_node = NodeTemplate(node.name, "Skeleton", parent_gd_node)
+    skeleton_node = SkeletonNode(node.name, parent_gd_node)
     skeleton_node['transform'] = node.matrix_local
 
     bone_list = list()
-    for index, pose_bone in enumerate(node.pose.bones):
-        if pose_bone.parent is None:
-            parent_id = -1
-        else:
-            parent_id = node.pose.bones.find(pose_bone.parent.name)
-        bone_list.append(export_bone(pose_bone, index, parent_id))
+    for pose_bone in node.pose.bones:
+        if (export_settings["use_exclude_ctrl_bone"] and
+                pose_bone.bone.use_deform):
+            bone = export_bone(
+                pose_bone, export_settings["use_exclude_ctrl_bone"])
+            bone_list.append(bone)
 
-    attach_bones_to_skeleton(skeleton_node, bone_list)
+    skeleton_node.add_bones(bone_list)
 
     escn_file.add_node(skeleton_node)
 

@@ -4,6 +4,7 @@ import re
 import copy
 import bpy
 import mathutils
+from . import armature
 from ..structures import (NodeTemplate, NodePath,
                           InternalResource, Array, fix_matrix)
 
@@ -214,6 +215,9 @@ def export_transform_action(godot_node, animation_player,
 
     first_frame, last_frame = get_frame_range(action)
 
+    # if no skeleton node exist, it will be None
+    skeleton_node = armature.find_skeletion_node(godot_node)
+
     transform_frames_map = collections.OrderedDict()
     for fcurve in action.fcurves:
         # fcurve data are seperated into different channels,
@@ -228,10 +232,16 @@ def export_transform_action(godot_node, animation_player,
                 default_frame = None
 
                 if object_path.startswith('pose'):
-                    bone_id = blender_object.pose.bones.find(
-                        blender_path_to_bone_name(object_path)
-                    )
-                    pose_bone = blender_object.pose.bones[bone_id]
+                    bone_name = blender_path_to_bone_name(object_path)
+
+                    # if the correspond bone of this track not exported, skip
+                    if (skeleton_node is None or
+                            skeleton_node.find_bone_id(bone_name) == -1):
+                        continue
+
+                    pose_bone = blender_object.pose.bones[
+                        blender_object.pose.bones.find(bone_name)
+                    ]
                     default_frame = TransformFrame(
                         pose_bone.matrix_basis,
                         pose_bone.rotation_mode
