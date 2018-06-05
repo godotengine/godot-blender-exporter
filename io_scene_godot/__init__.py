@@ -21,8 +21,9 @@ without significant importing (it's the same as Godot's tscn format).
 
 import bpy
 from bpy.props import StringProperty, BoolProperty, FloatProperty, EnumProperty
-
 from bpy_extras.io_utils import ExportHelper
+from .structures import ValidationError
+
 bl_info = {  # pylint: disable=invalid-name
     "name": "Godot Engine Exporter",
     "author": "Juan Linietsky",
@@ -37,10 +38,6 @@ bl_info = {  # pylint: disable=invalid-name
     "support": "OFFICIAL",
     "category": "Import-Export"
 }
-
-
-class ValidationError(Exception):
-    """An error type for explicitly delivering error messages to user."""
 
 
 class ExportGodot(bpy.types.Operator, ExportHelper):

@@ -7,6 +7,10 @@ import collections
 import mathutils
 
 
+class ValidationError(Exception):
+    """An error type for explicitly delivering error messages to user."""
+
+
 class ESCNFile:
     """The ESCN file consists of three major sections:
      - paths to external resources
