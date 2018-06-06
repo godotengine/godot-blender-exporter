@@ -9,21 +9,8 @@ from io_scene_godot import export_godot
 
 def export_escn(out_file):
     """Fake the export operator call"""
-    class op:
-        def __init__(self):
-            self.report = print
-            
-    res = export_godot.save(op(), bpy.context, out_file, 
-        object_types={"EMPTY", "CAMERA", "LAMP", "ARMATURE", "MESH", "CURVE"},
-        export_shape_key=True,
-        use_active_layers=False,
-        use_export_selected=False,
-        use_mesh_modifiers=True,
-        use_export_animation=True,
-        use_seperate_animation_player=False,
-        material_search_paths = 'PROJECT_DIR'
-    )
-
+    import io_scene_godot
+    io_scene_godot.export(out_file, {})
 
 
 def main():
@@ -33,11 +20,11 @@ def main():
         if full_path.endswith(".blend"):
             print("Exporting {}".format(full_path))
             bpy.ops.wm.open_mainfile(filepath=full_path)
-            
+
             out_path, blend_name = os.path.split(full_path)
             out_path = os.path.normpath(os.path.join(out_path, '../exports/'))
             out_path = os.path.join(
-                out_path, 
+                out_path,
                 blend_name.replace('.blend', '.escn')
                 )
             print(out_path)
