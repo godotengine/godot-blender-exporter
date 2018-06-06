@@ -7,7 +7,6 @@ GODOT = godot
 
 pylint:
 	$(PYLINT) io_scene_godot
-	$(PYLINT) io_scene_godot
 
 pep8:
 	$(PEP8) io_scene_godot
