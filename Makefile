@@ -7,16 +7,15 @@ GODOT = godot
 
 pylint:
 	$(PYLINT) io_scene_godot
-	$(PYLINT) io_scene_godot
 
 pep8:
 	$(PEP8) io_scene_godot
 
 
 export-blends:
-	mkdir -p ./tests/exports/
-	rm -rf ./tests/.import  # Ensure we don't have any hangover data
-	$(BLENDER) -b --python ./tests/scenes/export_blends.py
+	mkdir -p ./tests/godot_project/exports/
+	rm -rf ./tests/godot_project/.import  # Ensure we don't have any hangover data
+	$(BLENDER) -b --python ./tests/export_test_scenes.py
 
 
 test-import: export-blends
@@ -26,11 +25,11 @@ test-import: export-blends
 
 
 update-examples:
-	mkdir -p tests/reference-exports
-	cp tests/exports/*.escn tests/reference-exports
-	
+	mkdir -p tests/reference_exports
+	cp tests/godot_project/exports/*.escn tests/reference_exports
+
 compare: export-blends
-	diff -x "*.escn.import" -r tests/exports/ tests/reference-exports/
+	diff -x "*.escn.import" -r tests/godot_project/exports/ tests/reference_exports/
 
 
 style-test: pep8 pylint

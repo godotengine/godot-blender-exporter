@@ -14,7 +14,7 @@ def export_escn(out_file):
 
 
 def main():
-    target_dir = os.path.join(os.getcwd(), "tests/scenes")
+    target_dir = os.path.join(os.getcwd(), "tests/test_scenes")
     for file_name in os.listdir(target_dir):
         full_path = os.path.join(target_dir, file_name)
         if full_path.endswith(".blend"):
@@ -22,9 +22,9 @@ def main():
             bpy.ops.wm.open_mainfile(filepath=full_path)
 
             out_path, blend_name = os.path.split(full_path)
-            out_path = os.path.normpath(os.path.join(out_path, '../exports/'))
             out_path = os.path.join(
                 out_path,
+                '../godot_project/exports/',
                 blend_name.replace('.blend', '.escn')
                 )
             print(out_path)
