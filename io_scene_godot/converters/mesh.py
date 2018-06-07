@@ -4,7 +4,8 @@ import bmesh
 import mathutils
 
 from .material import export_material
-from ..structures import Array, NodeTemplate, InternalResource, NodePath
+from ..structures import (Array, NodeTemplate, InternalResource, NodePath,
+                          ValidationError)
 from . import physics
 from . import armature
 
@@ -461,18 +462,25 @@ class VerticesArrays:
 
             weights = sorted(weights, key=lambda x: x[1], reverse=True)
             totalw = 0.0
-            for weight in weights:
+            for index, weight in enumerate(weights):
+                if index >= MAX_BONE_PER_VERTEX:
+                    break
                 totalw += weight[1]
-            if totalw == 0.0:
-                totalw = 0.000000001
 
-            for i in range(MAX_BONE_PER_VERTEX):
-                if i < len(weights):
-                    bone_idx_array.append(weights[i][0])
-                    bone_ws_array.append(weights[i][1]/totalw)
-                else:
-                    bone_idx_array.append(0)
-                    bone_ws_array.append(0.0)
+            if totalw > 0.0:
+                for i in range(MAX_BONE_PER_VERTEX):
+                    if i < len(weights):
+                        bone_idx_array.append(weights[i][0])
+                        bone_ws_array.append(weights[i][1]/totalw)
+                    else:
+                        bone_idx_array.append(0)
+                        bone_ws_array.append(0.0)
+            else:
+                # vertex not assign to any bones
+                raise ValidationError(
+                    "There are vertices with no bone weight in rigged mesh, "
+                    "please fix them in Blender"
+                )
 
         return bone_idx_array, bone_ws_array
 
