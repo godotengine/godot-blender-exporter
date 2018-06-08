@@ -8,6 +8,7 @@
 
 far = 10.0
 near = 5.0
+size = 6.0
 projection = 0
 fov = 90.0
 transform = Transform(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 5.0, 0.0, 0.0)
@@ -16,22 +17,25 @@ transform = Transform(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 5.0, 0.0, 0.0
 
 far = 100.0
 near = 0.1
-projection = 1
 size = 6.0
+projection = 1
+fov = 90.0
 transform = Transform(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0)
 
 [node name="Camera002" type="Camera" parent="."]
 
 far = 100.0
 near = 0.1
-projection = 1
 size = 2.0
+projection = 1
+fov = 90.0
 transform = Transform(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, -2.0, 0.0, 0.0)
 
 [node name="Camera001" type="Camera" parent="."]
 
 far = 100.0
 near = 0.1
+size = 6.0
 projection = 0
 fov = 90.0
 transform = Transform(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, -5.0, 0.0, 0.0)
@@ -40,6 +44,7 @@ transform = Transform(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, -5.0, 0.0, 0.
 
 far = 100.0
 near = 0.1
+size = 6.0
 projection = 0
 fov = 20.0
 transform = Transform(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, -7.0, 0.0, 0.0)

@@ -8,6 +8,7 @@ from ..structures import (Array, NodeTemplate, InternalResource, NodePath,
                           ValidationError, Map)
 from . import physics
 from . import armature
+from . import animation
 
 MAX_BONE_PER_VERTEX = 4
 
@@ -52,6 +53,13 @@ def export_mesh_node(escn_file, export_settings, node, parent_gd_node):
         else:
             mesh_node['transform'] = mathutils.Matrix.Identity(4)
         escn_file.add_node(mesh_node)
+
+        # export shape key animation
+        if (export_settings['use_export_shape_key'] and
+                node.data.shape_keys is not None):
+            animation.export_animation_data(
+                escn_file, export_settings, mesh_node,
+                node.data.shape_keys, 'shapekey')
 
         return mesh_node
 

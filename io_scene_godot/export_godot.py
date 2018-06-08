@@ -91,9 +91,7 @@ class GodotExporter:
                                  parent_gd_node)
 
         # if the blender node is exported and it has animation data
-        if (self.config["use_export_animation"] and
-                exported_node != parent_gd_node and
-                node.animation_data is not None):
+        if exported_node != parent_gd_node:
             converters.ANIMATION_DATA_EXPORTER(
                 self.escn_file,
                 self.config,
