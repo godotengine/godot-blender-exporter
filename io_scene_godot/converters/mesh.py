@@ -37,18 +37,13 @@ def export_mesh_node(escn_file, export_settings, node, parent_gd_node):
         skeleton_node = None
         if ("ARMATURE" in export_settings['object_types'] and
                 armature_data is not None):
-            # trace up the godot scene tree to find the binded skeleton node
-            gd_node_ptr = parent_gd_node
-            while (gd_node_ptr is not None and
-                   gd_node_ptr.get_type() != "Skeleton"):
-                gd_node_ptr = gd_node_ptr.get_parent()
-            skeleton_node = gd_node_ptr
+            skeleton_node = armature.find_skeletion_node(parent_gd_node)
 
         mesh_id = export_mesh(
             escn_file,
             export_settings,
-            node,
-            armature_data
+            skeleton_node,
+            node
         )
 
         mesh_node = NodeTemplate(node.name, "MeshInstance", parent_gd_node)
@@ -66,7 +61,7 @@ def export_mesh_node(escn_file, export_settings, node, parent_gd_node):
         return mesh_node
 
 
-def export_mesh(escn_file, export_settings, node, armature_data):
+def export_mesh(escn_file, export_settings, skeleton_node, node):
     """Saves a mesh into the escn file """
     # Check if it exists so we don't bother to export it twice
     mesh = node.data
@@ -80,8 +75,8 @@ def export_mesh(escn_file, export_settings, node, armature_data):
     surfaces = make_arrays(
         escn_file,
         export_settings,
-        node,
-        armature_data)
+        skeleton_node,
+        node)
 
     if export_settings['export_shape_key'] and node.data.shape_keys:
         mesh_resource["blend_shape/names"] = Array(prefix="PoolStringArray(")
@@ -110,21 +105,22 @@ def triangulate_mesh(mesh):
     mesh.update(calc_tessface=True)
 
 
-def find_bone_vertex_groups(vertex_groups, armature_data):
+def find_bone_vertex_groups(vertex_groups, skeleton_node):
     """Find the id of vertex groups connected to bone weights,
     return a dict() mapping from vertex_group id to bone id"""
     ret = dict()
-    if armature_data is not None:
+    if skeleton_node is not None:
         # the bone's index in the bones list is exported as the id
-        for bone_id, bone in enumerate(armature_data.bones):
-            group = vertex_groups.get(bone.name)
+        for bone_name, bone_id in skeleton_node.bone_name_to_id_map.items():
+            group = vertex_groups.get(bone_name)
             if group is not None:
                 ret[group.index] = bone_id
     return ret
 
 
-def make_arrays(escn_file, export_settings, node, armature_data):
+def make_arrays(escn_file, export_settings, skeleton_node, node):
     """Generates arrays of positions, normals etc"""
+    armature_data = armature.get_armature_data(node)
     if armature_data is not None:
         original_pose_position = armature_data.pose_position
         armature_data.pose_position = 'REST'
@@ -149,7 +145,8 @@ def make_arrays(escn_file, export_settings, node, armature_data):
         has_tangents = False
 
     # find the vertex group id of bone weights
-    gid_to_bid_map = find_bone_vertex_groups(node.vertex_groups, armature_data)
+    gid_to_bid_map = find_bone_vertex_groups(
+        node.vertex_groups, skeleton_node)
 
     # Separate by materials into single-material surfaces
     surfaces = generate_surfaces(

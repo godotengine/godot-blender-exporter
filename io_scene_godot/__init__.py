@@ -83,6 +83,11 @@ class ExportGodot(bpy.types.Operator, ExportHelper):
                     "layers if that applies).",
         default=False,
         )
+    use_exclude_ctrl_bone = BoolProperty(
+        name="Exclude Control Bones",
+        description="Do not export control bones (bone.use_deform = false)",
+        default=True,
+    )
     use_export_animation = BoolProperty(
         name="Export Animation",
         description="Export all the animation actions (include those "
