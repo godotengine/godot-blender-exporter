@@ -201,9 +201,28 @@ def intialize_surfaces_morph_data(surfaces):
     return surfaces_morph_list
 
 
+def validate_morph_mesh_modifiers(mesh_object):
+    """Check whether a mesh has modifiers not
+    compatible with shape key"""
+    # this black list is not complete
+    modifiers_not_supported = (
+        bpy.types.SubsurfModifier,
+    )
+    for modifier in mesh_object.modifiers:
+        if isinstance(modifier, modifiers_not_supported):
+            return False
+    return True
+
+
 def export_morphs(export_settings, node, surfaces, has_tangents,
                   gid_to_bid_map):
     """Export shape keys in mesh node and append them to surfaces"""
+    if export_settings['use_mesh_modifiers']:
+        if not validate_morph_mesh_modifiers(node):
+            raise ValidationError(
+                "Mesh object '{}' has modifiers "
+                "incompatible with shape key".format(node.name)
+            )
     for index, shape_key in extract_shape_keys(node.data.shape_keys):
 
         node.show_only_shape_key = True
@@ -211,7 +230,7 @@ def export_morphs(export_settings, node, surfaces, has_tangents,
         shape_key.value = 1.0
 
         mesh = node.to_mesh(bpy.context.scene,
-                            export_settings['use_mesh_modifiers'],
+                            True,
                             "RENDER")
         triangulate_mesh(mesh)
 
