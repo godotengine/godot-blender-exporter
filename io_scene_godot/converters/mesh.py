@@ -126,8 +126,13 @@ def make_arrays(escn_file, export_settings, skeleton_node, node):
         armature_data.pose_position = 'REST'
         bpy.context.scene.update()
 
+    if not export_settings['use_mesh_modifiers']:
+        for modifier in node.modifiers:
+            if not isinstance(modifier, bpy.types.ArmatureModifier):
+                modifier.show_render = False
+
     mesh = node.to_mesh(bpy.context.scene,
-                        export_settings['use_mesh_modifiers'],
+                        True,
                         "RENDER")
 
     # Prepare the mesh for export
