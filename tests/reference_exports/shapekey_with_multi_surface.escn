@@ -48,7 +48,6 @@ surfaces/0 = {
 		null, ; Morph Object
 	]]
 }
-
 surfaces/1 = {
 	"material":SubResource(2),
 	"primitive":4,
@@ -75,7 +74,6 @@ surfaces/1 = {
 		null, ; Morph Object
 	]]
 }
-
 [node type="Spatial" name="Scene"]
 
 

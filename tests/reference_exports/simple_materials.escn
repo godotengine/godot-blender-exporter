@@ -36,7 +36,6 @@ surfaces/0 = {
 	],
 	"morph_arrays":[]
 }
-
 surfaces/1 = {
 	"material":SubResource(2),
 	"primitive":4,
@@ -53,7 +52,6 @@ surfaces/1 = {
 	],
 	"morph_arrays":[]
 }
-
 [node type="Spatial" name="Scene"]
 
 

@@ -18,7 +18,6 @@ surfaces/0 = {
 	"morph_arrays":[]
 }
 
-
 [sub_resource id=2 type="ArrayMesh"]
 
 surfaces/0 = {
@@ -37,7 +36,6 @@ surfaces/0 = {
 	"morph_arrays":[]
 }
 
-
 [sub_resource id=3 type="ArrayMesh"]
 
 surfaces/0 = {
@@ -55,7 +53,6 @@ surfaces/0 = {
 	],
 	"morph_arrays":[]
 }
-
 [node type="Spatial" name="Scene"]
 
 

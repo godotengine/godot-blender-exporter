@@ -5,7 +5,7 @@ import mathutils
 
 from .material import export_material
 from ..structures import (Array, NodeTemplate, InternalResource, NodePath,
-                          ValidationError)
+                          ValidationError, Map)
 from . import physics
 from . import armature
 
@@ -32,26 +32,21 @@ def export_mesh_node(escn_file, export_settings, node, parent_gd_node):
         return parent_gd_node
 
     else:
-        armature_data = armature.get_armature_data(node)
+        mesh_node = NodeTemplate(node.name, "MeshInstance", parent_gd_node)
+        mesh_exporter = MeshResourceExporter(node)
 
-        skeleton_node = None
+        armature_data = get_modifier_armature_data(node)
         if ("ARMATURE" in export_settings['object_types'] and
                 armature_data is not None):
             skeleton_node = armature.find_skeletion_node(parent_gd_node)
-
-        mesh_id = export_mesh(
-            escn_file,
-            export_settings,
-            skeleton_node,
-            node
-        )
-
-        mesh_node = NodeTemplate(node.name, "MeshInstance", parent_gd_node)
-        mesh_node['mesh'] = "SubResource({})".format(mesh_id)
-        mesh_node['visible'] = not node.hide
-        if skeleton_node is not None:
+            mesh_exporter.init_mesh_bones_data(skeleton_node)
             mesh_node['skeleton'] = NodePath(
                 mesh_node.get_path(), skeleton_node.get_path())
+
+        mesh_id = mesh_exporter.export_mesh(escn_file, export_settings)
+
+        mesh_node['mesh'] = "SubResource({})".format(mesh_id)
+        mesh_node['visible'] = not node.hide
         if not physics.has_physics(node) or not physics.is_physics_root(node):
             mesh_node['transform'] = node.matrix_local
         else:
@@ -59,39 +54,6 @@ def export_mesh_node(escn_file, export_settings, node, parent_gd_node):
         escn_file.add_node(mesh_node)
 
         return mesh_node
-
-
-def export_mesh(escn_file, export_settings, skeleton_node, node):
-    """Saves a mesh into the escn file """
-    # Check if it exists so we don't bother to export it twice
-    mesh = node.data
-    mesh_id = escn_file.get_internal_resource(mesh)
-
-    if mesh_id is not None:
-        return mesh_id
-
-    mesh_resource = InternalResource('ArrayMesh')
-
-    surfaces = make_arrays(
-        escn_file,
-        export_settings,
-        skeleton_node,
-        node)
-
-    if export_settings['export_shape_key'] and node.data.shape_keys:
-        mesh_resource["blend_shape/names"] = Array(prefix="PoolStringArray(")
-        mesh_resource["blend_shape/mode"] = 0
-        for _, shape_key in extract_shape_keys(node.data.shape_keys):
-            mesh_resource["blend_shape/names"].append(
-                '"{}"'.format(shape_key.name))
-
-    for surface in surfaces:
-        mesh_resource[surface.name_str] = surface
-
-    mesh_id = escn_file.add_internal_resource(mesh_resource, mesh)
-    assert mesh_id is not None
-
-    return mesh_id
 
 
 def triangulate_mesh(mesh):
@@ -105,269 +67,283 @@ def triangulate_mesh(mesh):
     mesh.update(calc_tessface=True)
 
 
-def find_bone_vertex_groups(vertex_groups, skeleton_node):
-    """Find the id of vertex groups connected to bone weights,
-    return a dict() mapping from vertex_group id to bone id"""
-    ret = dict()
-    if skeleton_node is not None:
-        # the bone's index in the bones list is exported as the id
-        for bone_name, bone_id in skeleton_node.bone_name_to_id_map.items():
-            group = vertex_groups.get(bone_name)
-            if group is not None:
-                ret[group.index] = bone_id
-    return ret
+def fix_vertex(vtx):
+    """Changes a single position vector from y-up to z-up"""
+    return mathutils.Vector((vtx.x, vtx.z, -vtx.y))
 
 
-def make_arrays(escn_file, export_settings, skeleton_node, node):
-    """Generates arrays of positions, normals etc"""
-    armature_data = armature.get_armature_data(node)
-    if armature_data is not None:
-        original_pose_position = armature_data.pose_position
-        armature_data.pose_position = 'REST'
-        bpy.context.scene.update()
-
-    if not export_settings['use_mesh_modifiers']:
-        for modifier in node.modifiers:
-            if not isinstance(modifier, bpy.types.ArmatureModifier):
-                modifier.show_render = False
-
-    mesh = node.to_mesh(bpy.context.scene,
-                        True,
-                        "RENDER")
-
-    # Prepare the mesh for export
-    triangulate_mesh(mesh)
-
-    uv_layer_count = len(mesh.uv_textures)
-    if uv_layer_count > 2:
-        uv_layer_count = 2
-
-    if mesh.uv_textures:
-        has_tangents = True
-        mesh.calc_tangents()
-    else:
-        mesh.calc_normals_split()
-        has_tangents = False
-
-    # find the vertex group id of bone weights
-    gid_to_bid_map = find_bone_vertex_groups(
-        node.vertex_groups, skeleton_node)
-
-    # Separate by materials into single-material surfaces
-    surfaces = generate_surfaces(
-        escn_file,
-        export_settings,
-        mesh,
-        has_tangents,
-        gid_to_bid_map
-    )
-
-    if (export_settings['export_shape_key'] and
-            node.data.shape_keys is not None):
-        export_morphs(
-            export_settings, node, surfaces, has_tangents, gid_to_bid_map)
-
-    has_bone = True if armature_data is not None else False
-
-    for surface_id, surface in enumerate(surfaces):
-        surface.id = surface_id
-        surface.vertex_data.has_bone = has_bone
-        for vert_data in surface.morph_arrays:
-            vert_data.has_bone = has_bone
-
-    bpy.data.meshes.remove(mesh)
-
-    if armature_data is not None:
-        armature_data.pose_position = original_pose_position
-        bpy.context.scene.update()
-
-    return surfaces
-
-
-def extract_shape_keys(blender_shape_keys):
-    """Return a list of (shape_key_index, shape_key_object) each of them
-    is a shape key needs exported"""
-    # base shape key needn't be exported
-    ret = list()
-    base_key = blender_shape_keys.reference_key
-    for index, shape_key in enumerate(blender_shape_keys.key_blocks):
-        if shape_key != base_key:
-            ret.append((index, shape_key))
-    return ret
-
-
-def intialize_surfaces_morph_data(surfaces):
-    """Initialize a list of empty morph for surfaces"""
-    surfaces_morph_list = [VerticesArrays() for _ in range(len(surfaces))]
-
-    for index, morph in enumerate(surfaces_morph_list):
-        morph.vertices = [None] * len(surfaces[index].vertex_data.vertices)
-
-    return surfaces_morph_list
-
-
-def validate_morph_mesh_modifiers(mesh_object):
-    """Check whether a mesh has modifiers not
-    compatible with shape key"""
-    # this black list is not complete
-    modifiers_not_supported = (
-        bpy.types.SubsurfModifier,
-    )
+def get_modifier_armature_data(mesh_object):
+    """Get the armature modifier of a blender object
+    if does not have one, return None"""
     for modifier in mesh_object.modifiers:
-        if isinstance(modifier, modifiers_not_supported):
-            return False
-    return True
+        if isinstance(modifier, bpy.types.ArmatureModifier):
+            return modifier.object.data
+    return None
 
 
-def export_morphs(export_settings, node, surfaces, has_tangents,
-                  gid_to_bid_map):
-    """Export shape keys in mesh node and append them to surfaces"""
-    if export_settings['use_mesh_modifiers']:
-        if not validate_morph_mesh_modifiers(node):
-            raise ValidationError(
-                "Mesh object '{}' has modifiers "
-                "incompatible with shape key".format(node.name)
+class MeshResourceExporter:
+    """Export a mesh resource from a blender mesh object"""
+    def __init__(self, mesh_object):
+        # blender mesh object
+        self.object = mesh_object
+
+        self.mesh_resource = None
+        self.has_tangents = False
+        self.vgroup_to_bone_mapping = dict()
+        self.mat_to_surf_mapping = dict()
+
+    def init_mesh_bones_data(self, skeleton_node):
+        """Find the mapping relation between vertex groups
+        and bone id"""
+        for bone_name, bone_id in skeleton_node.bone_name_to_id_map.items():
+            group = self.object.vertex_groups.get(bone_name)
+            if group is not None:
+                self.vgroup_to_bone_mapping[group.index] = bone_id
+
+    def export_mesh(self, escn_file, export_settings):
+        """Saves a mesh into the escn file """
+        # Check if it exists so we don't bother to export it twice
+        mesh = self.object.data
+        mesh_id = escn_file.get_internal_resource(mesh)
+
+        if mesh_id is not None:
+            return mesh_id
+
+        self.mesh_resource = InternalResource('ArrayMesh')
+
+        try:
+            self.make_arrays(
+                escn_file,
+                export_settings,
             )
-    for index, shape_key in extract_shape_keys(node.data.shape_keys):
+        except ValidationError as exception:
+            exception.args += (mesh.name, )
+            raise
 
-        node.show_only_shape_key = True
-        node.active_shape_key_index = index
-        shape_key.value = 1.0
+        mesh_id = escn_file.add_internal_resource(self.mesh_resource, mesh)
+        assert mesh_id is not None
 
-        mesh = node.to_mesh(bpy.context.scene,
-                            True,
-                            "RENDER")
+        return mesh_id
+
+    def make_arrays(self, escn_file, export_settings):
+        """Generates arrays of positions, normals etc"""
+        armature_data = get_modifier_armature_data(self.object)
+        if armature_data is not None:
+            original_pose_position = armature_data.pose_position
+            armature_data.pose_position = 'REST'
+            bpy.context.scene.update()
+
+        if not export_settings['use_mesh_modifiers']:
+            for modifier in self.object.modifiers:
+                if not isinstance(modifier, bpy.types.ArmatureModifier):
+                    modifier.show_render = False
+
+        mesh = self.object.to_mesh(bpy.context.scene,
+                                   True,
+                                   "RENDER")
+
+        # Prepare the mesh for export
         triangulate_mesh(mesh)
 
-        if has_tangents:
+        # godot engine supports two uv channels
+        uv_layer_count = min(len(mesh.uv_textures), 2)
+
+        if mesh.uv_textures:
+            self.has_tangents = True
             mesh.calc_tangents()
         else:
             mesh.calc_normals_split()
+            self.has_tangents = False
 
-        surfaces_morph_data = intialize_surfaces_morph_data(surfaces)
+        # Separate by materials into single-material surfaces
+        self.generate_surfaces(
+            escn_file,
+            export_settings,
+            mesh
+        )
 
-        for face in mesh.polygons:
-            surface_index = -1
-            for surf_index, surf in enumerate(surfaces):
-                # todo:
-                # use the `material_to_surface` map from `generate_surfaces`
-                if surf.face_material_index == face.material_index:
-                    surface_index = surf_index
-                    break
+        bpy.data.meshes.remove(mesh)
 
-            if surface_index != -1:
+        if armature_data is not None:
+            armature_data.pose_position = original_pose_position
+            bpy.context.scene.update()
+
+    @staticmethod
+    def extract_shape_keys(blender_shape_keys):
+        """Return a list of (shape_key_index, shape_key_object) each of them
+        is a shape key needs exported"""
+        # base shape key needn't be exported
+        ret = list()
+        base_key = blender_shape_keys.reference_key
+        for index, shape_key in enumerate(blender_shape_keys.key_blocks):
+            if shape_key != base_key:
+                ret.append((index, shape_key))
+        return ret
+
+    @staticmethod
+    def validate_morph_mesh_modifiers(mesh_object):
+        """Check whether a mesh has modifiers not
+        compatible with shape key"""
+        # this black list is not complete
+        modifiers_not_supported = (
+            bpy.types.SubsurfModifier,
+        )
+        for modifier in mesh_object.modifiers:
+            if isinstance(modifier, modifiers_not_supported):
+                return False
+        return True
+
+    @staticmethod
+    def intialize_surfaces_morph_data(surfaces):
+        """Initialize a list of empty morph for surfaces"""
+        surfaces_morph_list = [VerticesArrays() for _ in range(len(surfaces))]
+
+        for index, morph in enumerate(surfaces_morph_list):
+            morph.vertices = [None] * len(surfaces[index].vertex_data.vertices)
+
+        return surfaces_morph_list
+
+    def export_morphs(self, export_settings, surfaces):
+        """Export shape keys in mesh node and append them to surfaces"""
+        if export_settings['use_mesh_modifiers']:
+            if not self.validate_morph_mesh_modifiers(
+                    self.object):
+                raise ValidationError(
+                    "Mesh object '{}' has modifiers "
+                    "incompatible with shape key".format(self.object.name)
+                )
+
+        self.mesh_resource["blend_shape/names"] = Array(
+            prefix="PoolStringArray(", suffix=')'
+        )
+        self.mesh_resource["blend_shape/mode"] = 0
+
+        shape_keys_to_export = self.extract_shape_keys(
+            self.object.data.shape_keys
+        )
+        for index, shape_key in shape_keys_to_export:
+            self.mesh_resource["blend_shape/names"].append(
+                '"{}"'.format(shape_key.name)
+            )
+
+            self.object.show_only_shape_key = True
+            self.object.active_shape_key_index = index
+            shape_key.value = 1.0
+
+            shape_key_mesh = self.object.to_mesh(
+                bpy.context.scene,
+                True,
+                "RENDER"
+            )
+
+            triangulate_mesh(shape_key_mesh)
+
+            if self.has_tangents:
+                shape_key_mesh.calc_tangents()
+            else:
+                shape_key_mesh.calc_normals_split()
+
+            surfaces_morph_data = self.intialize_surfaces_morph_data(surfaces)
+
+            for face in shape_key_mesh.polygons:
+                surface_index = self.mat_to_surf_mapping[face.material_index]
+
                 surface = surfaces[surface_index]
                 morph = surfaces_morph_data[surface_index]
 
                 for loop_id in range(face.loop_total):
                     loop_index = face.loop_start + loop_id
-                    new_vert = VerticesArrays.create_vertex_from_loop(
-                        mesh, loop_index, has_tangents, gid_to_bid_map
+                    new_vert = Vertex.create_from_mesh_loop(
+                        shape_key_mesh,
+                        loop_index,
+                        self.has_tangents,
+                        self.vgroup_to_bone_mapping
                     )
 
                     vertex_index = surface.vertex_index_map[loop_index]
 
                     morph.vertices[vertex_index] = new_vert
 
-        for surf_index, surf in enumerate(surfaces):
-            surf.morph_arrays.append(surfaces_morph_data[surf_index])
+            for surf_index, surf in enumerate(surfaces):
+                surf.morph_arrays.append(surfaces_morph_data[surf_index])
 
-        bpy.data.meshes.remove(mesh)
+            bpy.data.meshes.remove(shape_key_mesh)
 
+    def generate_surfaces(self, escn_file, export_settings, mesh):
+        """Splits up the mesh into surfaces with a single material each.
+        Within this, it creates the Vertex structure to contain all data about
+        a single vertex
+        """
+        surfaces = []
 
-def generate_surfaces(escn_file, export_settings, mesh, has_tangents,
-                      gid_to_bid_map):
-    """Splits up the mesh into surfaces with a single material each.
-    Within this, it creates the Vertex structure to contain all data about
-    a single vertex
-    """
-    material_to_surface = {}
-    surfaces = []
+        for face_index in range(len(mesh.polygons)):
+            face = mesh.polygons[face_index]
 
-    for face_index in range(len(mesh.polygons)):
-        face = mesh.polygons[face_index]
+            # Find a surface that matches the material, otherwise create a new
+            # surface for it
+            if face.material_index not in self.mat_to_surf_mapping:
+                self.mat_to_surf_mapping[face.material_index] = len(surfaces)
+                surface = Surface()
+                surfaces.append(surface)
+                if mesh.materials:
+                    mat = mesh.materials[face.material_index]
+                    if mat is not None:
+                        surface.material = export_material(
+                            escn_file,
+                            export_settings,
+                            mat
+                        )
 
-        # Find a surface that matches the material, otherwise create a new
-        # surface for it
-        if face.material_index not in material_to_surface:
-            material_to_surface[face.material_index] = len(surfaces)
-            surface = Surface()
-            surface.face_material_index = face.material_index
-            surfaces.append(surface)
-            if mesh.materials:
-                mat = mesh.materials[face.material_index]
-                if mat is not None:
-                    surface.material = export_material(
-                        escn_file,
-                        export_settings,
-                        mat
-                    )
+            surface = surfaces[self.mat_to_surf_mapping[face.material_index]]
+            vertex_indices = []
 
-        surface = surfaces[material_to_surface[face.material_index]]
-        vertex_indices = []
+            for loop_id in range(face.loop_total):
+                loop_index = face.loop_start + loop_id
 
-        for loop_id in range(face.loop_total):
-            loop_index = face.loop_start + loop_id
+                new_vert = Vertex.create_from_mesh_loop(
+                    mesh,
+                    loop_index,
+                    self.has_tangents,
+                    self.vgroup_to_bone_mapping
+                )
 
-            new_vert = VerticesArrays.create_vertex_from_loop(
-                mesh, loop_index, has_tangents, gid_to_bid_map)
+                # Merge similar vertices
+                tup = new_vert.get_tup()
+                if tup not in surface.vertex_map:
+                    surface.vertex_map[tup] = len(surface.vertex_data.vertices)
+                    surface.vertex_data.vertices.append(new_vert)
 
-            # Merge similar vertices
-            tup = new_vert.get_tup()
-            if tup not in surface.vertex_map:
-                surface.vertex_map[tup] = len(surface.vertex_data.vertices)
-                surface.vertex_data.vertices.append(new_vert)
+                vertex_index = surface.vertex_map[tup]
+                surface.vertex_index_map[loop_index] = vertex_index
 
-            vertex_index = surface.vertex_map[tup]
-            surface.vertex_index_map[loop_index] = vertex_index
+                vertex_indices.append(vertex_index)
 
-            vertex_indices.append(vertex_index)
+            if len(vertex_indices) > 2:  # Only triangles and above
+                surface.vertex_data.indices.append(vertex_indices)
 
-        if len(vertex_indices) > 2:  # Only triangles and above
-            surface.vertex_data.indices.append(vertex_indices)
+        if (export_settings['use_export_shape_key'] and
+                self.object.data.shape_keys):
+            self.export_morphs(export_settings, surfaces)
 
-    return surfaces
+        has_bone = True if self.vgroup_to_bone_mapping else False
+        for surface_id, surface in enumerate(surfaces):
+            surface.id = surface_id
+            surface.vertex_data.has_bone = has_bone
+            for vert_array in surface.morph_arrays:
+                vert_array.has_bone = has_bone
+
+            self.mesh_resource[surface.name_str] = surface
 
 
 class VerticesArrays:
     """Godot use several arrays to store the data of a surface(e.g. vertices,
     indices, bone weights). A surface object has a single VerticesArrays as its
     default and also may have a morph array with a list of VerticesArrays"""
+
     def __init__(self):
         self.vertices = []
         self.indices = []
         self.has_bone = False
-
-    @staticmethod
-    def create_vertex_from_loop(mesh, loop_index, has_tangents,
-                                gid_to_bid_map):
-        """Create a vertex from a blender mesh loop"""
-        new_vert = Vertex()
-
-        loop = mesh.loops[loop_index]
-        new_vert.vertex = fix_vertex(mesh.vertices[loop.vertex_index].co)
-
-        for uv_layer in mesh.uv_layers:
-            new_vert.uv.append(mathutils.Vector(
-                uv_layer.data[loop_index].uv
-            ))
-
-        if mesh.vertex_colors:
-            new_vert.color = mathutils.Vector(
-                mesh.vertex_colors[0].data[loop_index].color)
-
-        new_vert.normal = fix_vertex(loop.normal)
-
-        if has_tangents:
-            new_vert.tangent = fix_vertex(loop.tangent)
-            new_vert.bitangent = fix_vertex(loop.bitangent)
-
-        for vertex_group in mesh.vertices[loop.vertex_index].groups:
-            if vertex_group.group in gid_to_bid_map:
-                new_vert.bones.append(gid_to_bid_map[vertex_group.group])
-                new_vert.weights.append(vertex_group.weight)
-
-        return new_vert
 
     def calc_tangent_dp(self, vert):
         """Calculates the dot product of the tangent. I think this has
@@ -425,7 +401,9 @@ class VerticesArrays:
     def generate_lines(self):
         """Generates the various arrays that are part of the surface (eg
         normals, position etc.)"""
-        surface_lines = []
+        surface_lines = Array(
+            prefix='[\n\t\t', seperator=',\n\t\t', suffix='\n\t]'
+        )
 
         position_vals = Array("Vector3Array(",
                               values=[v.vertex for v in self.vertices])
@@ -482,37 +460,33 @@ class VerticesArrays:
                 weights.append((vert.bones[i], vert.weights[i]))
 
             weights = sorted(weights, key=lambda x: x[1], reverse=True)
+
+            # totalw guaranteed to be not zero
             totalw = 0.0
             for index, weight in enumerate(weights):
                 if index >= MAX_BONE_PER_VERTEX:
                     break
                 totalw += weight[1]
 
-            if totalw > 0.0:
-                for i in range(MAX_BONE_PER_VERTEX):
-                    if i < len(weights):
-                        bone_idx_array.append(weights[i][0])
-                        bone_ws_array.append(weights[i][1]/totalw)
-                    else:
-                        bone_idx_array.append(0)
-                        bone_ws_array.append(0.0)
-            else:
-                # vertex not assign to any bones
-                raise ValidationError(
-                    "There are vertices with no bone weight in rigged mesh, "
-                    "please fix them in Blender"
-                )
+            for i in range(MAX_BONE_PER_VERTEX):
+                if i < len(weights):
+                    bone_idx_array.append(weights[i][0])
+                    bone_ws_array.append(weights[i][1]/totalw)
+                else:
+                    bone_idx_array.append(0)
+                    bone_ws_array.append(0.0)
 
         return bone_idx_array, bone_ws_array
 
     def to_string(self):
         """Serialize"""
-        return "[\n\t\t{}\n\t]".format(",\n\t\t".join(self.generate_lines()))
+        return self.generate_lines().to_string()
 
 
 class Surface:
     """A surface is a single part of a mesh (eg in blender, one mesh can have
     multiple materials. Godot calls these separate parts separate surfaces"""
+
     def __init__(self):
         # map from a Vertex.tup() to surface.vertex_data.indices
         self.vertex_map = dict()
@@ -522,7 +496,6 @@ class Surface:
         self.vertex_index_map = dict()
         self.id = None
         self.material = None
-        self.face_material_index = -1
 
     @property
     def name_str(self):
@@ -530,29 +503,25 @@ class Surface:
         id"""
         return "surfaces/" + str(self.id)
 
+    def generate_object(self):
+        """Generate object with mapping structure which fully
+        describe the surface"""
+        surface_object = Map()
+        if self.material is not None:
+            surface_object['material'] = self.material
+        surface_object['primitive'] = 4
+        surface_object['arrays'] = self.vertex_data
+        surface_object['morph_arrays'] = self.morph_arrays
+        return surface_object
+
     def to_string(self):
         """Serialize"""
-        out_str = "{\n"
-        if self.material is not None:
-
-            out_str += "\t\"material\":" + self.material + ",\n"
-        out_str += "\t\"primitive\":4,\n"
-        out_str += "\t\"arrays\":" + self.vertex_data.to_string() + ",\n"
-        out_str += "\t" + "\"morph_arrays\":"
-        out_str += self.morph_arrays.to_string()
-        out_str += "\n"
-        out_str += "}\n"
-
-        return out_str
-
-
-def fix_vertex(vtx):
-    """Changes a single position vector from y-up to z-up"""
-    return mathutils.Vector((vtx.x, vtx.z, -vtx.y))
+        return self.generate_object().to_string()
 
 
 class Vertex:
     """Stores all the attributes for a single vertex"""
+
     def get_tup(self):
         """Returns a tuple form of this vertex so that it can be hashed"""
         tup = (self.vertex.x, self.vertex.y, self.vertex.z, self.normal.x,
@@ -572,6 +541,47 @@ class Vertex:
             tup = tup + (float(weight), )
 
         return tup
+
+    @classmethod
+    def create_from_mesh_loop(cls, mesh, loop_index, has_tangents,
+                              gid_to_bid_map):
+        """Create a vertex from a blender mesh loop"""
+        new_vert = cls()
+
+        loop = mesh.loops[loop_index]
+        new_vert.vertex = fix_vertex(mesh.vertices[loop.vertex_index].co)
+
+        for uv_layer in mesh.uv_layers:
+            new_vert.uv.append(mathutils.Vector(
+                uv_layer.data[loop_index].uv
+            ))
+
+        if mesh.vertex_colors:
+            new_vert.color = mathutils.Vector(
+                mesh.vertex_colors[0].data[loop_index].color)
+
+        new_vert.normal = fix_vertex(loop.normal)
+
+        if has_tangents:
+            new_vert.tangent = fix_vertex(loop.tangent)
+            new_vert.bitangent = fix_vertex(loop.bitangent)
+
+        for vertex_group in mesh.vertices[loop.vertex_index].groups:
+            if (vertex_group.group in gid_to_bid_map and
+                    vertex_group.weight != 0.0):
+                new_vert.bones.append(gid_to_bid_map[vertex_group.group])
+                new_vert.weights.append(vertex_group.weight)
+
+        if gid_to_bid_map and not new_vert.weights:
+            # vertex not assign to any bones
+            raise ValidationError(
+                "No bone assigned vertex detected, "
+                "vertex with local position {} ".format(
+                    mesh.vertices[loop.vertex_index].co
+                )
+            )
+
+        return new_vert
 
     __slots__ = ("vertex", "normal", "tangent", "bitangent", "color", "uv",
                  "bones", "weights")

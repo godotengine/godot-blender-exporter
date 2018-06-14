@@ -21,7 +21,6 @@ surfaces/0 = {
 	],
 	"morph_arrays":[]
 }
-
 [node type="Spatial" name="Scene"]
 
 
@@ -84,7 +83,7 @@ bones/5/bound_children = []
 
 [node name="Mesh" type="MeshInstance" parent="PhysicsPhysics/Rig"]
 
+skeleton = NodePath("..:")
 mesh = SubResource(2)
 visible = true
-skeleton = NodePath("..:")
 transform = Transform(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0)

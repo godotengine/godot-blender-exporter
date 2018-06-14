@@ -272,6 +272,23 @@ class Array(list):
         )
 
 
+class Map(collections.OrderedDict):
+    """An ordered dict, used to serialize to a dict to escn file. Note
+    that the key should be string, but for the value will be applied
+    with to_string() method"""
+    def __init__(self):
+        super().__init__()
+
+        self.__str__ = self.to_string
+
+    def to_string(self):
+        """Convert the map to serialized form"""
+        return ("{\n\t" +
+                ',\n\t'.join(['"{}":{}'.format(k, to_string(v))
+                              for k, v in self.items()]) +
+                "\n}")
+
+
 class NodePath:
     """Node in scene points to other node or node's attribute,
     for example, a MeshInstane points to a Skeleton. """

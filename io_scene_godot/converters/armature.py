@@ -25,15 +25,6 @@ def export_bone_attachment(escn_file, node, parent_gd_node):
     return bone_attachment
 
 
-def get_armature_data(node):
-    """Get the armature modifier of a blender object
-    if does not have one, return None"""
-    for modifier in node.modifiers:
-        if modifier.type.lower() == 'armature':
-            return modifier.object.data
-    return None
-
-
 def find_skeletion_node(node):
     """Return the cloest Skeleton from node to root,
     if not found, return None"""

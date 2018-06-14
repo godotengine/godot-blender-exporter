@@ -72,7 +72,7 @@ class ExportGodot(bpy.types.Operator, ExportHelper):
         },
     )
 
-    export_shape_key = BoolProperty(
+    use_export_shape_key = BoolProperty(
         name="Export Shape Key",
         description="Export all the shape keys in mesh objects",
         default=True,
