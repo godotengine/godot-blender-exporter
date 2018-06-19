@@ -3,12 +3,12 @@
 [sub_resource type="ProceduralSky" id=1]
 
 radiance_size = 4
-sky_top_color = Color( 0.0470588, 0.454902, 0.976471, 1 )
-sky_horizon_color = Color( 0.556863, 0.823529, 0.909804, 1 )
+sky_top_color = Color( 1, 1, 1, 1 )
+sky_horizon_color = Color( 0.765625, 0.765625, 0.765625, 1 )
 sky_curve = 0.25
 sky_energy = 1.0
 ground_bottom_color = Color( 0.101961, 0.145098, 0.188235, 1 )
-ground_horizon_color = Color( 0.482353, 0.788235, 0.952941, 1 )
+ground_horizon_color = Color( 0.904654, 0.931082, 0.945312, 1 )
 ground_curve = 0.01
 ground_energy = 1.0
 sun_color = Color( 1, 1, 1, 1 )
@@ -52,7 +52,7 @@ auto_exposure_scale = 0.4
 auto_exposure_min_luma = 0.05
 auto_exposure_max_luma = 8.0
 auto_exposure_speed = 0.5
-ss_reflections_enabled = false
+ss_reflections_enabled = false 
 ss_reflections_max_steps = 64
 ss_reflections_fade_in = 0.15
 ss_reflections_fade_out = 2.0
@@ -98,5 +98,4 @@ adjustment_enabled = false
 adjustment_brightness = 1.0
 adjustment_contrast = 1.0
 adjustment_saturation = 1.0
-_sections_unfolded = [ "Ambient Light", "Background" ]
 

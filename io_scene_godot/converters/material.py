@@ -7,7 +7,8 @@ tree into a flat bunch of parameters is not trivial. So for someone else:"""
 import logging
 import os
 import bpy
-from ..structures import InternalResource, ExternalResource
+from .material_node_tree.exporters import export_node_tree
+from ..structures import InternalResource, ExternalResource, ValidationError
 
 
 def export_image(escn_file, export_settings, image):
@@ -35,7 +36,7 @@ def export_image(escn_file, export_settings, image):
 
 
 def export_material(escn_file, export_settings, material):
-    """ Exports a blender internal material as best it can"""
+    """Exports blender internal/cycles material as best it can"""
     external_material = find_material(export_settings, material)
     if external_material is not None:
         resource_id = escn_file.get_external_resource(material)
@@ -47,21 +48,43 @@ def export_material(escn_file, export_settings, material):
             resource_id = escn_file.add_external_resource(ext_mat, material)
         return "ExtResource({})".format(resource_id)
 
-    resource_id = escn_file.get_internal_resource(material)
-    # Existing internal resource
-    if resource_id is not None:
-        return "SubResource({})".format(resource_id)
-    mat = InternalResource("SpatialMaterial")
-
-    mat['flags_unshaded'] = material.use_shadeless
-    mat['flags_vertex_lighting'] = material.use_vertex_color_light
-    mat['flags_transparent'] = material.use_transparency
-    mat['vertex_color_use_as_albedo'] = material.use_vertex_color_paint
-    mat['albedo_color'] = material.diffuse_color
-    mat['subsurf_scatter_enabled'] = material.subsurface_scattering.use
-
-    resource_id = escn_file.add_internal_resource(mat, material)
+    resource_id = generate_material_resource(
+        escn_file, export_settings, material
+    )
     return "SubResource({})".format(resource_id)
+
+
+def generate_material_resource(escn_file, export_settings, material):
+    """Export blender material as an internal resource"""
+    resource_id = escn_file.get_internal_resource(material)
+    if resource_id is not None:
+        return resource_id
+
+    engine = bpy.context.scene.render.engine
+
+    mat = None
+    if engine == 'CYCLES' and material.node_tree is not None:
+        mat = InternalResource("ShaderMaterial")
+        try:
+            export_node_tree(
+                escn_file, export_settings, material, mat
+            )
+        except ValidationError as exception:
+            mat = None  # revert to SpatialMaterial
+            logging.error(
+                str(exception) + ", in material '{}'".format(material.name)
+            )
+
+    if mat is None:
+        mat = InternalResource("SpatialMaterial")
+
+        mat['flags_unshaded'] = material.use_shadeless
+        mat['flags_vertex_lighting'] = material.use_vertex_color_light
+        mat['flags_transparent'] = material.use_transparency
+        mat['vertex_color_use_as_albedo'] = material.use_vertex_color_paint
+        mat['albedo_color'] = material.diffuse_color
+        mat['subsurf_scatter_enabled'] = material.subsurface_scattering.use
+    return escn_file.add_internal_resource(mat, material)
 
 
 # ------------------- Tools for finding existing materials -------------------
