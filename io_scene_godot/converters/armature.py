@@ -61,13 +61,23 @@ def export_bone(pose_bone, exclude_ctrl_bone):
     parent_bone_name = ""
 
     rest_bone = pose_bone.bone
-    if (pose_bone.parent is None or
-            (exclude_ctrl_bone and not pose_bone.bone.parent.use_deform)):
+
+    if exclude_ctrl_bone:
         rest_mat = rest_bone.matrix_local
+        bone_ptr = rest_bone.parent
+        while bone_ptr is not None and not bone_ptr.use_deform:
+            bone_ptr = bone_ptr.parent
+        if bone_ptr is not None:
+            rest_mat = (bone_ptr.matrix_local.inverted_safe() *
+                        rest_mat)
+            parent_bone_name = bone_ptr.name
     else:
-        parent_bone_name = pose_bone.parent.name
-        rest_mat = (rest_bone.parent.matrix_local.inverted_safe() *
-                    rest_bone.matrix_local)
+        if pose_bone.parent is None:
+            rest_mat = rest_bone.matrix_local
+        else:
+            parent_bone_name = pose_bone.parent.name
+            rest_mat = (rest_bone.parent.matrix_local.inverted_safe() *
+                        rest_bone.matrix_local)
     pose_mat = pose_bone.matrix_basis
 
     bone = Bone(bone_name, parent_bone_name)
