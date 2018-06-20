@@ -12,9 +12,8 @@ def export_bone_attachment(escn_file, node, parent_gd_node):
     # in the parent armature node
     bone_attachment['bone_name'] = "\"{}\"".format(node.parent_bone)
 
-    # regard to ```export_armature_node()```, the exported bone id
-    # is the index of the bone in node.parent.pose.bones list
-    bone_id = node.parent.pose.bones.find(node.parent_bone)
+    # parent_gd_node is the SkeletonNode with the parent bone
+    bone_id = parent_gd_node.find_bone_id(node.parent_bone)
 
     # append node to its parent bone's bound_children list
     parent_gd_node["bones/{}/{}".format(bone_id, 'bound_children')].append(
@@ -46,29 +45,38 @@ class Bone:
         self.pose = mathutils.Matrix()
 
 
-def export_bone(pose_bone, exclude_ctrl_bone):
+def should_export(export_settings, armature_obj, rest_bone):
+    """Return a bool indicates whether a bone should be exported"""
+    # if bone has a child object, it must exported
+    for child in armature_obj.children:
+        if child.parent_bone == rest_bone.name:
+            return True
+
+    if not (export_settings['use_exclude_ctrl_bone'] and
+            not rest_bone.use_deform):
+        return True
+
+    return False
+
+
+def export_bone(pose_bone, bl_bones_to_export):
     """Convert a Blender bone to a escn bone"""
     bone_name = pose_bone.name
     parent_bone_name = ""
 
     rest_bone = pose_bone.bone
 
-    if exclude_ctrl_bone:
-        rest_mat = rest_bone.matrix_local
-        bone_ptr = rest_bone.parent
-        while bone_ptr is not None and not bone_ptr.use_deform:
-            bone_ptr = bone_ptr.parent
-        if bone_ptr is not None:
-            rest_mat = (bone_ptr.matrix_local.inverted_safe() *
-                        rest_mat)
-            parent_bone_name = bone_ptr.name
+    ps_bone_ptr = pose_bone.parent
+    while ps_bone_ptr is not None and ps_bone_ptr not in bl_bones_to_export:
+        ps_bone_ptr = ps_bone_ptr.parent
+    if ps_bone_ptr is not None:
+        rest_mat = (ps_bone_ptr.bone.matrix_local.inverted_safe() *
+                    rest_bone.matrix_local)
+        parent_bone_name = ps_bone_ptr.name
     else:
-        if pose_bone.parent is None:
-            rest_mat = rest_bone.matrix_local
-        else:
-            parent_bone_name = pose_bone.parent.name
-            rest_mat = (rest_bone.parent.matrix_local.inverted_safe() *
-                        rest_bone.matrix_local)
+        rest_mat = rest_bone.matrix_local
+        parent_bone_name = ""
+
     pose_mat = pose_bone.matrix_basis
 
     bone = Bone(bone_name, parent_bone_name)
@@ -116,15 +124,20 @@ def export_armature_node(escn_file, export_settings, node, parent_gd_node):
     skeleton_node = SkeletonNode(node.name, parent_gd_node)
     skeleton_node['transform'] = node.matrix_local
 
-    bone_list = list()
+    # according to configures, generate a set of blender bones
+    # need to be exported
+    bl_bones_to_export = list()
     for pose_bone in node.pose.bones:
-        if (export_settings["use_exclude_ctrl_bone"] and
-                pose_bone.bone.use_deform):
-            bone = export_bone(
-                pose_bone, export_settings["use_exclude_ctrl_bone"])
-            bone_list.append(bone)
+        if should_export(export_settings, node, pose_bone.bone):
+            bl_bones_to_export.append(pose_bone)
 
-    skeleton_node.add_bones(bone_list)
+    gd_bone_list = list()
+    for pose_bone in bl_bones_to_export:
+        if pose_bone in bl_bones_to_export:
+            gd_bone = export_bone(pose_bone, bl_bones_to_export)
+            gd_bone_list.append(gd_bone)
+
+    skeleton_node.add_bones(gd_bone_list)
 
     escn_file.add_node(skeleton_node)
 
