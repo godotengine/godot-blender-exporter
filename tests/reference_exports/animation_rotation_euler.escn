@@ -28,7 +28,6 @@ surfaces/0 = {
 	"morph_arrays":[]
 }
 
-
 [sub_resource id=3 type="Animation"]
 
 step = 0.1

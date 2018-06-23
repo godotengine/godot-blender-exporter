@@ -30,7 +30,6 @@ surfaces/0 = {
 	],
 	"morph_arrays":[]
 }
-
 [node type="Spatial" name="Scene"]
 
 
@@ -63,7 +62,7 @@ anims/ArmatureAction.001 = SubResource(1)
 
 [node name="Cylinder" type="MeshInstance" parent="Armature"]
 
+skeleton = NodePath("..:")
 mesh = SubResource(2)
 visible = true
-skeleton = NodePath("..:")
 transform = Transform(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 1.49012e-08, 1.1074, -1.49012e-08)

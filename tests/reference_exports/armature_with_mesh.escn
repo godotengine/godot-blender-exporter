@@ -17,7 +17,6 @@ surfaces/0 = {
 	],
 	"morph_arrays":[]
 }
-
 [node type="Spatial" name="Scene"]
 
 
@@ -39,7 +38,7 @@ bones/1/bound_children = []
 
 [node name="Suzanne" type="MeshInstance" parent="Armature001"]
 
+skeleton = NodePath("..:")
 mesh = SubResource(1)
 visible = true
-skeleton = NodePath("..:")
 transform = Transform(1.22688, 0.0, 0.0, 0.0, 1.22688, 0.0, 0.0, 0.0, 1.22688, 0.0440081, 1.01822, -0.544986)

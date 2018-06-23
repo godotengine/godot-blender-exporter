@@ -43,7 +43,6 @@ surfaces/0 = {
 	"morph_arrays":[]
 }
 
-
 [sub_resource id=3 type="ArrayMesh"]
 
 surfaces/0 = {
@@ -61,7 +60,6 @@ surfaces/0 = {
 	],
 	"morph_arrays":[]
 }
-
 [node type="Spatial" name="Scene"]
 
 
@@ -94,9 +92,9 @@ anims/Armature.001Action = SubResource(1)
 
 [node name="Cube" type="MeshInstance" parent="Armature001"]
 
+skeleton = NodePath("..:")
 mesh = SubResource(2)
 visible = true
-skeleton = NodePath("..:")
 transform = Transform(1.0, 0.0, 0.0, 2.98023e-08, 1.0, 0.0, -5.96046e-08, 0.0, 1.0, -0.06635, 0.614036, -0.079489)
 
 [node name="Armature" type="Skeleton" parent="."]
@@ -123,7 +121,7 @@ bones/2/bound_children = []
 
 [node name="Cylinder" type="MeshInstance" parent="Armature"]
 
+skeleton = NodePath("..:")
 mesh = SubResource(3)
 visible = true
-skeleton = NodePath("..:")
 transform = Transform(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.826031, 0.0)
