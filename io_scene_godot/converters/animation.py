@@ -5,7 +5,7 @@ import copy
 import bpy
 import mathutils
 from . import armature
-from ..structures import (NodeTemplate, NodePath,
+from ..structures import (NodeTemplate, NodePath, fix_directional_transform,
                           InternalResource, Array, fix_matrix)
 
 LINEAR_INTERPOLATION = 1
@@ -231,6 +231,12 @@ def export_transform_action(godot_node, animation_player,
 
                 default_frame = None
 
+                # the fcurve location is matrix_basis.to_translation()
+                default_frame = TransformFrame(
+                    blender_object.matrix_basis,
+                    blender_object.rotation_mode
+                )
+
                 if object_path.startswith('pose'):
                     bone_name = blender_path_to_bone_name(object_path)
 
@@ -245,12 +251,6 @@ def export_transform_action(godot_node, animation_player,
                     default_frame = TransformFrame(
                         pose_bone.matrix_basis,
                         pose_bone.rotation_mode
-                    )
-                else:
-                    # the fcurve location is matrix_basis.to_translation()
-                    default_frame = TransformFrame(
-                        blender_object.matrix_basis,
-                        blender_object.rotation_mode
                     )
 
                 transform_frames_map[object_path] = [
@@ -273,9 +273,18 @@ def export_transform_action(godot_node, animation_player,
             # object_path equals '' represents node itself
 
             # convert matrix_basis to matrix_local(parent space transform)
-            normalized_frame_list = [
-                blender_object.matrix_parent_inverse *
-                x.to_matrix() for x in frame_list]
+            if (godot_node.get_type()
+                    in ("SpotLight", "DirectionalLight", "Camera")):
+                normalized_frame_list = [
+                    fix_directional_transform(
+                        blender_object.matrix_parent_inverse * x.to_matrix()
+                    ) for x in frame_list
+                ]
+            else:
+                normalized_frame_list = [
+                    blender_object.matrix_parent_inverse *
+                    x.to_matrix() for x in frame_list
+                ]
 
             track_path = NodePath(
                 animation_player.parent.get_path(),

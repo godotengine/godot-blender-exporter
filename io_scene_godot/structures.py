@@ -3,6 +3,7 @@
 This file contains classes to help dealing with the actual writing to the file
 """
 import os
+import math
 import collections
 import mathutils
 
@@ -324,6 +325,15 @@ def fix_matrix(mtx):
     trans[up_axis][3] = -trans[up_axis][3]
 
     return trans
+
+
+_AXIS_CORRECT = mathutils.Matrix.Rotation(math.radians(-90), 4, 'X')
+
+
+def fix_directional_transform(mtx):
+    """Used to correct spotlights and cameras, which in blender are
+    Z-forwards and in Godot are Y-forwards"""
+    return mtx * _AXIS_CORRECT
 
 
 # ------------------ Implicit Conversions of Blender Types --------------------
