@@ -6,11 +6,7 @@ Anything more complex should go in it's own file
 import math
 import logging
 import mathutils
-from ..structures import NodeTemplate
-
-# Used to correct spotlights and cameras, which in blender are Z-forwards and
-# in Godot are Y-forwards
-AXIS_CORRECT = mathutils.Matrix.Rotation(math.radians(-90), 4, 'X')
+from ..structures import NodeTemplate, fix_directional_transform
 
 
 def export_empty_node(escn_file, export_settings, node, parent_gd_node):
@@ -43,7 +39,7 @@ def export_camera_node(escn_file, export_settings, node, parent_gd_node):
         cam_node['projection'] = 1
         cam_node['size'] = camera.ortho_scale
 
-    cam_node['transform'] = node.matrix_local * AXIS_CORRECT
+    cam_node['transform'] = fix_directional_transform(node.matrix_local)
     escn_file.add_node(cam_node)
 
     return cam_node
@@ -93,7 +89,7 @@ def export_lamp_node(escn_file, export_settings, node, parent_gd_node):
     if light_node is not None:
         # Properties common to all lights
         light_node['light_color'] = mathutils.Color(light.color)
-        light_node['transform'] = node.matrix_local * AXIS_CORRECT
+        light_node['transform'] = fix_directional_transform(node.matrix_local)
         light_node['light_negative'] = light.use_negative
         light_node['light_specular'] = 1.0 if light.use_specular else 0.0
         light_node['light_energy'] = light.energy
