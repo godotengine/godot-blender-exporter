@@ -299,18 +299,20 @@ transform = Transform(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0
 
 [node name="Lamp" type="OmniLight" parent="."]
 
-omni_range = 30.0
-shadow_enabled = true
-light_color = Color(1.0, 1.0, 1.0, 1.0)
-transform = Transform(-0.290865, -0.771101, 0.566393, -0.0551891, 0.604525, 0.794672, -0.955171, 0.199883, -0.218391, 4.07625, 7.32356, -1.00545)
-light_negative = false
 light_specular = 1.0
 light_energy = 1.0
+light_color = Color(1.0, 1.0, 1.0, 1.0)
+shadow_color = Color(0.0, 0.0, 0.0, 1.0)
+omni_range = 30.0
+transform = Transform(-0.290865, -0.771101, 0.566393, -0.0551891, 0.604525, 0.794672, -0.955171, 0.199883, -0.218391, 4.07625, 7.32356, -1.00545)
+shadow_enabled = true
+light_negative = false
 
 [node name="Camera" type="Camera" parent="."]
 
 far = 100.0
 near = 0.1
+size = 7.31429
 projection = 0
 fov = 49.1343
 transform = Transform(0.685921, -0.324014, 0.651558, 0.0, 0.895396, 0.445271, -0.727676, -0.305421, 0.61417, 14.4308, 10.093, 13.0585)

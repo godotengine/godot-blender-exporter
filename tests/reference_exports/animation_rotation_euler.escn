@@ -31,7 +31,7 @@ surfaces/0 = {
 [sub_resource id=3 type="Animation"]
 
 step = 0.1
-length = 7.125
+length = 7.08333
 tracks/0/type = "transform"
 tracks/0/path = NodePath("Cube:")
 tracks/0/interp = 1

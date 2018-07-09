@@ -3,7 +3,7 @@
 [sub_resource id=1 type="Animation"]
 
 step = 0.1
-length = 4.25
+length = 4.20833
 tracks/0/type = "transform"
 tracks/0/path = NodePath("Armature001:Bone.003")
 tracks/0/interp = 1

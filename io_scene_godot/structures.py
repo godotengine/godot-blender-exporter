@@ -4,6 +4,7 @@ This file contains classes to help dealing with the actual writing to the file
 """
 import os
 import math
+import copy
 import collections
 import mathutils
 
@@ -296,6 +297,14 @@ class NodePath:
     def __init__(self, from_here, to_there, attribute_pointed=''):
         self.relative_path = os.path.relpath(to_there, from_here)
         self.attribute_name = attribute_pointed
+
+    def new_copy(self, attribute=None):
+        """Return a new instance of the current NodePath and
+        able to change the attribute pointed"""
+        new_node_path = copy.deepcopy(self)
+        if attribute is not None:
+            new_node_path.attribute_name = attribute
+        return new_node_path
 
     def to_string(self):
         """Serialize a node path"""

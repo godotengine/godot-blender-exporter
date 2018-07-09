@@ -7,6 +7,9 @@ import math
 import logging
 import mathutils
 from ..structures import NodeTemplate, fix_directional_transform
+from .animation import (export_animation_data, AttributeConvertInfo,
+                        CONVERT_AS_BOOL, CONVERT_AS_FLOAT,
+                        CONVERT_AS_MULTI_VALUE)
 
 
 def export_empty_node(escn_file, export_settings, node, parent_gd_node):
@@ -20,29 +23,97 @@ def export_empty_node(escn_file, export_settings, node, parent_gd_node):
     return empty_node
 
 
+class CameraNode(NodeTemplate):
+    """Camera node in godot scene"""
+    _cam_attr_conv = [
+        # blender attr, godot attr, converter lambda, type
+        AttributeConvertInfo(
+            'clip_end', 'far', lambda x: x, CONVERT_AS_FLOAT),
+        AttributeConvertInfo(
+            'clip_start', 'near', lambda x: x, CONVERT_AS_FLOAT),
+        AttributeConvertInfo(
+            'ortho_scale', 'size', lambda x: x, CONVERT_AS_FLOAT),
+    ]
+
+    def __init__(self, name, parent):
+        super().__init__(name, "Camera", parent)
+
+    @property
+    def attribute_conversion(self):
+        """Get a list of quaternary tuple
+        (blender_attr, godot_attr, lambda converter, attr type)"""
+        return self._cam_attr_conv
+
+
 def export_camera_node(escn_file, export_settings, node, parent_gd_node):
     """Exports a camera"""
     if (node.data is None or node.hide_render or
             "CAMERA" not in export_settings['object_types']):
         return parent_gd_node
 
-    cam_node = NodeTemplate(node.name, "Camera", parent_gd_node)
+    cam_node = CameraNode(node.name, parent_gd_node)
     camera = node.data
 
-    cam_node['far'] = camera.clip_end
-    cam_node['near'] = camera.clip_start
+    for item in cam_node.attribute_conversion:
+        blender_attr, gd_attr, converter, _ = item
+        cam_node[gd_attr] = converter(getattr(camera, blender_attr))
 
     if camera.type == "PERSP":
         cam_node['projection'] = 0
-        cam_node['fov'] = math.degrees(camera.angle)
     else:
         cam_node['projection'] = 1
-        cam_node['size'] = camera.ortho_scale
+
+    # `fov` does not go into `attribute_conversion`, because it can not
+    # be animated
+    cam_node['fov'] = math.degrees(camera.angle)
 
     cam_node['transform'] = fix_directional_transform(node.matrix_local)
     escn_file.add_node(cam_node)
 
+    export_animation_data(escn_file, export_settings,
+                          cam_node, node.data, 'camera')
+
     return cam_node
+
+
+class LightNode(NodeTemplate):
+    """Base class for godot light node"""
+    _light_attr_conv = [
+        AttributeConvertInfo(
+            'use_specular', 'light_specular',
+            lambda x: 1.0 if x else 0.0, CONVERT_AS_BOOL),
+        AttributeConvertInfo(
+            'energy', 'light_energy', lambda x: x, CONVERT_AS_FLOAT),
+        AttributeConvertInfo(
+            'color', 'light_color', mathutils.Color, CONVERT_AS_MULTI_VALUE),
+        AttributeConvertInfo(
+            'shadow_color', 'shadow_color',
+            mathutils.Color, CONVERT_AS_MULTI_VALUE),
+    ]
+    _omni_attr_conv = [
+        AttributeConvertInfo(
+            'distance', 'omni_range', lambda x: x, CONVERT_AS_FLOAT)
+    ]
+    _spot_attr_conv = [
+        AttributeConvertInfo(
+            'spot_size', 'spot_angle',
+            lambda x: math.degrees(x/2), CONVERT_AS_FLOAT),
+        AttributeConvertInfo(
+            'spot_blend', 'spot_angle_attenuation',
+            lambda x: 0.2/(x + 0.01), CONVERT_AS_FLOAT),
+        AttributeConvertInfo('distance', 'spot_range',
+                             lambda x: x, CONVERT_AS_FLOAT),
+    ]
+
+    @property
+    def attribute_conversion(self):
+        """Get a list of quaternary tuple
+        (blender_attr, godot_attr, lambda converter, attr type)"""
+        if self.get_type() == 'OmniLight':
+            return self._light_attr_conv + self._omni_attr_conv
+        if self.get_type() == 'SpotLight':
+            return self._light_attr_conv + self._spot_attr_conv
+        return self._light_attr_conv
 
 
 def export_lamp_node(escn_file, export_settings, node, parent_gd_node):
@@ -55,9 +126,7 @@ def export_lamp_node(escn_file, export_settings, node, parent_gd_node):
     light = node.data
 
     if light.type == "POINT":
-        light_node = NodeTemplate(node.name, "OmniLight", parent_gd_node)
-        light_node['omni_range'] = light.distance
-        light_node['shadow_enabled'] = light.shadow_method != "NOSHADOW"
+        light_node = LightNode(node.name, 'OmniLight', parent_gd_node)
 
         if not light.use_sphere:
             logging.warning(
@@ -65,11 +134,7 @@ def export_lamp_node(escn_file, export_settings, node, parent_gd_node):
             )
 
     elif light.type == "SPOT":
-        light_node = NodeTemplate(node.name, "SpotLight", parent_gd_node)
-        light_node['spot_range'] = light.distance
-        light_node['spot_angle'] = math.degrees(light.spot_size/2)
-        light_node['spot_angle_attenuation'] = 0.2/(light.spot_blend + 0.01)
-        light_node['shadow_enabled'] = light.shadow_method != "NOSHADOW"
+        light_node = LightNode(node.name, 'SpotLight', parent_gd_node)
 
         if not light.use_sphere:
             logging.warning(
@@ -77,9 +142,7 @@ def export_lamp_node(escn_file, export_settings, node, parent_gd_node):
             )
 
     elif light.type == "SUN":
-        light_node = NodeTemplate(node.name, "DirectionalLight",
-                                  parent_gd_node)
-        light_node['shadow_enabled'] = light.shadow_method != "NOSHADOW"
+        light_node = LightNode(node.name, 'DirectionalLight', parent_gd_node)
     else:
         light_node = None
         logging.warning(
@@ -87,13 +150,18 @@ def export_lamp_node(escn_file, export_settings, node, parent_gd_node):
         )
 
     if light_node is not None:
+        for item in light_node.attribute_conversion:
+            bl_attr, gd_attr, converter, _ = item
+            light_node[gd_attr] = converter(getattr(light, bl_attr))
+
         # Properties common to all lights
-        light_node['light_color'] = mathutils.Color(light.color)
         light_node['transform'] = fix_directional_transform(node.matrix_local)
+        light_node['shadow_enabled'] = light.shadow_method != "NOSHADOW"
         light_node['light_negative'] = light.use_negative
-        light_node['light_specular'] = 1.0 if light.use_specular else 0.0
-        light_node['light_energy'] = light.energy
 
         escn_file.add_node(light_node)
+
+    export_animation_data(escn_file, export_settings,
+                          light_node, node.data, 'light')
 
     return light_node

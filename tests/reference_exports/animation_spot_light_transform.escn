@@ -3,7 +3,7 @@
 [sub_resource id=1 type="Animation"]
 
 step = 0.1
-length = 1.70833
+length = 1.66667
 tracks/0/type = "transform"
 tracks/0/path = NodePath("Spot:")
 tracks/0/interp = 1
@@ -41,15 +41,16 @@ surfaces/0 = {
 
 [node name="Spot" type="SpotLight" parent="."]
 
-spot_range = 10.0
-spot_angle = 22.5
-spot_angle_attenuation = 1.25
-shadow_enabled = true
-light_color = Color(1.0, 1.0, 1.0, 1.0)
-transform = Transform(0.664154, 0.183225, -0.724795, 0.688378, -0.528045, 0.497297, -0.291607, -0.829215, -0.476831, -8.94658, 5.71699, -3.33328)
-light_negative = false
 light_specular = 1.0
 light_energy = 1.0
+light_color = Color(1.0, 1.0, 1.0, 1.0)
+shadow_color = Color(0.0, 0.0, 0.0, 1.0)
+spot_angle = 22.5
+spot_angle_attenuation = 1.25
+spot_range = 10.0
+transform = Transform(0.664154, 0.183225, -0.724795, 0.688378, -0.528045, 0.497297, -0.291607, -0.829215, -0.476831, -8.94658, 5.71699, -3.33328)
+shadow_enabled = true
+light_negative = false
 
 [node name="SpotAnimation" type="AnimationPlayer" parent="."]
 
