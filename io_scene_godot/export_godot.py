@@ -26,6 +26,7 @@ http://www.godotengine.org
 
 import os
 import collections
+import functools
 import logging
 import bpy
 
@@ -35,6 +36,7 @@ from . import converters
 logging.basicConfig(level=logging.INFO, format="[%(levelname)s]: %(message)s")
 
 
+@functools.lru_cache(maxsize=1)  # Cache it so we don't search lots of times
 def find_godot_project_dir(export_path):
     """Finds the project.godot file assuming that the export path
     is inside a project (looks for a project.godot file)"""
@@ -176,7 +178,9 @@ class GodotExporter:
         self.scene = bpy.context.scene
         self.config = kwargs
         self.config["path"] = path
-        self.config["project_path"] = find_godot_project_dir(path)
+        self.config["project_path_func"] = functools.partial(
+            find_godot_project_dir, path
+        )
         self.valid_nodes = []
 
         self.escn_file = None
