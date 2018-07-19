@@ -221,10 +221,13 @@ class ExternalResource(FileEntry):
 
     def fix_path(self, export_settings):
         """Makes the resource path relative to the exported file"""
+        # The replace line is because godot always works in linux
+        # style slashes, and python doing relpath uses the one
+        # from the native OS
         self.heading['path'] = os.path.relpath(
             self.heading['path'],
             os.path.dirname(export_settings["path"]),
-        )
+        ).replace('\\', '/')
 
 
 class InternalResource(FileEntry):
