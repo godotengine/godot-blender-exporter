@@ -96,7 +96,7 @@ def find_material(export_settings, material):
     """Searches for an existing Godot material"""
     search_type = export_settings["material_search_paths"]
     if search_type == "PROJECT_DIR":
-        search_dir = export_settings["project_path"]
+        search_dir = export_settings["project_path_func"]()
     elif search_type == "EXPORT_DIR":
         search_dir = export_settings["path"]
     else:
