@@ -356,7 +356,11 @@ def export_transform_action(godot_node, animation_player,
             else:
                 rot_mat = self.rotation_euler.to_matrix().to_4x4()
             loc_mat = mathutils.Matrix.Translation(self.location)
-            sca_mat = mathutils.Matrix.Scale(1, 4, self.scale)
+            sca_mat = mathutils.Matrix((
+                (self.scale[0], 0, 0),
+                (0, self.scale[1], 0),
+                (0, 0, self.scale[2]),
+            )).to_4x4()
             return loc_mat * rot_mat * sca_mat
 
     first_frame, last_frame = get_action_frame_range(action)
