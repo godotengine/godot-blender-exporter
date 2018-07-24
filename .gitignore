@@ -6,3 +6,5 @@ tests/godot_project/exports/*.escn
 
 .import 
 *.import
+
+.sconsign.dblite
