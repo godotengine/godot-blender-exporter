@@ -33,7 +33,7 @@ surfaces/0 = {
 step = 0.1
 length = 2.5
 tracks/0/type = "value"
-tracks/0/path = NodePath("Lamp:spot_angle")
+tracks/0/path = NodePath(".:spot_angle")
 tracks/0/interp = 1
 tracks/0/keys = {
 	"times":PoolRealArray(1.25, 1.29167, 1.33333, 1.375, 1.41667, 1.45833, 1.5, 1.54167, 1.58333, 1.625, 1.66667),
@@ -42,7 +42,7 @@ tracks/0/keys = {
 	"values":[7.5, 7.66627, 8.16667, 8.98029, 10.0445, 11.25, 12.4555, 13.5197, 14.3333, 14.8337, 15.0]
 }
 tracks/1/type = "value"
-tracks/1/path = NodePath("Lamp:spot_angle_attenuation")
+tracks/1/path = NodePath(".:spot_angle_attenuation")
 tracks/1/interp = 1
 tracks/1/keys = {
 	"times":PoolRealArray(2.08333, 2.125, 2.16667, 2.20833, 2.25, 2.29167, 2.33333, 2.375, 2.41667, 2.45833, 2.5),
@@ -51,7 +51,7 @@ tracks/1/keys = {
 	"values":[1.25, 1.22455, 1.15385, 1.05482, 0.948365, 0.851064, 0.771871, 0.713281, 0.674157, 0.652157, 0.645161]
 }
 tracks/2/type = "value"
-tracks/2/path = NodePath("Lamp:spot_range")
+tracks/2/path = NodePath(".:spot_range")
 tracks/2/interp = 1
 tracks/2/keys = {
 	"times":PoolRealArray(0.0416667, 0.0833333, 0.125, 0.166667, 0.208333, 0.25, 0.291667, 0.333333, 0.375, 0.416667, 0.458333, 0.5, 0.541667, 0.583333, 0.625, 0.666667, 0.708333, 0.75, 0.791667, 0.833333),
@@ -81,7 +81,7 @@ transform = Transform(-0.290865, -0.771101, 0.566393, -0.0551891, 0.604525, 0.79
 shadow_enabled = true
 light_negative = false
 
-[node name="LampAnimation" type="AnimationPlayer" parent="."]
+[node name="AnimationPlayer" type="AnimationPlayer" parent="Lamp"]
 
 root_node = NodePath("..:")
 anims/LampAction = SubResource(3)

@@ -142,7 +142,7 @@ class AnimationPlayer(NodeTemplate):
     def __init__(self, name, parent):
         super().__init__(name, "AnimationPlayer", parent)
         # use parent node as the animation root node
-        self['root_node'] = NodePath(self.get_path(), self.parent.get_path())
+        self['root_node'] = NodePath(self.get_path(), parent.get_path())
         # blender actions not in nla_tracks are treated as default
         self.default_animation = None
 
@@ -243,8 +243,8 @@ def get_animation_player(escn_file, export_settings, godot_node):
 
     if animation_player is None:
         animation_player = AnimationPlayer(
-            godot_node.get_name() + 'Animation',
-            godot_node.parent,
+            name='AnimationPlayer',
+            parent=godot_node,
         )
 
         escn_file.add_node(animation_player)

@@ -23,7 +23,7 @@ surfaces/0 = {
 step = 0.1
 length = 3.33333
 tracks/0/type = "value"
-tracks/0/path = NodePath("Sun:light_negative")
+tracks/0/path = NodePath(".:light_negative")
 tracks/0/interp = 0
 tracks/0/keys = {
 	"times":PoolRealArray(2.5, 2.91667, 3.33333),
@@ -32,7 +32,7 @@ tracks/0/keys = {
 	"values":[false, true, true]
 }
 tracks/1/type = "value"
-tracks/1/path = NodePath("Sun:light_specular")
+tracks/1/path = NodePath(".:light_specular")
 tracks/1/interp = 0
 tracks/1/keys = {
 	"times":PoolRealArray(1.66667, 2.08333),
@@ -41,7 +41,7 @@ tracks/1/keys = {
 	"values":[1.0, 0.0]
 }
 tracks/2/type = "value"
-tracks/2/path = NodePath("Sun:light_energy")
+tracks/2/path = NodePath(".:light_energy")
 tracks/2/interp = 1
 tracks/2/keys = {
 	"times":PoolRealArray(0.833333, 0.875, 0.916667, 0.958333, 1.0, 1.04167, 1.08333, 1.125, 1.16667, 1.20833, 1.25),
@@ -50,7 +50,7 @@ tracks/2/keys = {
 	"values":[1.0, 1.08868, 1.35556, 1.78949, 2.35705, 3.0, 3.64295, 4.21051, 4.64444, 4.91132, 5.0]
 }
 tracks/3/type = "value"
-tracks/3/path = NodePath("Sun:light_color")
+tracks/3/path = NodePath(".:light_color")
 tracks/3/interp = 1
 tracks/3/keys = {
 	"times":PoolRealArray(0.0416667, 0.0833333, 0.125, 0.166667, 0.208333, 0.25, 0.291667, 0.333333, 0.375, 0.416667),
@@ -77,7 +77,7 @@ transform = Transform(1.0, 0.0, 0.0, 0.0, -4.37114e-08, 1.0, 0.0, -1.0, -4.37114
 shadow_enabled = false
 light_negative = true
 
-[node name="SunAnimation" type="AnimationPlayer" parent="."]
+[node name="AnimationPlayer" type="AnimationPlayer" parent="Sun"]
 
 root_node = NodePath("..:")
 anims/SunAction = SubResource(2)

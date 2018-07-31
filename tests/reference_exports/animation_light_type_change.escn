@@ -33,7 +33,7 @@ surfaces/0 = {
 step = 0.1
 length = 2.91667
 tracks/0/type = "value"
-tracks/0/path = NodePath("Lamp:light_color")
+tracks/0/path = NodePath(".:light_color")
 tracks/0/interp = 1
 tracks/0/keys = {
 	"times":PoolRealArray(0.0833333, 0.458333, 0.5, 0.541667, 0.583333, 0.625, 0.666667, 0.708333, 0.75, 0.791667, 0.833333),
@@ -60,7 +60,7 @@ transform = Transform(-0.290865, -0.771101, 0.566393, -0.0551891, 0.604525, 0.79
 shadow_enabled = true
 light_negative = false
 
-[node name="LampAnimation" type="AnimationPlayer" parent="."]
+[node name="AnimationPlayer" type="AnimationPlayer" parent="Lamp"]
 
 root_node = NodePath("..:")
 anims/LampAction = SubResource(3)
