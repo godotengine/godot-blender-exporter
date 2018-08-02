@@ -224,9 +224,9 @@ class ExternalResource(FileEntry):
         # The replace line is because godot always works in linux
         # style slashes, and python doing relpath uses the one
         # from the native OS
-        self.heading['path'] = os.path.relpath(
+        self.heading['path'] = "res://%s" % os.path.relpath(
             self.heading['path'],
-            os.path.dirname(export_settings["path"]),
+            export_settings["project_path_func"]()
         ).replace('\\', '/')
 
 
