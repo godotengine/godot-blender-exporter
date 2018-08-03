@@ -98,7 +98,7 @@ def find_material(export_settings, material):
     if search_type == "PROJECT_DIR":
         search_dir = export_settings["project_path_func"]()
     elif search_type == "EXPORT_DIR":
-        search_dir = export_settings["path"]
+        search_dir = os.path.dirname(export_settings["path"])
     else:
         search_dir = None
 
