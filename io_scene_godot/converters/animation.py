@@ -28,6 +28,10 @@ AttributeConvertInfo = collections.namedtuple(
     ['bl_name', 'gd_name', 'converter_function', 'attribute_type']
 )
 
+# a suffix append to action need baking to avoid name collision
+# with baked action's name
+BAKING_SUFFIX = '--being-baking'
+
 
 class Track:
     """Animation track, has track type, track path, interpolation
@@ -379,6 +383,13 @@ def bake_constraint_to_action(blender_object, base_action,
             do_visual_keying=True,
         )
 
+    if in_place:
+        return action_bake_into
+
+    if base_action is not None:
+        baked_action.name = base_action.name[:-len(BAKING_SUFFIX)]
+    else:
+        baked_action.name = blender_object.name + 'Action'
     return baked_action
 
 
@@ -732,33 +743,43 @@ def export_animation_data(escn_file, export_settings, godot_node,
 
     # back up active action to reset back after finish exporting
     if blender_object.animation_data:
-        active_action_bakeup = blender_object.animation_data.action
+        active_action_backup = blender_object.animation_data.action
     else:
-        active_action_bakeup = None
+        active_action_backup = None
 
     # ---- export active action
-    action_active = active_action_bakeup
-    if need_bake:
-        action_active = action_baker(action_active)
+    action_active = active_action_backup
+    if (action_active is not None or
+            not blender_object.animation_data and need_bake):
+        if need_bake:
+            if action_active is not None:
+                action_active.name = action_active.name + BAKING_SUFFIX
+                exported_actions.add(action_active)
+            action_active = action_baker(action_active)
 
-    # must be put after active action being baked, because action_active
-    # may be None before baking
-    if animation_player.default_animation is None:
-        animation_player.add_default_animation_resource(
-            escn_file, action_active
-        )
-    # export active action
-    exporter_func(godot_node, animation_player, blender_object,
-                  action_active, animation_player.default_animation)
-
-    if need_bake:
-        bpy.data.actions.remove(action_active)
+        # must be put after active action being baked, because action_active
+        # may be None before baking
+        if animation_player.default_animation is None:
+            animation_player.add_default_animation_resource(
+                escn_file, action_active
+            )
+        # export active action
+        exporter_func(godot_node, animation_player, blender_object,
+                      action_active, animation_player.default_animation)
 
     # ---- export actions in nla tracks
     def export_action(action_to_export):
-        """Export an action"""
+        """Export an action, would call baking if needed"""
+        if (action_to_export is None or
+                action_to_export in exported_actions):
+            return
+
+        exported_actions.add(action_to_export)
+        # backup as it may overwrite by baking
+        action_to_export_backup = action_to_export
         if need_bake:
             # action_to_export is new created, need to be removed later
+            action_to_export.name = action_to_export.name + BAKING_SUFFIX
             action_to_export = action_baker(action_to_export)
 
         anim_resource = animation_player.create_animation_resource(
@@ -768,10 +789,10 @@ def export_animation_data(escn_file, export_settings, godot_node,
         exporter_func(godot_node, animation_player, blender_object,
                       action_to_export, anim_resource)
 
-        exported_actions.add(action_to_export)
-
         if need_bake:
             # remove baked action
+            action_to_export_backup.name = action_to_export_backup.name[
+                :-len(BAKING_SUFFIX)]
             bpy.data.actions.remove(action_to_export)
 
     # export actions in nla_tracks, each exported to seperate
@@ -779,9 +800,11 @@ def export_animation_data(escn_file, export_settings, godot_node,
     for nla_track in blender_object.animation_data.nla_tracks:
         for nla_strip in nla_track.strips:
             # make sure no duplicate action exported
-            if (nla_strip.action is not None and
-                    nla_strip.action not in exported_actions):
-                export_action(nla_strip.action)
+            export_action(nla_strip.action)
 
-    if active_action_bakeup is not None:
-        blender_object.animation_data.action = active_action_bakeup
+    if need_bake:
+        if active_action_backup is not None:
+            blender_object.animation_data.action = active_action_backup
+            active_action_backup.name = action_active.name[
+                :-len(BAKING_SUFFIX)]
+        bpy.data.actions.remove(action_active)

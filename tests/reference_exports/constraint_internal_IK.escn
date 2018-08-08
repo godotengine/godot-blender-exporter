@@ -62,7 +62,7 @@ bones/2/bound_children = []
 [node name="AnimationPlayer" type="AnimationPlayer" parent="Armature"]
 
 root_node = NodePath("..:")
-anims/Action = SubResource(1)
+anims/ArmatureAction = SubResource(1)
 
 [node name="Cylinder" type="MeshInstance" parent="Armature"]
 
