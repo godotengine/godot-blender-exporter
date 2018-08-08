@@ -160,8 +160,13 @@ class AnimationPlayer(NodeTemplate):
     def create_animation_resource(self, escn_file, action):
         """Create a new animation resource and add it into escn file"""
         new_anim_resource = AnimationResource()
-        resource_id = escn_file.add_internal_resource(
-            new_anim_resource, action)
+
+        # add animation resource without checking hash,
+        # blender action is in world space, while godot animation
+        # is in local space (parent space),  so identical actions
+        # are not necessarily generates identical godot animations
+        resource_id = escn_file.force_add_internal_resource(new_anim_resource)
+
         self['anims/{}'.format(action.name)] = (
             "SubResource({})".format(resource_id))
 
@@ -730,23 +735,28 @@ def export_animation_data(escn_file, export_settings, godot_node,
     has_pose_cst = has_pose_constraint(blender_object)
     need_bake = action_type == 'transform' and (has_obj_cst or has_pose_cst)
 
+    if blender_object.animation_data is None and not need_bake:
+        return
+
     def action_baker(action_to_bake):
         """A quick call to bake OBJECT and POSE action"""
         # note it used variable outside its scope
-        if has_obj_cst:
-            action_baked = bake_constraint_to_action(
-                blender_object, action_to_bake, "OBJECT", False)
-        if has_pose_cst:
-            if has_obj_cst:
-                action_baked = bake_constraint_to_action(
-                    blender_object, action_baked, "POSE", True)
-            else:
-                action_baked = bake_constraint_to_action(
-                    blender_object, action_to_bake, "POSE", False)
-        return action_baked
-
-    if blender_object.animation_data is None and not need_bake:
-        return
+        if has_obj_cst and has_pose_cst:
+            tmp = bake_constraint_to_action(
+                blender_object, action_to_bake, "OBJECT", False
+            )
+            ret = bake_constraint_to_action(
+                blender_object, tmp, "POSE", True
+            )
+        elif has_pose_cst:
+            ret = bake_constraint_to_action(
+                blender_object, action_to_bake, "POSE", False
+            )
+        elif has_obj_cst:
+            ret = bake_constraint_to_action(
+                blender_object, action_to_bake, "POSE", False
+            )
+        return ret
 
     animation_player = get_animation_player(
         escn_file, export_settings, godot_node
@@ -757,68 +767,73 @@ def export_animation_data(escn_file, export_settings, godot_node,
 
     # back up active action to reset back after finish exporting
     if blender_object.animation_data:
-        active_action_backup = blender_object.animation_data.action
+        active_action = blender_object.animation_data.action
     else:
-        active_action_backup = None
+        active_action = None
 
-    # ---- export active action
-    action_active = active_action_backup
-    if (action_active is not None or
-            not blender_object.animation_data and need_bake):
+    def export_active_action(active_action):
+        """Export the active action, if needed would call bake,
+        note that active_action maybe None, which means the object
+        has constraint and need to bake to action"""
         if need_bake:
-            if action_active is not None:
-                action_active.name = action_active.name + BAKING_SUFFIX
-                exported_actions.add(action_active)
-            action_active = action_baker(action_active)
+            if active_action is not None:
+                active_action.name = active_action.name + BAKING_SUFFIX
+                exported_actions.add(active_action)
+            action_active_to_export = action_baker(active_action)
+        else:
+            action_active_to_export = active_action
 
-        # must be put after active action being baked, because action_active
-        # may be None before baking
         if animation_player.default_animation is None:
             animation_player.add_default_animation_resource(
-                escn_file, action_active
+                escn_file, action_active_to_export
             )
-        # export active action
-        exporter_func(godot_node, animation_player, blender_object,
-                      action_active, animation_player.default_animation)
 
-    # ---- export actions in nla tracks
-    def export_action(action_to_export):
-        """Export an action, would call baking if needed"""
-        if (action_to_export is None or
-                action_to_export in exported_actions):
-            return
+        exporter_func(
+            godot_node, animation_player, blender_object,
+            action_active_to_export, animation_player.default_animation
+        )
 
-        exported_actions.add(action_to_export)
-        # backup as it may overwrite by baking
-        action_to_export_backup = action_to_export
         if need_bake:
-            # action_to_export is new created, need to be removed later
-            action_to_export.name = action_to_export.name + BAKING_SUFFIX
-            action_to_export = action_baker(action_to_export)
+            # remove new created action
+            bpy.data.actions.remove(action_active_to_export)
+            if active_action is not None:
+                # set back active action name
+                active_action.name = active_action.name[:-len(BAKING_SUFFIX)]
+
+    if (active_action is not None or
+            not blender_object.animation_data and need_bake):
+        export_active_action(active_action)
+
+    def export_nla_action(nla_action):
+        """Export an action in nla_tracks, would call baking if needed"""
+        exported_actions.add(nla_action)
+        if need_bake:
+            nla_action.name = nla_action.name + BAKING_SUFFIX
+            # nla_action_to_export is new created, need to be removed later
+            nla_action_to_export = action_baker(nla_action)
+        else:
+            nla_action_to_export = nla_action
 
         anim_resource = animation_player.create_animation_resource(
-            escn_file, action_to_export
+            escn_file, nla_action_to_export
         )
 
         exporter_func(godot_node, animation_player, blender_object,
-                      action_to_export, anim_resource)
+                      nla_action_to_export, anim_resource)
 
         if need_bake:
             # remove baked action
-            action_to_export_backup.name = action_to_export_backup.name[
-                :-len(BAKING_SUFFIX)]
-            bpy.data.actions.remove(action_to_export)
+            bpy.data.actions.remove(nla_action_to_export)
+            nla_action.name = nla_action.name[:-len(BAKING_SUFFIX)]
 
     # export actions in nla_tracks, each exported to seperate
     # animation resources
     for nla_track in blender_object.animation_data.nla_tracks:
         for nla_strip in nla_track.strips:
-            # make sure no duplicate action exported
-            export_action(nla_strip.action)
+            # here make sure no duplicate action exported
+            if (nla_strip.action is not None and
+                    nla_strip.action not in exported_actions):
+                export_nla_action(nla_strip.action)
 
-    if need_bake:
-        if active_action_backup is not None:
-            blender_object.animation_data.action = active_action_backup
-            active_action_backup.name = action_active.name[
-                :-len(BAKING_SUFFIX)]
-        bpy.data.actions.remove(action_active)
+    if active_action is not None:
+        blender_object.animation_data.action = active_action
