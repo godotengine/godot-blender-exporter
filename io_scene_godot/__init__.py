@@ -82,7 +82,7 @@ class ExportGodot(bpy.types.Operator, ExportHelper):
         description="Export only selected objects (and visible in active "
                     "layers if that applies).",
         default=False,
-        )
+    )
     use_exclude_ctrl_bone = BoolProperty(
         name="Exclude Control Bones",
         description="Do not export control bones (bone.use_deform = false)",
@@ -90,28 +90,47 @@ class ExportGodot(bpy.types.Operator, ExportHelper):
     )
     use_export_animation = BoolProperty(
         name="Export Animation",
-        description="Export all the animation actions (include those "
-                    "in nla_tracks), notice if an animated object has "
-                    "an ancestor also has animated, its animation would "
-                    "go into the ancetor's AnimationPlayer",
+        description="Export all the animation actions (include actions "
+                    "in nla_tracks), note that by default blender animation "
+                    "is exported as actions, so every node would have their "
+                    "own AnimationPlayer hold their actions",
         default=True,
-        )
-    use_seperate_animation_player = BoolProperty(
-        name="Seperate AnimationPlayer For Each Object",
-        description="Create a seperate AnimationPlayer node for every"
-                    "blender object which has animtion data",
-        default=False,
     )
     use_mesh_modifiers = BoolProperty(
         name="Apply Modifiers",
         description="Apply modifiers to mesh objects (on a copy!).",
         default=True,
-        )
+    )
     use_active_layers = BoolProperty(
         name="Active Layers",
         description="Export only objects on the active layers.",
         default=True,
+    )
+    animation_modes = EnumProperty(
+        name="Animation Modes",
+        description="Configuration of how blender animation data being "
+                    "exported to godot AnimationPlayer as well as the "
+                    "placement of AnimationPlayers in the node tree.",
+        default="ACTIONS",
+        items=(
+            (
+                "ACTIONS", "Animation as Actions",
+                "Each animated node would have their own AnimationPlayer"
+            ),
+            (
+                "SCENE_ANIMATION", "Scene Animation",
+                "All the animations of the whole scene would be placed "
+                "into one AnimationPlayer at scene root"
+            ),
+            (
+                "SQUASHED_ACTIONS", "Animation as Actions with Squash",
+                "Animation is exported as actions of nodes, but instead "
+                "of having an individual AnimationPlayer for each node, "
+                "this configuration would squash children nodes' actions "
+                "to their parents"
+            )
         )
+    )
     material_search_paths = EnumProperty(
         name="Material Search Paths",
         description="Search for existing godot materials with names that match"
