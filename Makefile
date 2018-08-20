@@ -26,7 +26,7 @@ test-import: export-blends
 
 update-examples:
 	mkdir -p tests/reference_exports
-	cp tests/godot_project/exports/*.escn tests/reference_exports
+	cp -r tests/godot_project/exports/* tests/reference_exports
 
 compare: export-blends
 	diff -x "*.escn.import" -r tests/godot_project/exports/ tests/reference_exports/
