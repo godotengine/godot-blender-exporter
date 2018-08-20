@@ -2,7 +2,7 @@
 __pycache__
 
 *.blend[0-9]
-tests/godot_project/exports/*.escn
+tests/godot_project/exports/*
 
 .import 
 *.import

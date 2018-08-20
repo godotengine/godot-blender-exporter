@@ -229,12 +229,26 @@ def transform_frames_to_keys(frame_list, value_list, interp):
 
 
 def get_animation_player(escn_file, export_settings, godot_node):
-    """Get a AnimationPlayer node, if not existed, a new
-    one will be created and returned"""
+    """Get a AnimationPlayer node, its return value depends
+    on animation exporting settings"""
     animation_player = None
+    # the parent of AnimationPlayer
+    animation_base = None
 
-    # looking for a existed AnimationPlayer
-    if not export_settings['use_seperate_animation_player']:
+    if export_settings['animation_modes'] == 'ACTIONS':
+        animation_base = godot_node
+    elif export_settings['animation_modes'] == 'SCENE_ANIMATION':
+        node_ptr = godot_node
+        while node_ptr.parent is not None:
+            node_ptr = node_ptr.parent
+        scene_root = node_ptr
+        animation_base = scene_root
+        for child in scene_root.children:
+            if child.get_type() == 'AnimationPlayer':
+                animation_player = child
+                break
+    else:  # export_settings['animation_modes'] == 'SQUASHED_ACTIONS':
+        animation_base = godot_node
         node_ptr = godot_node
         while node_ptr is not None:
             for child in node_ptr.children:
@@ -248,7 +262,7 @@ def get_animation_player(escn_file, export_settings, godot_node):
     if animation_player is None:
         animation_player = AnimationPlayer(
             name='AnimationPlayer',
-            parent=godot_node,
+            parent=animation_base,
         )
 
         escn_file.add_node(animation_player)
