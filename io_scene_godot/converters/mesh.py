@@ -158,7 +158,14 @@ class MeshResourceExporter:
 
         if mesh.uv_textures:
             self.has_tangents = True
-            mesh.calc_tangents()
+            try:
+                mesh.calc_tangents()
+            except RuntimeError:
+                # This fails if the mesh is a single vertex (and presumably an
+                # edge). Since this won't be rendered by visualserver (the only
+                # user of the tangents), we'll just disable tangents and hope
+                # for the best....
+                self.has_tangents = False
         else:
             mesh.calc_normals_split()
             self.has_tangents = False
