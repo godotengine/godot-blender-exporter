@@ -1,11 +1,12 @@
 """Exports a normal triangle mesh"""
+import logging
 import bpy
 import bmesh
 import mathutils
 
 from .material import export_material
 from ..structures import (Array, NodeTemplate, InternalResource, NodePath,
-                          ValidationError, Map)
+                          Map)
 from . import physics
 from . import armature
 from . import animation
@@ -119,14 +120,10 @@ class MeshResourceExporter:
 
         self.mesh_resource = InternalResource('ArrayMesh')
 
-        try:
-            self.make_arrays(
-                escn_file,
-                export_settings,
-            )
-        except ValidationError as exception:
-            exception.args += (mesh.name, )
-            raise
+        self.make_arrays(
+            escn_file,
+            export_settings,
+        )
 
         mesh_id = escn_file.add_internal_resource(self.mesh_resource, mesh)
         assert mesh_id is not None
@@ -223,9 +220,10 @@ class MeshResourceExporter:
         if export_settings['use_mesh_modifiers']:
             if not self.validate_morph_mesh_modifiers(
                     self.object):
-                raise ValidationError(
-                    "Mesh object '{}' has modifiers "
-                    "incompatible with shape key".format(self.object.name)
+                logging.warning(
+                    "Mesh object '%s' has modifiers "
+                    "incompatible with shape key",
+                    self.object.name
                 )
 
         self.mesh_resource["blend_shape/names"] = Array(
@@ -589,11 +587,11 @@ class Vertex:
 
         if gid_to_bid_map and not new_vert.weights:
             # vertex not assign to any bones
-            raise ValidationError(
-                "No bone assigned vertex detected, "
-                "vertex with local position {} ".format(
-                    mesh.vertices[loop.vertex_index].co
-                )
+            logging.warning(
+                "No bone assigned vertex detected in mesh '%s' "
+                "at local position %s.",
+                mesh.name,
+                str(mesh.vertices[loop.vertex_index].co)
             )
 
         return new_vert

@@ -3,11 +3,11 @@ import collections
 import re
 import math
 import copy
+import logging
 from functools import partial
 import bpy
 import bpy_extras.anim_utils
 import mathutils
-from . import armature
 from ..structures import (NodeTemplate, NodePath, fix_directional_transform,
                           InternalResource, Array, Map, fix_matrix)
 
@@ -461,9 +461,6 @@ def export_transform_action(godot_node, animation_player,
 
     first_frame, last_frame = get_action_frame_range(action)
 
-    # if no skeleton node exist, it will be None
-    skeleton_node = armature.find_skeletion_node(godot_node)
-
     transform_frame_values_map = collections.OrderedDict()
     for fcurve in action.fcurves:
         # fcurve data are seperated into different channels,
@@ -472,37 +469,45 @@ def export_transform_action(godot_node, animation_player,
         # are aggregated to object while being evaluted
         object_path, attribute = split_fcurve_data_path(fcurve.data_path)
 
-        if object_path not in transform_frame_values_map:
-            if attribute in TransformFrame.ATTRIBUTES:
+        if (object_path not in transform_frame_values_map and
+                attribute in TransformFrame.ATTRIBUTES):
 
-                default_frame = None
+            default_frame = None
 
-                # the fcurve location is matrix_basis.to_translation()
-                default_frame = TransformFrame(
-                    blender_object.matrix_basis,
-                    blender_object.rotation_mode
-                )
+            # the fcurve location is matrix_basis.to_translation()
+            default_frame = TransformFrame(
+                blender_object.matrix_basis,
+                blender_object.rotation_mode
+            )
 
-                if object_path.startswith('pose'):
-                    bone_name = blender_path_to_bone_name(object_path)
+            if object_path.startswith('pose'):
+                bone_name = blender_path_to_bone_name(object_path)
+
+                # bone fcurve in a non armature object
+                if godot_node.get_type() != 'Skeleton':
+                    logging.warning(
+                        "Skip a bone fcurve in a non-armature "
+                        "object '%s'",
+                        blender_object.name
+                    )
+                    continue
 
                     # if the correspond bone of this track not exported, skip
-                    if (skeleton_node is None or
-                            skeleton_node.find_bone_id(bone_name) == -1):
-                        continue
+                if godot_node.find_bone_id(bone_name) == -1:
+                    continue
 
-                    pose_bone = blender_object.pose.bones[
-                        blender_object.pose.bones.find(bone_name)
-                    ]
-                    default_frame = TransformFrame(
-                        pose_bone.matrix_basis,
-                        pose_bone.rotation_mode
-                    )
-
-                transform_frame_values_map[object_path] = [
-                    copy.deepcopy(default_frame)
-                    for _ in range(last_frame - first_frame)
+                pose_bone = blender_object.pose.bones[
+                    blender_object.pose.bones.find(bone_name)
                 ]
+                default_frame = TransformFrame(
+                    pose_bone.matrix_basis,
+                    pose_bone.rotation_mode
+                )
+
+            transform_frame_values_map[object_path] = [
+                copy.deepcopy(default_frame)
+                for _ in range(last_frame - first_frame)
+            ]
 
         if attribute in TransformFrame.ATTRIBUTES:
 

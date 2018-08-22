@@ -57,6 +57,23 @@ def find_godot_project_dir(export_path):
     return project_dir
 
 
+class ExporterLogHandler(logging.Handler):
+    """Custom handler for exporter, would report logging message
+    to GUI"""
+    def __init__(self, operator):
+        super().__init__()
+        self.setLevel(logging.WARNING)
+        self.setFormatter(logging.Formatter("%(message)s"))
+
+        self.blender_op = operator
+
+    def emit(self, record):
+        if record.levelno == logging.WARNING:
+            self.blender_op.report({'WARNING'}, record.message)
+        else:
+            self.blender_op.report({'ERROR'}, record.message)
+
+
 class GodotExporter:
     """Handles picking what nodes to export and kicks off the export process"""
 
@@ -194,7 +211,12 @@ class GodotExporter:
 
 def save(operator, context, filepath="", **kwargs):
     """Begin the export"""
+    exporter_log_handler = ExporterLogHandler(operator)
+    logging.getLogger().addHandler(exporter_log_handler)
+
     with GodotExporter(filepath, kwargs, operator) as exp:
         exp.export()
+
+    logging.getLogger().removeHandler(exporter_log_handler)
 
     return {"FINISHED"}
