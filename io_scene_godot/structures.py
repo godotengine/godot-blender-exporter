@@ -67,10 +67,17 @@ class ESCNFile:
         """See comment on external resources. It's the same"""
         if self.get_internal_resource(hashable) is not None:
             raise Exception("Attempting to add object to file twice")
+        resource_id = self.force_add_internal_resource(item)
+        self._internal_hashes[hashable] = resource_id
+        return resource_id
+
+    def force_add_internal_resource(self, item):
+        """Add an internal resource without providing an hashable,
+        ATTENTION: it should not be called unless an hashable can not
+        be found"""
         self.internal_resources.append(item)
         index = len(self.internal_resources)
         item.heading['id'] = index
-        self._internal_hashes[hashable] = index
         return index
 
     def add_node(self, item):
