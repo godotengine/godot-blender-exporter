@@ -92,12 +92,12 @@ def export_collision_shape(escn_file, export_settings, node, parent_gd_node,
         col_shape['height'] = bounds.z - col_shape['radius'] * 2
         shape_id = escn_file.add_internal_resource(col_shape, rbd)
     elif rbd.collision_shape == "CONVEX_HULL":
-        shape_id = generate_convex_mesh_array(
+        col_shape, shape_id = generate_convex_mesh_array(
             escn_file, export_settings,
             node
         )
     elif rbd.collision_shape == "MESH":
-        shape_id = generate_triangle_mesh_array(
+        col_shape, shape_id = generate_triangle_mesh_array(
             escn_file, export_settings,
             node
         )
@@ -105,6 +105,9 @@ def export_collision_shape(escn_file, export_settings, node, parent_gd_node,
         logging.warning("Unable to export physics shape for %s", node.name)
 
     if shape_id is not None:
+
+        if rbd.use_margin or rbd.collision_shape == "MESH":
+            col_shape['margin'] = rbd.collision_margin
         col_node['shape'] = "SubResource({})".format(shape_id)
     escn_file.add_node(col_node)
 
@@ -143,7 +146,7 @@ def generate_convex_mesh_array(escn_file, export_settings, node):
 
     col_shape['points'] = Array("PoolVector3Array(", values=vert_array)
 
-    return escn_file.add_internal_resource(col_shape, key)
+    return col_shape, escn_file.add_internal_resource(col_shape, key)
 
 
 def generate_triangle_mesh_array(escn_file, export_settings, node):
@@ -176,7 +179,7 @@ def generate_triangle_mesh_array(escn_file, export_settings, node):
 
     col_shape['data'] = Array("PoolVector3Array(", values=vert_array)
 
-    return escn_file.add_internal_resource(col_shape, key)
+    return col_shape, escn_file.add_internal_resource(col_shape, key)
 
 
 def export_physics_controller(escn_file, export_settings, node,
