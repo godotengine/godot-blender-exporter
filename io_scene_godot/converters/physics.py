@@ -185,8 +185,8 @@ def generate_concave_shape(escn_file, export_settings, bl_object):
     if mesh is not None and mesh.polygons:
         vert_array = list()
         for poly in mesh.polygons:
-            for vert_id in poly.vertices:
-                vert_array.append(list(mesh.vertices[vert_id].co))
+            for vert_id in reversed(poly.vertices):
+                vert_array.append(mesh.vertices[vert_id].co)
 
         col_shape = InternalResource("ConcavePolygonShape", mesh.name)
         col_shape['data'] = Array("PoolVector3Array(", values=vert_array)
