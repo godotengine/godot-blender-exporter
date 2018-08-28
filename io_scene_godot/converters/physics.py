@@ -172,7 +172,7 @@ def generate_triangle_mesh_array(escn_file, export_settings, node):
 
     vert_array = list()
     for poly in mesh.polygons:
-        for vert_id in poly.vertices:
+        for vert_id in reversed(poly.vertices):
             vert_array.append(list(mesh.vertices[vert_id].co))
 
     bpy.data.meshes.remove(mesh)
