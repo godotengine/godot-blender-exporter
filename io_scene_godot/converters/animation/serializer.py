@@ -75,7 +75,7 @@ class TransformFrame:
         """Factory function, create cls from a transform matrix"""
         ret = cls()
         ret.location = trans_mat.to_translation()
-        # fixme: lose negative scale
+        # FIXME: lose negative scale
         ret.scale = trans_mat.to_scale()
 
         # quaternion and euler fcurves may both exist in fcurves
@@ -112,7 +112,7 @@ class TransformFrame:
             (0, self.scale[1], 0),
             (0, 0, self.scale[2]),
         )).to_4x4()
-        return loc_mat * rot_mat * sca_mat
+        return loc_mat @ rot_mat @ sca_mat
 
 
 class Track:
@@ -255,7 +255,7 @@ class TransformTrack(Track):
 
     def blend_frames(self, frame_val1, frame_val2):
         """Blend two transform frames into one"""
-        # fixme: currently only blend with ADD
+        # FIXME: currently only blend with ADD
         new_frame = TransformFrame()
         for frame in (frame_val1, frame_val2):
             if frame.rotation_mode != 'QUATERNION':
@@ -264,7 +264,7 @@ class TransformTrack(Track):
                 )
 
         new_frame.rotation_quaternion = (
-            frame_val1.rotation_quaternion * frame_val2.rotation_quaternion
+            frame_val1.rotation_quaternion @ frame_val2.rotation_quaternion
         )
 
         new_frame.location = frame_val1.location + frame_val2.location
@@ -291,7 +291,7 @@ class TransformTrack(Track):
             if frame < scene_frame_start:
                 continue
 
-            mat = self.parent_trans_inverse * trans_frame.to_matrix()
+            mat = self.parent_trans_inverse @ trans_frame.to_matrix()
             if self.is_directional:
                 mat = fix_directional_transform(mat)
             # convert from z-up to y-up
@@ -326,7 +326,7 @@ class ValueTrack(Track):
         self.interp = interp
 
     def blend_frames(self, frame_val1, frame_val2):
-        # xxx: default use REPLACE
+        # FIXME: default use REPLACE
         return max(frame_val1, frame_val2)
 
     def convert_to_keys_object(self):

@@ -38,8 +38,6 @@ class ObjectAnimationExporter:
         self.action_exporter_func = ACTION_EXPORTER_MAP[action_type]
         self.animation_player = None
 
-        self.has_object_constraint = False
-        self.has_pose_constraint = False
         self.need_baking = False
 
         self.unmute_nla_tracks = []
@@ -56,8 +54,6 @@ class ObjectAnimationExporter:
         self.need_baking = (
             action_type == 'transform' and (has_obj_cst or has_pose_cst)
         )
-        self.has_object_constraint = has_obj_cst
-        self.has_pose_constraint = has_pose_cst
 
     def preprocess_nla_tracks(self, blender_object):
         """Iterative through nla tracks, separately store mute and unmuted
@@ -77,22 +73,9 @@ class ObjectAnimationExporter:
 
         Note that it accept a action to bake (which would not be modified)
         and always return a new created baked actiony"""
-        if self.has_object_constraint and self.has_pose_constraint:
-            tmp = bake_constraint_to_action(
-                self.blender_object, action_to_bake, "OBJECT", False
-            )
-            ret = bake_constraint_to_action(
-                self.blender_object, action_to_bake, "POSE", True
-            )
-        elif self.has_pose_constraint:
-            ret = bake_constraint_to_action(
-                self.blender_object, action_to_bake, "POSE", False
-            )
-        elif self.has_object_constraint:
-            ret = bake_constraint_to_action(
-                self.blender_object, action_to_bake, "OBJECT", False
-            )
-        return ret
+        return bake_constraint_to_action(
+            self.blender_object, action_to_bake, False
+        )
 
     def export_active_action(self, escn_file, active_action):
         """Export the active action, if needed, would call bake.

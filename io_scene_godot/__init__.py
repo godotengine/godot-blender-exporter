@@ -27,8 +27,7 @@ from .structures import ValidationError
 bl_info = {  # pylint: disable=invalid-name
     "name": "Godot Engine Exporter",
     "author": "Juan Linietsky",
-    "blender": (2, 5, 8),
-    "api": 38691,
+    "blender": (2, 80, 0),
     "location": "File > Import-Export",
     "description": ("Export Godot Scenes to a format that can be efficiently "
                     "imported. "),
@@ -57,7 +56,7 @@ class ExportGodot(bpy.types.Operator, ExportHelper):
         items=(
             ("EMPTY", "Empty", ""),
             ("CAMERA", "Camera", ""),
-            ("LAMP", "Lamp", ""),
+            ("LIGHT", "LIGHT", ""),
             ("ARMATURE", "Armature", ""),
             ("MESH", "Mesh", ""),
             # ("CURVE", "Curve", ""),
@@ -65,7 +64,7 @@ class ExportGodot(bpy.types.Operator, ExportHelper):
         default={
             "EMPTY",
             "CAMERA",
-            "LAMP",
+            "LIGHT",
             "ARMATURE",
             "MESH",
             # "CURVE"
@@ -79,8 +78,7 @@ class ExportGodot(bpy.types.Operator, ExportHelper):
     )
     use_export_selected = BoolProperty(
         name="Selected Objects",
-        description="Export only selected objects (and visible in active "
-                    "layers if that applies).",
+        description="Export only selected objects",
         default=False,
     )
     use_exclude_ctrl_bone = BoolProperty(
@@ -101,9 +99,10 @@ class ExportGodot(bpy.types.Operator, ExportHelper):
         description="Apply modifiers to mesh objects (on a copy!).",
         default=True,
     )
-    use_active_layers = BoolProperty(
-        name="Active Layers",
-        description="Export only objects on the active layers.",
+    use_visible_objects = BoolProperty(
+        name="Visible Object",
+        description="Export only objects which are in the current view layer "
+                    "and are visible.",
         default=True,
     )
     use_stashed_action = BoolProperty(
@@ -201,16 +200,14 @@ def menu_func(self, context):
 
 def register():
     """Add addon to blender"""
-    bpy.utils.register_module(__name__)
-
-    bpy.types.INFO_MT_file_export.append(menu_func)
+    bpy.utils.register_class(ExportGodot)
+    bpy.types.TOPBAR_MT_file_export.append(menu_func)
 
 
 def unregister():
     """Remove addon from blender"""
-    bpy.utils.unregister_module(__name__)
-
-    bpy.types.INFO_MT_file_export.remove(menu_func)
+    bpy.utils.unregister_class(ExportGodot)
+    bpy.types.TOPBAR_MT_file_export.remove(menu_func)
 
 
 def export(filename, overrides=None):

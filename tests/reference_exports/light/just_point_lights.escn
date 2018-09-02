@@ -68,7 +68,6 @@ shadow_color = Color(0.0, 0.0, 0.0, 1.0)
 omni_range = 5.0
 transform = Transform(1.0, 0.0, 0.0, 0.0, -4.37114e-08, 1.0, 0.0, -1.0, -4.37114e-08, 0.0, 0.4, 1.0)
 shadow_enabled = true
-light_negative = false
 
 [node name="Cube001" type="MeshInstance" parent="."]
 
@@ -91,7 +90,6 @@ shadow_color = Color(0.0, 0.0, 0.0, 1.0)
 omni_range = 5.0
 transform = Transform(1.0, 0.0, 0.0, 0.0, -4.37114e-08, 1.0, 0.0, -1.0, -4.37114e-08, -2.0, 0.4, 1.0)
 shadow_enabled = false
-light_negative = false
 
 [node name="Lamp001" type="OmniLight" parent="."]
 
@@ -102,7 +100,6 @@ shadow_color = Color(0.0, 0.0, 0.0, 1.0)
 omni_range = 2.0
 transform = Transform(1.0, 0.0, 0.0, 0.0, -4.37114e-08, 1.0, 0.0, -1.0, -4.37114e-08, -6.0, 1.0, 3.0)
 shadow_enabled = false
-light_negative = false
 
 [node name="Plane" type="MeshInstance" parent="."]
 
@@ -119,7 +116,6 @@ shadow_color = Color(0.0, 0.0, 0.0, 1.0)
 omni_range = 2.0
 transform = Transform(1.0, 0.0, 0.0, 0.0, -4.37114e-08, 1.0, 0.0, -1.0, -4.37114e-08, -6.0, 1.0, 0.0)
 shadow_enabled = false
-light_negative = false
 
 [node name="Camera" type="Camera" parent="."]
 

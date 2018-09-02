@@ -280,7 +280,7 @@ transform = Transform(1.0, 0.0, 0.0, 0.0, 7.54979e-08, -1.0, 0.0, 1.0, 7.54979e-
 
 [node name="Sphere002Collision" type="CollisionShape" parent="SpherePhysics"]
 
-transform = Transform(1.0, 1.30385e-08, 2.98023e-08, 1.49012e-08, -2.97416e-08, 1.0, 2.42144e-08, -1.0, -5.1162e-08, 0.565972, 0.864336, 0.166554)
+transform = Transform(1.0, 1.30385e-08, 2.98023e-08, 1.49012e-08, -2.97416e-08, 1.0, 2.42144e-08, -1.0, -5.1162e-08, 0.565972, 0.864336, 0.166555)
 shape = SubResource(12)
 
 [node name="Sphere002" type="MeshInstance" parent="SpherePhysics/Sphere002Collision"]
@@ -321,7 +321,6 @@ shadow_color = Color(0.0, 0.0, 0.0, 1.0)
 omni_range = 30.0
 transform = Transform(-0.290865, -0.771101, 0.566393, -0.0551891, 0.604525, 0.794672, -0.955171, 0.199883, -0.218391, 4.07625, 7.32356, -1.00545)
 shadow_enabled = true
-light_negative = false
 
 [node name="Camera" type="Camera" parent="."]
 

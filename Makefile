@@ -1,5 +1,5 @@
-PYLINT = pylint3
-PEP8 = pep8
+PYLINT = pylint
+PEP8 = pycodestyle 
 BLENDER = blender
 GODOT = godot
 

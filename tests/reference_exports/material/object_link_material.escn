@@ -3,22 +3,12 @@
 [sub_resource id=1 type="SpatialMaterial"]
 
 resource_name = ""
-flags_unshaded = false
-flags_vertex_lighting = false
-flags_transparent = false
-vertex_color_use_as_albedo = false
 albedo_color = Color(0.229957, 0.274814, 0.903545, 1.0)
-subsurf_scatter_enabled = false
 
 [sub_resource id=2 type="SpatialMaterial"]
 
 resource_name = ""
-flags_unshaded = false
-flags_vertex_lighting = false
-flags_transparent = false
-vertex_color_use_as_albedo = false
 albedo_color = Color(0.903545, 0.903545, 0.903545, 1.0)
-subsurf_scatter_enabled = false
 
 [sub_resource id=3 type="ArrayMesh"]
 
@@ -59,22 +49,12 @@ surfaces/1 = {
 [sub_resource id=4 type="SpatialMaterial"]
 
 resource_name = ""
-flags_unshaded = false
-flags_vertex_lighting = false
-flags_transparent = false
-vertex_color_use_as_albedo = false
 albedo_color = Color(0.903545, 0.169508, 0.242857, 1.0)
-subsurf_scatter_enabled = false
 
 [sub_resource id=5 type="SpatialMaterial"]
 
 resource_name = ""
-flags_unshaded = false
-flags_vertex_lighting = false
-flags_transparent = false
-vertex_color_use_as_albedo = false
 albedo_color = Color(0.121702, 0.903545, 0.139942, 1.0)
-subsurf_scatter_enabled = false
 [node type="Spatial" name="Scene"]
 
 

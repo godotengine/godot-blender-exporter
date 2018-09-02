@@ -372,98 +372,16 @@ void fragment() {
 resource_name = ""
 shader = SubResource(11)
 
-[sub_resource id=13 type="Shader"]
-
-resource_name = "Shader Nodetree"
-code = "shader_type spatial;
-render_mode blend_mix,depth_draw_always,cull_back,diffuse_burley,specular_schlick_ggx;
-uniform sampler2D uni1_ImageTexturetexture_image;
-
-
-void node_bsdf_diffuse(vec4 color, float roughness, out vec3 albedo,
-        out float specular_out, out float roughness_out) {
-    albedo = color.rgb;
-    specular_out = 0.5;
-    roughness_out = 1.0;
-}
-
-
-void node_tex_image(vec3 co, sampler2D ima, out vec4 color, out float alpha) {
-    color = texture(ima, co.xy);
-    alpha = color.a;
-}
-
-
-void node_rgb_to_bw(vec4 color, out float result){
-    result = color.r * 0.2126 + color.g * 0.7152 + color.b * 0.0722;
-}
-
-
-void node_bump(float strength, float dist, float height, vec3 normal,
-               vec3 surf_pos, float invert, out vec3 out_normal){
-    if (invert != 0.0) {
-        dist *= -1.0;
-    }
-    vec3 dPdx = dFdx(surf_pos);
-    vec3 dPdy = dFdy(surf_pos);
-
-    /* Get surface tangents from normal. */
-    vec3 Rx = cross(dPdy, normal);
-    vec3 Ry = cross(normal, dPdx);
-
-    /* Compute surface gradient and determinant. */
-    float det = dot(dPdx, Rx);
-    float absdet = abs(det);
-
-    float dHdx = dFdx(height);
-    float dHdy = dFdy(height);
-    vec3 surfgrad = dHdx * Rx + dHdy * Ry;
-
-    strength = max(strength, 0.0);
-
-    out_normal = normalize(absdet * normal - dist * sign(det) * surfgrad);
-    out_normal = normalize(strength * out_normal + (1.0 - strength) * normal);
-}
-
-
-
-void vertex() {
-	
-}
-
-
-void fragment() {
-	vec4 var1_DiffuseBSDF_Color;
-	var1_DiffuseBSDF_Color = vec4(0.800000011920929, 0.800000011920929, 0.800000011920929, 1.0);
-	float var2_DiffuseBSDF_Roughness;
-	var2_DiffuseBSDF_Roughness = 0.0;
-	vec3 var3_DiffuseBSDF_output_albedo;
-	float var4_DiffuseBSDF_output_specular;
-	float var5_DiffuseBSDF_output_roughness;
-	node_bsdf_diffuse(var1_DiffuseBSDF_Color, var2_DiffuseBSDF_Roughness, var3_DiffuseBSDF_output_albedo, var4_DiffuseBSDF_output_specular, var5_DiffuseBSDF_output_roughness);
-	ALBEDO = var3_DiffuseBSDF_output_albedo;
-	SPECULAR = var4_DiffuseBSDF_output_specular;
-	ROUGHNESS = var5_DiffuseBSDF_output_roughness;
-	vec4 var6_ImageTexture_Color;
-	float var7_ImageTexture_Alpha;
-	node_tex_image(vec3(UV, 0.0), uni1_ImageTexturetexture_image, var6_ImageTexture_Color, var7_ImageTexture_Alpha);
-	float var8_auto_insert_RGBtoBW;
-	node_rgb_to_bw(var6_ImageTexture_Color, var8_auto_insert_RGBtoBW);
-	node_bump(1.0, 0.1, var8_auto_insert_RGBtoBW, NORMAL, VERTEX, 0.0, NORMAL);
-}
-"
-
-[sub_resource id=14 type="ShaderMaterial"]
+[sub_resource id=13 type="SpatialMaterial"]
 
 resource_name = ""
-shader = SubResource(13)
-shader_param/uni1_ImageTexturetexture_image = ExtResource(2)
+albedo_color = Color(0.903545, 0.903545, 0.903545, 1.0)
 
-[sub_resource id=15 type="ArrayMesh"]
+[sub_resource id=14 type="ArrayMesh"]
 
 resource_name = "Plane001"
 surfaces/0 = {
-	"material":SubResource(14),
+	"material":SubResource(13),
 	"primitive":4,
 	"arrays":[
 		Vector3Array(1.0, 0.0, 1.0, -1.0, 0.0, -1.0, -1.0, 0.0, 1.0, 1.0, 0.0, -1.0),
@@ -479,7 +397,7 @@ surfaces/0 = {
 	"morph_arrays":[]
 }
 
-[sub_resource id=16 type="Shader"]
+[sub_resource id=15 type="Shader"]
 
 resource_name = "Shader Nodetree"
 code = "shader_type spatial;
@@ -542,17 +460,17 @@ void fragment() {
 }
 "
 
-[sub_resource id=17 type="ShaderMaterial"]
+[sub_resource id=16 type="ShaderMaterial"]
 
 resource_name = ""
-shader = SubResource(16)
+shader = SubResource(15)
 shader_param/uni1_ImageTexturetexture_image = ExtResource(1)
 
-[sub_resource id=18 type="ArrayMesh"]
+[sub_resource id=17 type="ArrayMesh"]
 
 resource_name = "Plane002"
 surfaces/0 = {
-	"material":SubResource(17),
+	"material":SubResource(16),
 	"primitive":4,
 	"arrays":[
 		Vector3Array(1.0, 0.0, 1.0, -1.0, 0.0, -1.0, -1.0, 0.0, 1.0, 1.0, 0.0, -1.0),
@@ -568,7 +486,7 @@ surfaces/0 = {
 	"morph_arrays":[]
 }
 
-[sub_resource id=19 type="Shader"]
+[sub_resource id=18 type="Shader"]
 
 resource_name = "Shader Nodetree"
 code = "shader_type spatial;
@@ -630,17 +548,17 @@ void fragment() {
 }
 "
 
-[sub_resource id=20 type="ShaderMaterial"]
+[sub_resource id=19 type="ShaderMaterial"]
 
 resource_name = ""
-shader = SubResource(19)
+shader = SubResource(18)
 shader_param/uni1_ImageTexturetexture_image = ExtResource(1)
 
-[sub_resource id=21 type="ArrayMesh"]
+[sub_resource id=20 type="ArrayMesh"]
 
 resource_name = "Plane003"
 surfaces/0 = {
-	"material":SubResource(20),
+	"material":SubResource(19),
 	"primitive":4,
 	"arrays":[
 		Vector3Array(1.0, 0.0, 1.0, -1.0, 0.0, -1.0, -1.0, 0.0, 1.0, 1.0, 0.0, -1.0),
@@ -656,7 +574,7 @@ surfaces/0 = {
 	"morph_arrays":[]
 }
 
-[sub_resource id=22 type="Shader"]
+[sub_resource id=21 type="Shader"]
 
 resource_name = "Shader Nodetree"
 code = "shader_type spatial;
@@ -745,17 +663,17 @@ void fragment() {
 }
 "
 
-[sub_resource id=23 type="ShaderMaterial"]
+[sub_resource id=22 type="ShaderMaterial"]
 
 resource_name = ""
-shader = SubResource(22)
+shader = SubResource(21)
 shader_param/uni1_ImageTexture001texture_image = ExtResource(2)
 
-[sub_resource id=24 type="ArrayMesh"]
+[sub_resource id=23 type="ArrayMesh"]
 
 resource_name = "Plane004"
 surfaces/0 = {
-	"material":SubResource(23),
+	"material":SubResource(22),
 	"primitive":4,
 	"arrays":[
 		Vector3Array(1.0, 0.0, 1.0, -1.0, 0.0, -1.0, -1.0, 0.0, 1.0, 1.0, 0.0, -1.0),
@@ -814,28 +732,27 @@ light_color = Color(1.0, 1.0, 1.0, 1.0)
 shadow_color = Color(0.0, 0.0, 0.0, 1.0)
 transform = Transform(-0.404791, -0.439839, 0.801677, 0.221124, 0.803611, 0.552553, -0.88727, 0.400938, -0.228035, 4.07625, 1.70784, -1.00545)
 shadow_enabled = true
-light_negative = false
 
 [node name="test_displacement" type="MeshInstance" parent="."]
 
-mesh = SubResource(15)
+mesh = SubResource(14)
 visible = true
 transform = Transform(2.17434, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 2.089, 5.56855, 0.111502, 4.35828)
 
 [node name="test_normal_object" type="MeshInstance" parent="."]
 
-mesh = SubResource(18)
+mesh = SubResource(17)
 visible = true
 transform = Transform(2.17434, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 2.089, -4.51125, 0.111502, -5.04673)
 
 [node name="test_normal_world" type="MeshInstance" parent="."]
 
-mesh = SubResource(21)
+mesh = SubResource(20)
 visible = true
 transform = Transform(2.17434, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 2.089, -4.6612, 0.111502, 4.30586)
 
 [node name="test_bump" type="MeshInstance" parent="."]
 
-mesh = SubResource(24)
+mesh = SubResource(23)
 visible = true
 transform = Transform(2.17434, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 2.089, 0.134761, 0.111502, -0.424369)

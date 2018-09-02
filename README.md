@@ -32,14 +32,10 @@ This repository includes a Makefile to assist with development. Running
    be elegible to merge.
 
 
-Due to differences in blender versions creating minor differences in the 
-output files (even with the same blender release number), the regression tests 
-are best run with blender 2.79 downloaded from 
-[this exact url](http://mirror.cs.umn.edu/blender.org/release/Blender2.79/), 
-which is used for the Travis builds. If you think your blender version is 
-adequate, the hash (visble in the upper right of blender's splash screen) 
-should be `5bd8ac9abfa`. The exporter itself should run on all modern versions 
-of blender, but the output may differ slightly.
+Current regression tests use the daily build of blender 2.80 from blender [official
+site](https://builder.blender.org/download/) and runs on ubuntu 16.04. If you run
+on different blender version or different platform, the output may differ slightly 
+mostly causing by different float precision.
 
 
 ## License

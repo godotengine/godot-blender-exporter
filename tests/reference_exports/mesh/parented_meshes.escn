@@ -49,7 +49,7 @@ transform = Transform(-4.37114e-08, 0.0, 1.0, 0.0, 1.0, 0.0, -1.0, 0.0, -4.37114
 
 mesh = SubResource(1)
 visible = true
-transform = Transform(1.0, 1.19209e-07, 4.37114e-08, -4.37114e-08, 1.35103e-07, 1.0, 1.19209e-07, -1.0, 7.54979e-08, 4.37114e-08, -2.0, -1.0)
+transform = Transform(1.0, 1.19209e-07, 4.37114e-08, -4.37114e-08, 1.053e-07, 1.0, 1.19209e-07, -1.0, 7.54979e-08, 4.37114e-08, -2.0, -1.0)
 
 [node name="Suzanne" type="MeshInstance" parent="."]
 
@@ -61,4 +61,4 @@ transform = Transform(1.0, 0.0, 0.0, 0.0, 0.642788, -0.766044, 0.0, 0.766044, 0.
 
 mesh = SubResource(1)
 visible = true
-transform = Transform(1.0, 0.0, 0.0, 0.0, 1.0, -2.98023e-08, 0.0, 0.0, 1.0, 0.0, 3.0, 1.19209e-07)
+transform = Transform(1.0, 0.0, 0.0, 0.0, 1.0, 2.98023e-08, 0.0, -2.98023e-08, 1.0, 0.0, 3.0, 0.0)

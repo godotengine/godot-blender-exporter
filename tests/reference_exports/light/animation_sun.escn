@@ -23,29 +23,11 @@ surfaces/0 = {
 
 resource_name = "SunAction001"
 step = 0.1
-length = 4.58333
+length = 1.25
 tracks/0/type = "value"
-tracks/0/path = NodePath(".:light_negative")
-tracks/0/interp = 0
+tracks/0/path = NodePath(".:light_energy")
+tracks/0/interp = 1
 tracks/0/keys = {
-	"times":PoolRealArray(3.75, 4.16667, 4.58333),
-	"transitions":PoolRealArray(1, 1, 1),
-	"update":0,
-	"values":[false, true, false]
-}
-tracks/1/type = "value"
-tracks/1/path = NodePath(".:light_specular")
-tracks/1/interp = 0
-tracks/1/keys = {
-	"times":PoolRealArray(2.08333, 2.5, 2.91667),
-	"transitions":PoolRealArray(1, 1, 1),
-	"update":0,
-	"values":[1.0, 0.0, 1.0]
-}
-tracks/2/type = "value"
-tracks/2/path = NodePath(".:light_energy")
-tracks/2/interp = 1
-tracks/2/keys = {
 	"times":PoolRealArray(0.0, 0.0416667, 0.0833333, 0.125, 0.166667, 0.208333, 0.25, 0.291667, 0.333333, 0.375, 0.416667, 0.458333, 0.5, 0.541667, 0.583333, 0.625, 0.666667, 0.708333, 0.75, 0.791667, 0.833333, 0.875, 0.916667, 0.958333, 1.0, 1.04167, 1.08333, 1.125, 1.16667, 1.20833, 1.25),
 	"transitions":PoolRealArray(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1),
 	"update":0,
@@ -67,8 +49,7 @@ light_energy = 1.0
 light_color = Color(1.0, 1.0, 1.0, 1.0)
 shadow_color = Color(0.0, 0.0, 0.0, 1.0)
 transform = Transform(0.883713, -0.407974, 0.229367, -0.443707, -0.574356, 0.687924, -0.148916, -0.709699, -0.688587, 0.0, 5.2651, -7.49279)
-shadow_enabled = false
-light_negative = false
+shadow_enabled = true
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="Sun"]
 

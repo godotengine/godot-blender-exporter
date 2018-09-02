@@ -35,7 +35,7 @@ tracks/0/keys = [0.0, 1.0, 0.0, 0.0, -3.77384, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0
 
 mesh = SubResource(1)
 visible = true
-transform = Transform(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 4.1733)
+transform = Transform(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, -3.6196)
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="Cube"]
 

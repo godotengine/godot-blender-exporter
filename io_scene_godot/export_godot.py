@@ -50,7 +50,7 @@ def find_godot_project_dir(export_path):
     last = None
     while not os.path.isfile(os.path.join(project_dir, "project.godot")):
         project_dir = os.path.split(project_dir)[0]
-        if project_dir == "/" or project_dir == last:
+        if project_dir in ("/", last):
             raise structures.ValidationError(
                 "Unable to find godot project file"
             )
@@ -79,54 +79,57 @@ class ExporterLogHandler(logging.Handler):
 class GodotExporter:
     """Handles picking what nodes to export and kicks off the export process"""
 
-    def export_node(self, node, parent_gd_node):
-        """Recursively export a node. It calls the export_node function on
-        all of the nodes children. If you have heirarchies more than 1000 nodes
-        deep, this will fail with a recursion error"""
-        if node not in self.valid_nodes:
+    def export_object(self, obj, parent_gd_node):
+        """Recursively export a object. It calls the export_object function on
+        all of the objects children. If you have heirarchies more than 1000
+        objects deep, this will fail with a recursion error"""
+        if obj not in self.valid_objects:
             return
-        logging.info("Exporting Blender Object: %s", node.name)
 
-        prev_node = bpy.context.scene.objects.active
-        bpy.context.scene.objects.active = node
+        logging.info("Exporting Blender Object: %s", obj.name)
+
+        prev_node = bpy.context.view_layer.objects.active
+        bpy.context.view_layer.objects.active = obj
 
         # Figure out what function will perform the export of this object
-        if node.type in converters.BLENDER_TYPE_TO_EXPORTER:
-            exporter = converters.BLENDER_TYPE_TO_EXPORTER[node.type]
+        if (obj.type in converters.BLENDER_TYPE_TO_EXPORTER and
+                obj in self.exporting_objects):
+            exporter = converters.BLENDER_TYPE_TO_EXPORTER[obj.type]
         else:
             logging.warning(
-                "Unknown object type. Treating as empty: %s", node.name
+                "Unknown object type. Treating as empty: %s", obj.name
             )
             exporter = converters.BLENDER_TYPE_TO_EXPORTER["EMPTY"]
 
         is_bone_attachment = False
         if ("ARMATURE" in self.config['object_types'] and
-                node.parent_bone != ''):
+                obj.parent_bone != ''):
             is_bone_attachment = True
             parent_gd_node = converters.BONE_ATTACHMENT_EXPORTER(
                 self.escn_file,
-                node,
+                obj,
                 parent_gd_node
             )
 
-        # Perform the export, note that `exported_node.paren`t not
+        # Perform the export, note that `exported_node.parent` not
         # always the same as `parent_gd_node`, as sometimes, one
         # blender node exported as two parented node
-        exported_node = exporter(self.escn_file, self.config, node,
+        exported_node = exporter(self.escn_file, self.config, obj,
                                  parent_gd_node)
 
         if is_bone_attachment:
             for child in parent_gd_node.children:
                 child['transform'] = structures.fix_bone_attachment_transform(
-                    node, child['transform']
+                    obj, child['transform']
                 )
 
         # CollisionShape node has different direction in blender
         # and godot, so it has a -90 rotation around X axis,
         # here rotate its children back
-        if exported_node.parent.get_type() == 'CollisionShape':
+        if (exported_node.parent is not None and
+                exported_node.parent.get_type() == 'CollisionShape'):
             exported_node['transform'] = (
-                mathutils.Matrix.Rotation(math.radians(90), 4, 'X') *
+                mathutils.Matrix.Rotation(math.radians(90), 4, 'X') @
                 exported_node['transform'])
 
         # if the blender node is exported and it has animation data
@@ -135,36 +138,53 @@ class GodotExporter:
                 self.escn_file,
                 self.config,
                 exported_node,
-                node,
+                obj,
                 "transform"
             )
 
-        for child in node.children:
-            self.export_node(child, exported_node)
+        for child in obj.children:
+            self.export_object(child, exported_node)
 
-        bpy.context.scene.objects.active = prev_node
+        bpy.context.view_layer.objects.active = prev_node
 
-    def should_export_node(self, node):
+    def should_export_object(self, obj):
         """Checks if a node should be exported:"""
-        if node.type not in self.config["object_types"]:
+        if obj.type not in self.config["object_types"]:
             return False
 
-        if self.config["use_active_layers"]:
-            valid = False
-            for i in range(20):
-                if node.layers[i] and self.scene.layers[i]:
-                    valid = True
-                    break
-            if not valid:
+        if self.config["use_visible_objects"]:
+            view_layer = bpy.context.view_layer
+            if obj.name not in view_layer.objects:
+                return False
+            if not obj.visible_get():
                 return False
 
-        if self.config["use_export_selected"] and not node.select:
+        if self.config["use_export_selected"] and not obj.select:
             return False
 
+        self.exporting_objects.add(obj)
         return True
 
     def export_scene(self):
         """Decide what objects to export, and export them!"""
+        logging.info("Exporting scene: %s", self.scene.name)
+
+        # Decide what objects to export
+        for obj in self.scene.objects:
+            if obj in self.valid_objects:
+                continue
+            if self.should_export_object(obj):
+                # Ensure  parents of current valid object is
+                # going to the exporting recursion
+                tmp = obj
+                while tmp is not None:
+                    if tmp not in self.valid_objects:
+                        self.valid_objects.add(tmp)
+                    else:
+                        break
+                    tmp = tmp.parent
+        logging.info("Exporting %d objects", len(self.valid_objects))
+
         # Scene root
         root_gd_node = structures.NodeTemplate(
             self.scene.name,
@@ -172,25 +192,10 @@ class GodotExporter:
             None
         )
         self.escn_file.add_node(root_gd_node)
-        logging.info("Exporting scene: %s", self.scene.name)
-
-        # Decide what objects to export
         for obj in self.scene.objects:
-            if obj in self.valid_nodes:
-                continue
-            if self.should_export_node(obj):
-                # Ensure all parents are also going to be exported
-                node = obj
-                while node is not None:
-                    if node not in self.valid_nodes:
-                        self.valid_nodes.append(node)
-                    node = node.parent
-
-        logging.info("Exporting %d objects", len(self.valid_nodes))
-
-        for obj in self.scene.objects:
-            if obj in self.valid_nodes and obj.parent is None:
-                self.export_node(obj, root_gd_node)
+            if obj in self.valid_objects and obj.parent is None:
+                # recursive exporting on root object
+                self.export_object(obj, root_gd_node)
 
     def export(self):
         """Begin the export"""
@@ -218,7 +223,10 @@ class GodotExporter:
         self.config["project_path_func"] = functools.partial(
             find_godot_project_dir, path
         )
-        self.valid_nodes = []
+        # valid object would contain object should be exported
+        # and their parents to retain the hierarchy
+        self.valid_objects = set()
+        self.exporting_objects = set()
 
         self.escn_file = None
 

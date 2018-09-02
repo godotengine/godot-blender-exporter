@@ -165,7 +165,7 @@ class NodeTemplate(FileEntry):
         if parent_node is not None:
             # solve duplication
             counter = 1
-            child_name_set = set([c.get_name() for c in self.parent.children])
+            child_name_set = {c.get_name() for c in self.parent.children}
             node_name_base = node_name
             while node_name in child_name_set:
                 node_name = node_name_base + str(counter).zfill(3)
@@ -334,7 +334,7 @@ class NodePath:
 
 def fix_matrix(mtx):
     """ Shuffles a matrix to change from y-up to z-up"""
-    # Todo: can this be replaced my a matrix multiplcation?
+    # TODO: can this be replaced my a matrix multiplcation?
     trans = mathutils.Matrix(mtx)
     up_axis = 2
 
@@ -360,7 +360,7 @@ _AXIS_CORRECT = mathutils.Matrix.Rotation(math.radians(-90), 4, 'X')
 def fix_directional_transform(mtx):
     """Used to correct spotlights and cameras, which in blender are
     Z-forwards and in Godot are Y-forwards"""
-    return mtx * _AXIS_CORRECT
+    return mtx @ _AXIS_CORRECT
 
 
 def fix_bone_attachment_transform(attachment_obj, blender_transform):
@@ -389,6 +389,8 @@ def gamma_correct(color):
     # note that here use a widely mentioned sRGB approximation gamma = 2.2
     # it is good enough, the exact gamma of sRGB can be find at
     # https://en.wikipedia.org/wiki/SRGB
+    if len(color) > 3:
+        color = color[:3]
     return mathutils.Color(tuple([x ** (1 / 2.2) for x in color]))
 
 

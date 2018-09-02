@@ -26,7 +26,7 @@ BLENDER_TYPE_TO_EXPORTER = {
     "MESH": export_mesh_node,
     "ARMATURE": export_armature_node,
     "CAMERA": export_camera_node,
-    "LAMP": export_lamp_node,
+    "LIGHT": export_light_node,
     "EMPTY": export_empty_node
 }
 

@@ -64,9 +64,9 @@ def export_collision_shape(escn_file, export_settings, node, parent_gd_node,
     if parent_override is None:
         col_node['transform'] = mathutils.Matrix.Identity(4)
     else:
-        parent_to_world = parent_override.matrix_world.inverted()
-        col_node['transform'] = parent_to_world * node.matrix_world
-    col_node['transform'] *= _AXIS_CORRECT
+        parent_to_world = parent_override.matrix_world.inverted_safe()
+        col_node['transform'] = parent_to_world @ node.matrix_world
+    col_node['transform'] = col_node['transform'] @ _AXIS_CORRECT
 
     rbd = node.rigid_body
 
@@ -121,9 +121,9 @@ def generate_convex_mesh_array(escn_file, export_settings, node):
 
     col_shape = InternalResource("ConvexPolygonShape", mesh.name)
 
-    mesh = node.to_mesh(bpy.context.scene,
-                        export_settings['use_mesh_modifiers'],
-                        "RENDER")
+    mesh = node.to_mesh(bpy.context.view_layer.depsgraph,
+                        apply_modifiers=True,
+                        calc_undeformed=True)
 
     # Triangulate
     triangulated_mesh = bmesh.new()
@@ -156,9 +156,9 @@ def generate_triangle_mesh_array(escn_file, export_settings, node):
 
     col_shape = InternalResource("ConcavePolygonShape", mesh.name)
 
-    mesh = node.to_mesh(bpy.context.scene,
-                        export_settings['use_mesh_modifiers'],
-                        "RENDER")
+    mesh = node.to_mesh(bpy.context.view_layer.depsgraph,
+                        apply_modifiers=True,
+                        calc_undeformed=True)
 
     # Triangulate
     triangulated_mesh = bmesh.new()
@@ -202,8 +202,8 @@ def export_physics_controller(escn_file, export_settings, node,
     phys_obj['bounce'] = rbd.restitution
 
     col_groups = 0
-    for offset, bit in enumerate(rbd.collision_groups):
-        col_groups += bit << offset
+    for offset, flag in enumerate(rbd.collision_collections):
+        col_groups += (1 if flag else 0) << offset
 
     phys_obj['transform'] = node.matrix_local
     phys_obj['collision_layer'] = col_groups

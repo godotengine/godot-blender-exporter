@@ -15,73 +15,71 @@ MAX_BONE_PER_VERTEX = 4
 
 
 # ------------------------------- The Mesh -----------------------------------
-def export_mesh_node(escn_file, export_settings, node, parent_gd_node):
+def export_mesh_node(escn_file, export_settings, obj, parent_gd_node):
     """Exports a MeshInstance. If the mesh is not already exported, it will
     trigger the export of that mesh"""
-    if (node.data is None or
-            "MESH" not in export_settings['object_types']):
-        return parent_gd_node
-
     # If this mesh object has physics properties, we need to export them first
     # because they need to be higher in the scene-tree
-    if physics.has_physics(node):
+
+    if physics.has_physics(obj):
         parent_gd_node = physics.export_physics_properties(
-            escn_file, export_settings, node, parent_gd_node
+            escn_file, export_settings, obj, parent_gd_node
         )
 
-    if (node.hide_render or
-            (physics.has_physics(node) and node.draw_type == "WIRE")):
+    if physics.has_physics(obj) and obj.display_type == "WIRE":
+        # skip wire mesh which is used as collision mesh
         return parent_gd_node
 
-    else:
-        mesh_node = NodeTemplate(node.name, "MeshInstance", parent_gd_node)
-        mesh_exporter = MeshResourceExporter(node)
+    mesh_node = NodeTemplate(obj.name, "MeshInstance", parent_gd_node)
+    mesh_exporter = MeshResourceExporter(obj)
 
-        armature_data = get_modifier_armature_data(node)
-        if ("ARMATURE" in export_settings['object_types'] and
-                armature_data is not None):
-            skeleton_node = armature.find_skeletion_node(parent_gd_node)
+    armature_data = get_modifier_armature_data(obj)
+    if ("ARMATURE" in export_settings['object_types'] and
+            armature_data is not None):
+        skeleton_node = armature.find_skeletion_node(parent_gd_node)
+        if skeleton_node is not None:
             mesh_exporter.init_mesh_bones_data(skeleton_node)
             mesh_node['skeleton'] = NodePath(
                 mesh_node.get_path(), skeleton_node.get_path())
 
-        mesh_id = mesh_exporter.export_mesh(escn_file, export_settings)
+    mesh_id = mesh_exporter.export_mesh(escn_file, export_settings)
 
-        mesh_node['mesh'] = "SubResource({})".format(mesh_id)
-        mesh_node['visible'] = not node.hide
+    mesh_node['mesh'] = "SubResource({})".format(mesh_id)
+    mesh_node['visible'] = obj.visible_get()
 
-        # Transform of rigid mesh is moved up to its collision
-        # shapes.
-        if not physics.has_physics(node):
-            mesh_node['transform'] = node.matrix_local
-        else:
-            mesh_node['transform'] = mathutils.Matrix.Identity(4)
+    # Transform of rigid mesh is moved up to its collision
+    # shapes.
+    if not physics.has_physics(obj):
+        mesh_node['transform'] = obj.matrix_local
+    else:
+        mesh_node['transform'] = mathutils.Matrix.Identity(4)
 
-        escn_file.add_node(mesh_node)
+    escn_file.add_node(mesh_node)
 
-        export_object_link_material(
-            escn_file, export_settings, node, mesh_node
-        )
+    export_object_link_material(
+        escn_file, export_settings, obj, mesh_node
+    )
 
-        # export shape key animation
-        if (export_settings['use_export_shape_key'] and
-                node.data.shape_keys is not None):
-            animation.export_animation_data(
-                escn_file, export_settings, mesh_node,
-                node.data.shape_keys, 'shapekey')
+    # export shape key animation
+    if (export_settings['use_export_shape_key'] and
+            obj.data.shape_keys is not None):
+        animation.export_animation_data(
+            escn_file, export_settings, mesh_node,
+            obj.data.shape_keys, 'shapekey')
 
-        return mesh_node
+    return mesh_node
 
 
 def triangulate_mesh(mesh):
     """Triangulate a mesh"""
     tri_mesh = bmesh.new()
     tri_mesh.from_mesh(mesh)
-    bmesh.ops.triangulate(tri_mesh, faces=tri_mesh.faces, quad_method=2)
+    bmesh.ops.triangulate(
+        tri_mesh, faces=tri_mesh.faces, quad_method="ALTERNATE")
     tri_mesh.to_mesh(mesh)
     tri_mesh.free()
 
-    mesh.update(calc_tessface=True)
+    mesh.update(calc_loop_triangles=True)
 
 
 def fix_vertex(vtx):
@@ -173,24 +171,15 @@ class MeshResourceExporter:
 
     def make_arrays(self, escn_file, export_settings):
         """Generates arrays of positions, normals etc"""
-        armature_data = get_modifier_armature_data(self.object)
-        if armature_data is not None:
-            original_pose_position = armature_data.pose_position
-            armature_data.pose_position = 'REST'
-            bpy.context.scene.update()
-
-        if not export_settings['use_mesh_modifiers']:
-            for modifier in self.object.modifiers:
-                if not isinstance(modifier, bpy.types.ArmatureModifier):
-                    modifier.show_render = False
+        apply_modifiers = export_settings['use_mesh_modifiers']
 
         # set shape key to basis key which would have index 0
         self.object.show_only_shape_key = True
         self.object.active_shape_key_index = 0
 
-        mesh = self.object.to_mesh(bpy.context.scene,
-                                   True,
-                                   "RENDER")
+        mesh = self.object.to_mesh(bpy.context.view_layer.depsgraph,
+                                   apply_modifiers=apply_modifiers,
+                                   calc_undeformed=True)
 
         self.object.show_only_shape_key = False
 
@@ -205,9 +194,9 @@ class MeshResourceExporter:
         triangulate_mesh(mesh)
 
         # godot engine supports two uv channels
-        uv_layer_count = min(len(mesh.uv_textures), 2)
+        uv_layer_count = min(len(mesh.uv_layers), 2)
 
-        if mesh.uv_textures:
+        if mesh.uv_layers:
             self.has_tangents = True
             try:
                 mesh.calc_tangents()
@@ -229,10 +218,6 @@ class MeshResourceExporter:
         )
 
         bpy.data.meshes.remove(mesh)
-
-        if armature_data is not None:
-            armature_data.pose_position = original_pose_position
-            bpy.context.scene.update()
 
     @staticmethod
     def extract_shape_keys(blender_shape_keys):
@@ -269,8 +254,10 @@ class MeshResourceExporter:
 
         return surfaces_morph_list
 
+    # pylint: disable-msg=R0914
     def export_morphs(self, export_settings, surfaces):
         """Export shape keys in mesh node and append them to surfaces"""
+        modifier_config_cache = list()
         if export_settings['use_mesh_modifiers']:
             if not self.validate_morph_mesh_modifiers(
                     self.object):
@@ -279,6 +266,10 @@ class MeshResourceExporter:
                     "incompatible with shape key",
                     self.object.name
                 )
+
+            for modifier in self.object.modifiers:
+                modifier_config_cache.append(modifier.show_render)
+                modifier.show_render = False
 
         self.mesh_resource["blend_shape/names"] = Array(
             prefix="PoolStringArray(", suffix=')'
@@ -298,9 +289,9 @@ class MeshResourceExporter:
             shape_key.value = 1.0
 
             shape_key_mesh = self.object.to_mesh(
-                bpy.context.scene,
-                True,
-                "RENDER"
+                bpy.context.view_layer.depsgraph,
+                apply_modifiers=True,
+                calc_undeformed=True
             )
 
             self.object.show_only_shape_key = False
@@ -339,6 +330,10 @@ class MeshResourceExporter:
                 surf.morph_arrays.append(surfaces_morph_data[surf_index])
 
             bpy.data.meshes.remove(shape_key_mesh)
+
+        if export_settings['use_mesh_modifiers']:
+            for index, modifier in enumerate(self.object.modifiers):
+                modifier.show_render = modifier_config_cache[index]
 
     def generate_surfaces(self, escn_file, export_settings, mesh):
         """Splits up the mesh into surfaces with a single material each.
@@ -403,7 +398,7 @@ class MeshResourceExporter:
                 self.object.data.shape_keys):
             self.export_morphs(export_settings, surfaces)
 
-        has_bone = True if self.vgroup_to_bone_mapping else False
+        has_bone = bool(self.vgroup_to_bone_mapping)
         for surface in surfaces:
             surface.vertex_data.has_bone = has_bone
             for vert_array in surface.morph_arrays:

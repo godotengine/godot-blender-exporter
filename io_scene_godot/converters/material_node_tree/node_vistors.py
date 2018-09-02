@@ -440,12 +440,12 @@ def visit_mapping_node(shader, node):
     if node.vector_type == "TEXTURE":
         # Texture: Transform a texture by inverse
         # mapping the texture coordinate
-        transform_mat = (loc_mat * rot_mat * sca_mat).inverted_safe()
+        transform_mat = (loc_mat @ rot_mat @ sca_mat).inverted_safe()
     elif node.vector_type == "POINT":
-        transform_mat = loc_mat * rot_mat * sca_mat
+        transform_mat = loc_mat @ rot_mat @ sca_mat
     else:  # node.vector_type in ("VECTOR", "NORMAL")
         # no translation for vectors
-        transform_mat = rot_mat * sca_mat
+        transform_mat = rot_mat @ sca_mat
 
     mat = Value.create_from_blender_value(transform_mat)
     clamp_min = Value.create_from_blender_value(node.min)
@@ -520,14 +520,6 @@ def visit_tangent_node(shader, node):
 
 def visit_uvmap_node(shader, node):
     """Visit UV Map node"""
-    if node.from_dupli:
-        raise ValidationError(
-            "'{}' from_dupli not supported, at '{}'".format(
-                node.bl_idname,
-                node.name
-            )
-        )
-
     shader.assign_variable_to_socket(
         node.outputs['UV'],
         Value("vec3", ('UV', 0.0)),

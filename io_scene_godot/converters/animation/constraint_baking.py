@@ -24,7 +24,7 @@ def action_baking_finalize(action):
 def check_object_constraint(blender_object):
     """Return bool indicate if object has constraint"""
     if isinstance(blender_object, bpy.types.Object):
-        return True if blender_object.constraints else False
+        return bool(blender_object.constraints)
     return False
 
 
@@ -38,14 +38,15 @@ def check_pose_constraint(blender_object):
     return False
 
 
-def bake_constraint_to_action(blender_object, base_action, bake_type,
-                              in_place):
+def bake_constraint_to_action(blender_object, base_action, in_place):
     """Bake pose or object constrainst (e.g. IK) to action"""
     if base_action is not None:
         blender_object.animation_data.action = base_action
-        frame_range = tuple([int(x) for x in base_action.frame_range])
+        frame_range = range(
+            int(base_action.frame_range[0]),
+            int(base_action.frame_range[1]) + 1)
     else:
-        frame_range = (1, 250)  # default, can be improved
+        frame_range = range(1, 251)  # default, can be improved
 
     # if action_bake_into is None, it would create a new one
     # and baked into it
@@ -54,38 +55,14 @@ def bake_constraint_to_action(blender_object, base_action, bake_type,
     else:
         action_bake_into = None
 
-    do_pose = bake_type == "POSE"
-    do_object = not do_pose
-
-    if bpy.app.version <= (2, 79, 0):
-        active_obj_backup = bpy.context.scene.objects.active
-
-        # the object to bake is the current active object
-        bpy.context.scene.objects.active = blender_object
-        baked_action = bpy_extras.anim_utils.bake_action(
-            frame_start=frame_range[0],
-            frame_end=frame_range[1],
-            frame_step=1,
-            only_selected=False,
-            action=action_bake_into,
-            do_pose=do_pose,
-            do_object=do_object,
-            do_visual_keying=True,
-        )
-
-        bpy.context.scene.objects.active = active_obj_backup
-    else:
-        baked_action = bpy_extras.anim_utils.bake_action(
-            obj=blender_object,
-            frame_start=frame_range[0],
-            frame_end=frame_range[1],
-            frame_step=1,
-            only_selected=False,
-            action=action_bake_into,
-            do_pose=do_pose,
-            do_object=do_object,
-            do_visual_keying=True,
-        )
+    baked_action = bpy_extras.anim_utils.bake_action_objects(
+        object_action_pairs=[(blender_object, action_bake_into)],
+        frames=frame_range,
+        only_selected=False,
+        do_pose=True,
+        do_object=True,
+        do_visual_keying=True,
+    )[0]
 
     if in_place:
         return action_bake_into

@@ -247,12 +247,6 @@ def export_light_action(light_node, animation_player, blender_lamp,
     )
 
     fcurves = action_strip.action.fcurves
-    animation_resource.add_attribute_track(
-        action_strip,
-        fcurves.find('use_negative'),
-        lambda x: x > 0.0,
-        base_node_path.new_copy('light_negative'),
-    )
 
     animation_resource.add_attribute_track(
         action_strip,

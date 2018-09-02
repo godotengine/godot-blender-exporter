@@ -1,3 +1,3 @@
 # Python requirements for development
-pylint==1.9.2
+pylint==2.2.0
 pycodestyle==2.4.0

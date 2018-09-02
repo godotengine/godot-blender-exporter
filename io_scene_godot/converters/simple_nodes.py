@@ -43,10 +43,6 @@ class CameraNode(NodeTemplate):
 
 def export_camera_node(escn_file, export_settings, node, parent_gd_node):
     """Exports a camera"""
-    if (node.data is None or node.hide_render or
-            "CAMERA" not in export_settings['object_types']):
-        return parent_gd_node
-
     cam_node = CameraNode(node.name, parent_gd_node)
     camera = node.data
 
@@ -76,8 +72,7 @@ class LightNode(NodeTemplate):
     """Base class for godot light node"""
     _light_attr_conv = [
         AttributeConvertInfo(
-            'use_specular', 'light_specular', lambda x: 1.0 if x else 0.0
-        ),
+            'specular_factor', 'light_specular', lambda x: x),
         AttributeConvertInfo('energy', 'light_energy', lambda x: x),
         AttributeConvertInfo('color', 'light_color', gamma_correct),
         AttributeConvertInfo('shadow_color', 'shadow_color', gamma_correct),
@@ -106,30 +101,15 @@ class LightNode(NodeTemplate):
         return self._light_attr_conv
 
 
-def export_lamp_node(escn_file, export_settings, node, parent_gd_node):
+def export_light_node(escn_file, export_settings, node, parent_gd_node):
     """Exports lights - well, the ones it knows about. Other light types
     just throw a warning"""
-    if (node.data is None or node.hide_render or
-            "LAMP" not in export_settings['object_types']):
-        return parent_gd_node
-
     light = node.data
 
     if light.type == "POINT":
         light_node = LightNode(node.name, 'OmniLight', parent_gd_node)
-
-        if not light.use_sphere:
-            logging.warning(
-                "Ranged light without sphere enabled: %s", node.name
-            )
-
     elif light.type == "SPOT":
         light_node = LightNode(node.name, 'SpotLight', parent_gd_node)
-        if not light.use_sphere:
-            logging.warning(
-                "Ranged light without sphere enabled: %s", node.name
-            )
-
     elif light.type == "SUN":
         light_node = LightNode(node.name, 'DirectionalLight', parent_gd_node)
     else:
@@ -143,10 +123,9 @@ def export_lamp_node(escn_file, export_settings, node, parent_gd_node):
             bl_attr, gd_attr, converter = item
             light_node[gd_attr] = converter(getattr(light, bl_attr))
 
-        # Properties common to all lights
+        # Properties cannot handled by a converter function
         light_node['transform'] = fix_directional_transform(node.matrix_local)
-        light_node['shadow_enabled'] = light.shadow_method != "NOSHADOW"
-        light_node['light_negative'] = light.use_negative
+        light_node['shadow_enabled'] = light.use_shadow
 
         escn_file.add_node(light_node)
 

@@ -360,7 +360,7 @@ class FragmentShader(BaseShader):
                 self.code_array.append(
                     '{} = {};'.format(name.upper(), str(var))
                 )
-        # xxx: transmission for thick object is not supported in godot
+        # XXX: transmission for thick object is not supported in godot
         # transmission_var = bsdf_output.get_attribute('transmission')
         # if transmission_var is not None:
         #     self.append_code_line(
@@ -407,7 +407,7 @@ class FragmentShader(BaseShader):
 
     def add_bump_displacement(self, displacement_output):
         """Add bump displacement to fragment shader"""
-        # xxx: use tangent space if uv exists?
+        # XXX: use tangent space if uv exists?
         function = find_function_by_name('node_bump')
 
         in_arguments = list()

@@ -73,7 +73,7 @@ def export_bone(pose_bone, bl_bones_to_export):
     while ps_bone_ptr is not None and ps_bone_ptr not in bl_bones_to_export:
         ps_bone_ptr = ps_bone_ptr.parent
     if ps_bone_ptr is not None:
-        rest_mat = (ps_bone_ptr.bone.matrix_local.inverted_safe() *
+        rest_mat = (ps_bone_ptr.bone.matrix_local.inverted_safe() @
                     rest_bone.matrix_local)
         parent_bone_name = ps_bone_ptr.name
     else:
@@ -151,9 +151,6 @@ class SkeletonNode(NodeTemplate):
 
 def export_armature_node(escn_file, export_settings, node, parent_gd_node):
     """Export an armature node"""
-    if "ARMATURE" not in export_settings['object_types']:
-        return parent_gd_node
-
     skeleton_node = SkeletonNode(node.name, parent_gd_node)
     skeleton_node['transform'] = node.matrix_local
 

@@ -97,4 +97,4 @@ anims/Cube.003Action.001 = SubResource(4)
 
 mesh = SubResource(5)
 visible = true
-transform = Transform(1.65289, 0.0, 0.0, 0.0, 1.2479e-07, -1.65289, 0.0, 1.65289, 1.2479e-07, 0.0, 3.60002e-14, 4.76837e-07)
+transform = Transform(1.65289, 0.0, 0.0, 0.0, 1.2479e-07, -1.65289, 0.0, 1.65289, 1.2479e-07, 0.0, 0.0, 0.0)
