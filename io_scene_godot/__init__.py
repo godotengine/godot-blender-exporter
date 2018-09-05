@@ -106,6 +106,12 @@ class ExportGodot(bpy.types.Operator, ExportHelper):
         description="Export only objects on the active layers.",
         default=True,
     )
+    use_stashed_action = BoolProperty(
+        name="Export Stashed Actions",
+        description="Export stashed actions and muted nla_strip as separate "
+                    "animation and place into AnimationPlayer",
+        default=True,
+    )
     animation_modes = EnumProperty(
         name="Animation Modes",
         description="Configuration of how blender animation data being "
