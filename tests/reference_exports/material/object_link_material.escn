@@ -7,7 +7,7 @@ flags_unshaded = false
 flags_vertex_lighting = false
 flags_transparent = false
 vertex_color_use_as_albedo = false
-albedo_color = Color(0.0394116, 0.058329, 0.8, 1.0)
+albedo_color = Color(0.229957, 0.274814, 0.903545, 1.0)
 subsurf_scatter_enabled = false
 
 [sub_resource id=2 type="SpatialMaterial"]
@@ -17,7 +17,7 @@ flags_unshaded = false
 flags_vertex_lighting = false
 flags_transparent = false
 vertex_color_use_as_albedo = false
-albedo_color = Color(0.8, 0.8, 0.8, 1.0)
+albedo_color = Color(0.903545, 0.903545, 0.903545, 1.0)
 subsurf_scatter_enabled = false
 
 [sub_resource id=3 type="ArrayMesh"]
@@ -63,7 +63,7 @@ flags_unshaded = false
 flags_vertex_lighting = false
 flags_transparent = false
 vertex_color_use_as_albedo = false
-albedo_color = Color(0.8, 0.0201475, 0.0444397, 1.0)
+albedo_color = Color(0.903545, 0.169508, 0.242857, 1.0)
 subsurf_scatter_enabled = false
 
 [sub_resource id=5 type="SpatialMaterial"]
@@ -73,7 +73,7 @@ flags_unshaded = false
 flags_vertex_lighting = false
 flags_transparent = false
 vertex_color_use_as_albedo = false
-albedo_color = Color(0.00971971, 0.8, 0.0132156, 1.0)
+albedo_color = Color(0.121702, 0.903545, 0.139942, 1.0)
 subsurf_scatter_enabled = false
 [node type="Spatial" name="Scene"]
 

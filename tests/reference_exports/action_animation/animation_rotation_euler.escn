@@ -1,20 +1,9 @@
 [gd_scene load_steps=1 format=2]
 
-[sub_resource id=1 type="SpatialMaterial"]
-
-resource_name = "Material"
-flags_unshaded = false
-flags_vertex_lighting = false
-flags_transparent = false
-vertex_color_use_as_albedo = false
-albedo_color = Color(0.8, 0.8, 0.8, 1.0)
-subsurf_scatter_enabled = false
-
-[sub_resource id=2 type="ArrayMesh"]
+[sub_resource id=1 type="ArrayMesh"]
 
 resource_name = "Cube"
 surfaces/0 = {
-	"material":SubResource(1),
 	"primitive":4,
 	"arrays":[
 		Vector3Array(1.0, -1.0, 1.0, -1.0, -1.0, -1.0, 1.0, -1.0, -1.0, -1.0, 1.0, -1.0, 0.999999, 1.0, 1.0, 1.0, 1.0, -0.999999, 1.0, 1.0, -0.999999, 1.0, -1.0, 1.0, 1.0, -1.0, -1.0, 0.999999, 1.0, 1.0, -1.0, -1.0, 1.0, 1.0, -1.0, 1.0, -1.0, 1.0, 1.0, -1.0, -1.0, -1.0, -1.0, -1.0, 1.0, 1.0, -1.0, -1.0, -1.0, 1.0, -1.0, 1.0, 1.0, -0.999999, 1.0, -1.0, 1.0, -1.0, -1.0, 1.0, -1.0, -1.0, -1.0, -1.0, 1.0, -1.0, -1.0, 1.0, 1.0, 0.999999, 1.0, 1.0, 1.0, 1.0, -0.999999, 0.999999, 1.0, 1.0, 1.0, -1.0, 1.0, 0.999999, 1.0, 1.0, -1.0, 1.0, 1.0, -1.0, -1.0, 1.0, -1.0, 1.0, 1.0, -1.0, 1.0, -1.0, -1.0, -1.0, -1.0, 1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, 1.0, -1.0),
@@ -30,7 +19,7 @@ surfaces/0 = {
 	"morph_arrays":[]
 }
 
-[sub_resource id=3 type="Animation"]
+[sub_resource id=2 type="Animation"]
 
 resource_name = "CubeAction"
 step = 0.1
@@ -44,11 +33,11 @@ tracks/0/keys = [0.0, 1.0, -0.284979, 2.62876, -2.59493, 0.0, 0.0, 0.0, 1.0, 1.0
 
 [node name="Cube" type="MeshInstance" parent="."]
 
-mesh = SubResource(2)
+mesh = SubResource(1)
 visible = true
 transform = Transform(0.416415, 0.901424, 0.118463, -0.695175, 0.231712, 0.680472, 0.585944, -0.365711, 0.723136, -0.284979, 2.62876, -2.59493)
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="Cube"]
 
 root_node = NodePath("..:")
-anims/CubeAction = SubResource(3)
+anims/CubeAction = SubResource(2)

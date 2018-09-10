@@ -291,6 +291,13 @@ def export_light_action(light_node, animation_player, blender_lamp,
                     action_strip.evaluate_fcurve(fcurve, frame)
                 )
 
+    for bl_attr, _, converter in light_node.attribute_conversion:
+        if (bl_attr in ('color', 'shadow_color') and
+                bl_attr in color_frame_values_map):
+            color_frame_values_map[bl_attr] = [
+                converter(x) for x in color_frame_values_map[bl_attr]
+            ]
+
     for attribute, frame_value_list in color_frame_values_map.items():
         if attribute == 'color':
             track_path = base_node_path.new_copy('light_color')

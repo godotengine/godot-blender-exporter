@@ -5,9 +5,10 @@ Anything more complex should go in it's own file
 
 import math
 import logging
-import mathutils
-from ..structures import NodeTemplate, fix_directional_transform
-from .animation import (export_animation_data, AttributeConvertInfo)
+from ..structures import (
+    NodeTemplate, fix_directional_transform, gamma_correct
+)
+from .animation import export_animation_data, AttributeConvertInfo
 
 
 def export_empty_node(escn_file, export_settings, node, parent_gd_node):
@@ -78,8 +79,8 @@ class LightNode(NodeTemplate):
             'use_specular', 'light_specular', lambda x: 1.0 if x else 0.0
         ),
         AttributeConvertInfo('energy', 'light_energy', lambda x: x),
-        AttributeConvertInfo('color', 'light_color', mathutils.Color),
-        AttributeConvertInfo('shadow_color', 'shadow_color', mathutils.Color),
+        AttributeConvertInfo('color', 'light_color', gamma_correct),
+        AttributeConvertInfo('shadow_color', 'shadow_color', gamma_correct),
     ]
     _omni_attr_conv = [
         AttributeConvertInfo('distance', 'omni_range', lambda x: x),
@@ -124,7 +125,6 @@ def export_lamp_node(escn_file, export_settings, node, parent_gd_node):
 
     elif light.type == "SPOT":
         light_node = LightNode(node.name, 'SpotLight', parent_gd_node)
-
         if not light.use_sphere:
             logging.warning(
                 "Ranged light without sphere enabled: %s", node.name

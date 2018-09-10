@@ -63,7 +63,7 @@ surfaces/0 = {
 
 light_specular = 1.0
 light_energy = 1.0
-light_color = Color(0.674415, 0.00033786, 1.0, 1.0)
+light_color = Color(0.836064, 0.0264334, 1.0, 1.0)
 shadow_color = Color(0.0, 0.0, 0.0, 1.0)
 omni_range = 5.0
 transform = Transform(1.0, 0.0, 0.0, 0.0, -4.37114e-08, 1.0, 0.0, -1.0, -4.37114e-08, 0.0, 0.4, 1.0)
@@ -86,7 +86,7 @@ transform = Transform(0.3, 0.0, 0.0, 0.0, 0.6, 0.0, 0.0, 0.0, 0.3, -2.0, 0.0, 0.
 
 light_specular = 1.0
 light_energy = 1.0
-light_color = Color(0.0, 1.0, 0.00242467, 1.0)
+light_color = Color(0.0, 1.0, 0.064745, 1.0)
 shadow_color = Color(0.0, 0.0, 0.0, 1.0)
 omni_range = 5.0
 transform = Transform(1.0, 0.0, 0.0, 0.0, -4.37114e-08, 1.0, 0.0, -1.0, -4.37114e-08, -2.0, 0.4, 1.0)

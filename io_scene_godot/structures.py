@@ -384,6 +384,14 @@ def fix_bone_attachment_location(attachment_obj, location_vec):
     return vec
 
 
+def gamma_correct(color):
+    """Apply sRGB color space gamma correction to the given color"""
+    # note that here use a widely mentioned sRGB approximation gamma = 2.2
+    # it is good enough, the exact gamma of sRGB can be find at
+    # https://en.wikipedia.org/wiki/SRGB
+    return mathutils.Color(tuple([x ** (1 / 2.2) for x in color]))
+
+
 # ------------------ Implicit Conversions of Blender Types --------------------
 def mat4_to_string(mtx):
     """Converts a matrix to a "Transform" string that can be parsed by Godot"""
