@@ -22,3 +22,4 @@ upstream [GitHub repository](https://github.com/godotengine/blender-exporter).
 This Godot exporter is distributed under the terms of the GNU General
 Public License, version 2 or later. See the [LICENSE.txt](/LICENSE.txt) file
 for details.
+Enjoy using Godot....!
