@@ -1,0 +1,77 @@
+[gd_scene load_steps=1 format=2]
+[ext_resource id=1 path="brick_4_diff_1k.jpg" type="Texture"]
+
+[sub_resource id=1 type="Shader"]
+
+code = "shader_type spatial;
+render_mode blend_mix,depth_draw_always,cull_back,diffuse_burley,specular_schlick_ggx;
+uniform sampler2D uni1_ImageTexturetexture_image;
+
+
+void node_tex_image(vec3 co, sampler2D ima, out vec4 color, out float alpha) {
+    color = texture(ima, co.xy);
+    alpha = color.a;
+}
+
+
+void node_bsdf_diffuse(vec4 color, float roughness, out vec3 albedo,
+        out float specular_out, out float roughness_out) {
+    albedo = color.rgb;
+    specular_out = 0.5;
+    roughness_out = 1.0;
+}
+
+
+
+void vertex() {
+	
+}
+
+
+void fragment() {
+	vec4 var1_ImageTexture_Color;
+	float var2_ImageTexture_Alpha;
+	node_tex_image(vec3(UV, 0.0), uni1_ImageTexturetexture_image, var1_ImageTexture_Color, var2_ImageTexture_Alpha);
+	float var3_DiffuseBSDF_Roughness;
+	var3_DiffuseBSDF_Roughness = 0.0;
+	vec3 var4_DiffuseBSDF_output_albedo;
+	float var5_DiffuseBSDF_output_specular;
+	float var6_DiffuseBSDF_output_roughness;
+	node_bsdf_diffuse(var1_ImageTexture_Color, var3_DiffuseBSDF_Roughness, var4_DiffuseBSDF_output_albedo, var5_DiffuseBSDF_output_specular, var6_DiffuseBSDF_output_roughness);
+	ALBEDO = var4_DiffuseBSDF_output_albedo;
+	SPECULAR = var5_DiffuseBSDF_output_specular;
+	ROUGHNESS = var6_DiffuseBSDF_output_roughness;
+}
+"
+
+[sub_resource id=2 type="ShaderMaterial"]
+
+shader = SubResource(1)
+shader_param/uni1_ImageTexturetexture_image = ExtResource(1)
+
+[sub_resource id=3 type="ArrayMesh"]
+
+surfaces/0 = {
+	"material":SubResource(2),
+	"primitive":4,
+	"arrays":[
+		Vector3Array(3.58062, -1.0, 1.0, -3.03377, -1.0, 0.567279, 3.58062, -1.0, 0.567279, -3.03378, 5.77507, 0.567279, 3.58062, 5.77507, 1.0, 3.58062, 5.77507, 0.56728, 3.58062, 5.77507, 0.56728, 3.58062, -1.0, 1.0, 3.58062, -1.0, 0.567279, 3.58062, 5.77507, 1.0, -3.03378, -1.0, 1.0, 3.58062, -1.0, 1.0, -3.03378, 5.77507, 1.0, -3.03377, -1.0, 0.567279, -3.03378, -1.0, 1.0, 3.58062, -1.0, 0.567279, -3.03378, 5.77507, 0.567279, 3.58062, 5.77507, 0.56728, -3.03378, -1.0, 1.0, -3.03378, 5.77507, 0.567279, -3.03378, 5.77507, 1.0, 3.58062, 5.77507, 1.0, 3.58062, 5.77507, 0.56728, 3.58062, 5.77507, 1.0, 3.58062, -1.0, 1.0, 3.58062, 5.77507, 1.0, -3.03378, 5.77507, 1.0, -3.03378, -1.0, 1.0, -3.03378, 5.77507, 1.0, -3.03378, 5.77507, 0.567279, -3.03377, -1.0, 0.567279, 3.58062, -1.0, 0.567279, -3.03377, -1.0, 0.567279, -3.03378, 5.77507, 0.567279),
+		Vector3Array(0.0, -1.0, 0.0, 0.0, -1.0, 0.0, 0.0, -1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0, -7.03811e-08, 0.0, 1.0, -7.03811e-08, 0.0, 1.0, -7.03811e-08, 0.0, -2.70341e-08, -1.27687e-07, 1.0, -2.70341e-08, -1.27687e-07, 1.0, -2.70341e-08, -1.27687e-07, 1.0, -1.0, -7.03812e-08, -1.30118e-06, -1.0, -7.03812e-08, -1.30118e-06, -1.0, -7.03812e-08, -1.30118e-06, 8.11022e-08, 7.44842e-08, -1.0, 8.11022e-08, 7.44842e-08, -1.0, 8.11022e-08, 7.44842e-08, -1.0, 0.0, -1.0, 0.0, 1.67067e-08, 1.0, 0.0, 1.67067e-08, 1.0, 0.0, 1.67067e-08, 1.0, 0.0, 1.0, 1.05571e-07, 3.90355e-06, 1.0, 1.05571e-07, 3.90355e-06, 1.0, 1.05571e-07, 3.90355e-06, -1.44182e-07, 4.25624e-08, 1.0, -1.44182e-07, 4.25624e-08, 1.0, -1.44182e-07, 4.25624e-08, 1.0, -1.0, -7.03811e-08, -1.30118e-06, -1.0, -7.03811e-08, -1.30118e-06, -1.0, -7.03811e-08, -1.30118e-06, 6.30795e-08, 3.049e-08, -1.0, 6.30795e-08, 3.049e-08, -1.0, 6.30795e-08, 3.049e-08, -1.0),
+		FloatArray(1.0, 0.0, 0.0, -1.0, 1.0, 0.0, 0.0, -1.0, 1.0, 0.0, 0.0, -1.0, 1.0, 0.0, 0.0, -1.0, 1.0, 0.0, 0.0, -1.0, 1.0, 0.0, 0.0, -1.0, 1.0, 0.0, 0.0, -1.0, 1.0, 0.0, 0.0, -1.0, 1.0, 0.0, 0.0, -1.0, 1.0, 0.0, 0.0, -1.0, 1.0, 0.0, 0.0, -1.0, 1.0, 0.0, 0.0, -1.0, 1.0, 0.0, 0.0, -1.0, 1.0, 0.0, 0.0, -1.0, 1.0, 0.0, 0.0, -1.0, -1.0, 0.0, -8.11022e-08, 1.0, -1.0, 0.0, -8.11022e-08, 1.0, -1.0, 0.0, -8.11022e-08, 1.0, 1.0, 0.0, 0.0, -1.0, 1.0, 0.0, 0.0, -1.0, 1.0, 0.0, 0.0, -1.0, 1.0, 0.0, 0.0, -1.0, 1.0, 0.0, 0.0, -1.0, 1.0, 0.0, 0.0, -1.0, 1.0, 0.0, 0.0, -1.0, 1.0, 0.0, 0.0, -1.0, 1.0, 0.0, 0.0, -1.0, 1.0, 0.0, 0.0, -1.0, 1.0, 0.0, 0.0, -1.0, 1.0, 0.0, 0.0, -1.0, 1.0, 0.0, 0.0, -1.0, -1.0, 0.0, -6.30795e-08, 1.0, -1.0, 0.0, -6.30795e-08, 1.0, -1.0, 0.0, -6.30795e-08, 1.0),
+		null, ; no Vertex Colors,
+		Vector2Array(0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 9.87876e-05, 0.999901, 0.97619, 9.88245e-05, 9.87876e-05, 9.87649e-05, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 9.87876e-05, 0.999901, 0.97619, 0.999901, 0.97619, 9.88245e-05),
+		null, ; No UV2,
+		null, ; No Bones,
+		null, ; No Weights,
+		IntArray(0, 2, 1, 3, 5, 4, 6, 8, 7, 9, 11, 10, 12, 14, 13, 15, 17, 16, 0, 1, 18, 19, 21, 20, 22, 24, 23, 25, 27, 26, 28, 30, 29, 31, 33, 32)
+	],
+	"morph_arrays":[]
+}
+[node type="Spatial" name="Scene"]
+
+
+[node name="Cube" type="MeshInstance" parent="."]
+
+mesh = SubResource(3)
+visible = true
+transform = Transform(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0330188, 0.0, 0.0)

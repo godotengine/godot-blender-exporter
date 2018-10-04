@@ -55,6 +55,10 @@ def export_mesh_node(escn_file, export_settings, node, parent_gd_node):
             mesh_node['transform'] = mathutils.Matrix.Identity(4)
         escn_file.add_node(mesh_node)
 
+        export_object_link_material(
+            escn_file, export_settings, node, mesh_node
+        )
+
         # export shape key animation
         if (export_settings['use_export_shape_key'] and
                 node.data.shape_keys is not None):
@@ -90,6 +94,39 @@ def get_modifier_armature_data(mesh_object):
     return None
 
 
+def export_object_link_material(escn_file, export_settings, mesh_object,
+                                gd_node):
+    """Export object linked material, if multiple object link material,
+    only export the first one in the material slots"""
+    mesh_resource_id = escn_file.get_internal_resource(mesh_object.data)
+    mesh_resource = escn_file.internal_resources[mesh_resource_id - 1]
+    for index, slot in enumerate(mesh_object.material_slots):
+        if slot.link == 'OBJECT' and slot.material is not None:
+            surface_id = mesh_resource.get_surface_id(index)
+            if surface_id is not None:
+                gd_node['material/{}'.format(surface_id)] = export_material(
+                    escn_file,
+                    export_settings,
+                    slot.material
+                )
+
+
+class ArrayMeshResource(InternalResource):
+    """Godot ArrayMesh resource, containing surfaces"""
+    def __init__(self):
+        super().__init__('ArrayMesh')
+        self._mat_to_surf_mapping = dict()
+
+    def get_surface_id(self, material_index):
+        """Given blender material index, return the corresponding
+        surface id"""
+        return self._mat_to_surf_mapping.get(material_index, None)
+
+    def set_surface_id(self, material_index, surface_id):
+        """Set a relation between material and surface"""
+        self._mat_to_surf_mapping[material_index] = surface_id
+
+
 class MeshResourceExporter:
     """Export a mesh resource from a blender mesh object"""
     def __init__(self, mesh_object):
@@ -99,7 +136,6 @@ class MeshResourceExporter:
         self.mesh_resource = None
         self.has_tangents = False
         self.vgroup_to_bone_mapping = dict()
-        self.mat_to_surf_mapping = dict()
 
     def init_mesh_bones_data(self, skeleton_node):
         """Find the mapping relation between vertex groups
@@ -118,7 +154,7 @@ class MeshResourceExporter:
         if mesh_id is not None:
             return mesh_id
 
-        self.mesh_resource = InternalResource('ArrayMesh')
+        self.mesh_resource = ArrayMeshResource()
 
         self.make_arrays(
             escn_file,
@@ -146,6 +182,13 @@ class MeshResourceExporter:
         mesh = self.object.to_mesh(bpy.context.scene,
                                    True,
                                    "RENDER")
+
+        # if the original mesh has an object link material,
+        # the new created mesh would use it as data link material,
+        # seems a bug of Blender,
+        # here is a simple fix, not sure if it is robust enough..
+        for idx in range(len(mesh.materials)):
+            mesh.materials[idx] = self.object.data.materials[idx]
 
         # Prepare the mesh for export
         triangulate_mesh(mesh)
@@ -259,7 +302,9 @@ class MeshResourceExporter:
             surfaces_morph_data = self.intialize_surfaces_morph_data(surfaces)
 
             for face in shape_key_mesh.polygons:
-                surface_index = self.mat_to_surf_mapping[face.material_index]
+                surface_index = self.mesh_resource.get_surface_id(
+                    face.material_index
+                )
 
                 surface = surfaces[surface_index]
                 morph = surfaces_morph_data[surface_index]
@@ -294,9 +339,16 @@ class MeshResourceExporter:
 
             # Find a surface that matches the material, otherwise create a new
             # surface for it
-            if face.material_index not in self.mat_to_surf_mapping:
-                self.mat_to_surf_mapping[face.material_index] = len(surfaces)
+            surface_index = self.mesh_resource.get_surface_id(
+                face.material_index
+            )
+            if surface_index is None:
+                surface_index = len(surfaces)
+                self.mesh_resource.set_surface_id(
+                    face.material_index, surface_index
+                )
                 surface = Surface()
+                surface.id = surface_index
                 surfaces.append(surface)
                 if mesh.materials:
                     mat = mesh.materials[face.material_index]
@@ -307,7 +359,7 @@ class MeshResourceExporter:
                             mat
                         )
 
-            surface = surfaces[self.mat_to_surf_mapping[face.material_index]]
+            surface = surfaces[surface_index]
             vertex_indices = []
 
             for loop_id in range(face.loop_total):
@@ -339,8 +391,7 @@ class MeshResourceExporter:
             self.export_morphs(export_settings, surfaces)
 
         has_bone = True if self.vgroup_to_bone_mapping else False
-        for surface_id, surface in enumerate(surfaces):
-            surface.id = surface_id
+        for surface in surfaces:
             surface.vertex_data.has_bone = has_bone
             for vert_array in surface.morph_arrays:
                 vert_array.has_bone = has_bone
