@@ -77,17 +77,17 @@ def export_collision_shape(escn_file, export_settings, node, parent_gd_node,
     bounds = get_extents(node)
 
     if rbd.collision_shape == "BOX":
-        col_shape = InternalResource("BoxShape")
+        col_shape = InternalResource("BoxShape", col_name)
         col_shape['extents'] = mathutils.Vector(bounds/2)
         shape_id = escn_file.add_internal_resource(col_shape, rbd)
 
     elif rbd.collision_shape == "SPHERE":
-        col_shape = InternalResource("SphereShape")
+        col_shape = InternalResource("SphereShape", col_name)
         col_shape['radius'] = max(list(bounds))/2
         shape_id = escn_file.add_internal_resource(col_shape, rbd)
 
     elif rbd.collision_shape == "CAPSULE":
-        col_shape = InternalResource("CapsuleShape")
+        col_shape = InternalResource("CapsuleShape", col_name)
         col_shape['radius'] = max(bounds.x, bounds.y) / 2
         col_shape['height'] = bounds.z - col_shape['radius'] * 2
         shape_id = escn_file.add_internal_resource(col_shape, rbd)
@@ -122,7 +122,7 @@ def generate_convex_mesh_array(escn_file, export_settings, node):
     if resource_id is not None:
         return resource_id
 
-    col_shape = InternalResource("ConvexPolygonShape")
+    col_shape = InternalResource("ConvexPolygonShape", mesh.name)
 
     mesh = node.to_mesh(bpy.context.scene,
                         export_settings['use_mesh_modifiers'],
@@ -157,7 +157,7 @@ def generate_triangle_mesh_array(escn_file, export_settings, node):
     if resource_id is not None:
         return resource_id
 
-    col_shape = InternalResource("ConcavePolygonShape")
+    col_shape = InternalResource("ConcavePolygonShape", mesh.name)
 
     mesh = node.to_mesh(bpy.context.scene,
                         export_settings['use_mesh_modifiers'],

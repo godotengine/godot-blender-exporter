@@ -109,7 +109,7 @@ def export_node_tree(escn_file, export_settings, cycle_mat, shader_mat):
                 )
             )
 
-    shader_resource = InternalResource('Shader')
+    shader_resource = InternalResource('Shader', cycle_mat.node_tree.name)
     shader_resource['code'] = '"{}"'.format(shader_globals.to_string())
     resource_id = escn_file.add_internal_resource(
         shader_resource, cycle_mat.node_tree

@@ -2,6 +2,7 @@
 
 [sub_resource id=1 type="ArrayMesh"]
 
+resource_name = "Cube002"
 surfaces/0 = {
 	"primitive":4,
 	"arrays":[
@@ -20,6 +21,7 @@ surfaces/0 = {
 
 [sub_resource id=2 type="ArrayMesh"]
 
+resource_name = "Cube001"
 surfaces/0 = {
 	"primitive":4,
 	"arrays":[
@@ -38,6 +40,7 @@ surfaces/0 = {
 
 [sub_resource id=3 type="SpatialMaterial"]
 
+resource_name = "Material"
 flags_unshaded = false
 flags_vertex_lighting = false
 flags_transparent = false
@@ -47,6 +50,7 @@ subsurf_scatter_enabled = false
 
 [sub_resource id=4 type="ArrayMesh"]
 
+resource_name = "Cube"
 surfaces/0 = {
 	"material":SubResource(3),
 	"primitive":4,

@@ -2,9 +2,11 @@
 
 [sub_resource id=1 type="ArrayMesh"]
 
+resource_name = "Cube001"
 
 [sub_resource id=2 type="ArrayMesh"]
 
+resource_name = "Cube"
 [node type="Spatial" name="Scene"]
 
 

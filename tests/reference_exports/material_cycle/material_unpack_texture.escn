@@ -3,6 +3,7 @@
 
 [sub_resource id=1 type="Shader"]
 
+resource_name = "Shader Nodetree"
 code = "shader_type spatial;
 render_mode blend_mix,depth_draw_always,cull_back,diffuse_burley,specular_schlick_ggx;
 uniform sampler2D uni1_ImageTexturetexture_image;
@@ -46,11 +47,13 @@ void fragment() {
 
 [sub_resource id=2 type="ShaderMaterial"]
 
+resource_name = "Material"
 shader = SubResource(1)
 shader_param/uni1_ImageTexturetexture_image = ExtResource(1)
 
 [sub_resource id=3 type="ArrayMesh"]
 
+resource_name = "Cube"
 surfaces/0 = {
 	"material":SubResource(2),
 	"primitive":4,

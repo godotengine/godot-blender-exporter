@@ -2,6 +2,7 @@
 
 [sub_resource id=1 type="ArrayMesh"]
 
+resource_name = "Suzanne002"
 blend_shape/names = PoolStringArray("Key 1")
 blend_shape/mode = 0
 surfaces/0 = {
@@ -32,6 +33,7 @@ surfaces/0 = {
 
 [sub_resource id=2 type="Animation"]
 
+resource_name = "Key002Action"
 step = 0.1
 length = 2.5
 tracks/0/type = "value"

@@ -2,6 +2,7 @@
 
 [sub_resource id=1 type="SpatialMaterial"]
 
+resource_name = "Material"
 flags_unshaded = false
 flags_vertex_lighting = false
 flags_transparent = false
@@ -11,6 +12,7 @@ subsurf_scatter_enabled = false
 
 [sub_resource id=2 type="ArrayMesh"]
 
+resource_name = "Cube"
 surfaces/0 = {
 	"material":SubResource(1),
 	"primitive":4,
@@ -30,6 +32,7 @@ surfaces/0 = {
 
 [sub_resource id=3 type="Animation"]
 
+resource_name = "LampAction"
 step = 0.1
 length = 2.91667
 tracks/0/type = "value"

@@ -2,6 +2,7 @@
 
 [sub_resource id=1 type="SpatialMaterial"]
 
+resource_name = "Material"
 flags_unshaded = false
 flags_vertex_lighting = false
 flags_transparent = false
@@ -11,6 +12,7 @@ subsurf_scatter_enabled = false
 
 [sub_resource id=2 type="ArrayMesh"]
 
+resource_name = "Cube"
 surfaces/0 = {
 	"material":SubResource(1),
 	"primitive":4,
@@ -30,6 +32,7 @@ surfaces/0 = {
 
 [sub_resource id=3 type="Animation"]
 
+resource_name = "CubeAction"
 step = 0.1
 length = 3.33333
 tracks/0/type = "transform"
@@ -43,6 +46,7 @@ tracks/1/keys = [0.0416667, 1.0, 3.5422, -3.40839, -3.35921, 0.0, 0.0, 0.0, 1.0,
 
 [sub_resource id=4 type="ArrayMesh"]
 
+resource_name = "Cube001"
 surfaces/0 = {
 	"primitive":4,
 	"arrays":[

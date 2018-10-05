@@ -3,6 +3,7 @@
 
 [sub_resource id=1 type="ArrayMesh"]
 
+resource_name = "Cube"
 surfaces/0 = {
 	"material":ExtResource(1),
 	"primitive":4,

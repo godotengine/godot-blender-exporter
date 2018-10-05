@@ -113,8 +113,8 @@ def export_object_link_material(escn_file, export_settings, mesh_object,
 
 class ArrayMeshResource(InternalResource):
     """Godot ArrayMesh resource, containing surfaces"""
-    def __init__(self):
-        super().__init__('ArrayMesh')
+    def __init__(self, name):
+        super().__init__('ArrayMesh', name)
         self._mat_to_surf_mapping = dict()
 
     def get_surface_id(self, material_index):
@@ -154,7 +154,7 @@ class MeshResourceExporter:
         if mesh_id is not None:
             return mesh_id
 
-        self.mesh_resource = ArrayMeshResource()
+        self.mesh_resource = ArrayMeshResource(mesh.name)
 
         self.make_arrays(
             escn_file,

@@ -2,6 +2,7 @@
 
 [sub_resource id=1 type="ArrayMesh"]
 
+resource_name = "Cube"
 surfaces/0 = {
 	"primitive":4,
 	"arrays":[
@@ -20,6 +21,7 @@ surfaces/0 = {
 
 [sub_resource id=2 type="Animation"]
 
+resource_name = "SunAction"
 step = 0.1
 length = 3.33333
 tracks/0/type = "value"

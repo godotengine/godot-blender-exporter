@@ -64,7 +64,7 @@ def generate_material_resource(escn_file, export_settings, material):
 
     mat = None
     if engine == 'CYCLES' and material.node_tree is not None:
-        mat = InternalResource("ShaderMaterial")
+        mat = InternalResource("ShaderMaterial", material.name)
         try:
             export_node_tree(
                 escn_file, export_settings, material, mat
@@ -76,7 +76,7 @@ def generate_material_resource(escn_file, export_settings, material):
             )
 
     if mat is None:
-        mat = InternalResource("SpatialMaterial")
+        mat = InternalResource("SpatialMaterial", material.name)
 
         mat['flags_unshaded'] = material.use_shadeless
         mat['flags_vertex_lighting'] = material.use_vertex_color_light

@@ -2,6 +2,7 @@
 
 [sub_resource id=1 type="SpatialMaterial"]
 
+resource_name = "Material001"
 flags_unshaded = false
 flags_vertex_lighting = false
 flags_transparent = false
@@ -11,6 +12,7 @@ subsurf_scatter_enabled = false
 
 [sub_resource id=2 type="SpatialMaterial"]
 
+resource_name = "Material002"
 flags_unshaded = false
 flags_vertex_lighting = false
 flags_transparent = false
@@ -20,6 +22,7 @@ subsurf_scatter_enabled = false
 
 [sub_resource id=3 type="ArrayMesh"]
 
+resource_name = "Suzanne"
 blend_shape/names = PoolStringArray("Key 1")
 blend_shape/mode = 0
 surfaces/0 = {

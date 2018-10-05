@@ -2,6 +2,7 @@
 
 [sub_resource id=1 type="Animation"]
 
+resource_name = "Armature001Action"
 step = 0.1
 length = 4.16667
 tracks/0/type = "transform"
@@ -19,6 +20,7 @@ tracks/2/keys = [0.0416667, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.
 
 [sub_resource id=2 type="ArrayMesh"]
 
+resource_name = "Cube"
 surfaces/0 = {
 	"primitive":4,
 	"arrays":[
@@ -37,6 +39,7 @@ surfaces/0 = {
 
 [sub_resource id=3 type="Animation"]
 
+resource_name = "ArmatureAction"
 step = 0.1
 length = 4.20833
 tracks/0/type = "transform"
@@ -50,6 +53,7 @@ tracks/1/keys = [0.0416667, 1.0, 0.0, 0.0, 0.0, 0.154309, -0.0356616, 0.0570919,
 
 [sub_resource id=4 type="ArrayMesh"]
 
+resource_name = "Cylinder"
 surfaces/0 = {
 	"primitive":4,
 	"arrays":[
