@@ -2,6 +2,7 @@
 
 [sub_resource id=1 type="ArrayMesh"]
 
+resource_name = "Plane"
 surfaces/0 = {
 	"primitive":4,
 	"arrays":[

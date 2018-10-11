@@ -2,6 +2,7 @@
 
 [sub_resource id=1 type="Animation"]
 
+resource_name = "SpotAction"
 step = 0.1
 length = 1.66667
 tracks/0/type = "transform"
@@ -11,6 +12,7 @@ tracks/0/keys = [0.0416667, 1.0, 4.20022, 5.71699, 1.06498, -0.601878, 0.391827,
 
 [sub_resource id=2 type="SpatialMaterial"]
 
+resource_name = "Material"
 flags_unshaded = false
 flags_vertex_lighting = false
 flags_transparent = false
@@ -20,6 +22,7 @@ subsurf_scatter_enabled = false
 
 [sub_resource id=3 type="ArrayMesh"]
 
+resource_name = "Cube"
 surfaces/0 = {
 	"material":SubResource(2),
 	"primitive":4,

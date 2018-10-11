@@ -2,6 +2,7 @@
 
 [sub_resource id=1 type="Animation"]
 
+resource_name = "EmptyAction001"
 step = 0.1
 length = 3.79167
 tracks/0/type = "transform"
@@ -11,6 +12,7 @@ tracks/0/keys = [0.333333, 1.0, 0.0191494, 2.43195, 0.42693, 0.0, 0.0, 0.0, 1.0,
 
 [sub_resource id=2 type="Animation"]
 
+resource_name = "ArmatureAction"
 step = 0.1
 length = 10.4167
 tracks/0/type = "transform"
@@ -28,6 +30,7 @@ tracks/2/keys = [0.0416667, 1.0, 4.65661e-10, 1.19209e-07, 0.0, -1.86265e-09, -1
 
 [sub_resource id=3 type="ArrayMesh"]
 
+resource_name = "Cylinder"
 surfaces/0 = {
 	"primitive":4,
 	"arrays":[

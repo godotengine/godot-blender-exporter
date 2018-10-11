@@ -74,8 +74,8 @@ class Track:
 
 class AnimationResource(InternalResource):
     """Internal resource with type Animation"""
-    def __init__(self):
-        super().__init__('Animation')
+    def __init__(self, name):
+        super().__init__('Animation', name)
         self['step'] = 0.1
         self['length'] = 0
         self.track_count = 0
@@ -159,7 +159,8 @@ class AnimationPlayer(NodeTemplate):
 
     def create_animation_resource(self, escn_file, action):
         """Create a new animation resource and add it into escn file"""
-        new_anim_resource = AnimationResource()
+        resource_name = action.name
+        new_anim_resource = AnimationResource(resource_name)
 
         # add animation resource without checking hash,
         # blender action is in world space, while godot animation
@@ -167,7 +168,7 @@ class AnimationPlayer(NodeTemplate):
         # are not necessarily generates identical godot animations
         resource_id = escn_file.force_add_internal_resource(new_anim_resource)
 
-        self['anims/{}'.format(action.name)] = (
+        self['anims/{}'.format(resource_name)] = (
             "SubResource({})".format(resource_id))
 
         return new_anim_resource

@@ -2,6 +2,7 @@
 
 [sub_resource id=1 type="Shader"]
 
+resource_name = "Shader Nodetree"
 code = "shader_type spatial;
 render_mode blend_mix,depth_draw_always,cull_back,diffuse_burley,specular_schlick_ggx;
 
@@ -91,10 +92,12 @@ void fragment() {
 
 [sub_resource id=2 type="ShaderMaterial"]
 
+resource_name = "Material001"
 shader = SubResource(1)
 
 [sub_resource id=3 type="ArrayMesh"]
 
+resource_name = "Cylinder"
 surfaces/0 = {
 	"material":SubResource(2),
 	"primitive":4,
@@ -114,6 +117,7 @@ surfaces/0 = {
 
 [sub_resource id=4 type="Shader"]
 
+resource_name = "Shader Nodetree"
 code = "shader_type spatial;
 render_mode blend_mix,depth_draw_always,cull_back,diffuse_burley,specular_schlick_ggx;
 
@@ -211,10 +215,12 @@ void fragment() {
 
 [sub_resource id=5 type="ShaderMaterial"]
 
+resource_name = "Material002"
 shader = SubResource(4)
 
 [sub_resource id=6 type="ArrayMesh"]
 
+resource_name = "Cylinder001"
 surfaces/0 = {
 	"material":SubResource(5),
 	"primitive":4,

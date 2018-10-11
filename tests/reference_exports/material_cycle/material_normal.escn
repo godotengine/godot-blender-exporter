@@ -6,6 +6,7 @@
 
 [sub_resource id=1 type="Shader"]
 
+resource_name = "Shader Nodetree"
 code = "shader_type spatial;
 render_mode blend_mix,depth_draw_always,cull_back,diffuse_burley,specular_schlick_ggx;
 
@@ -64,10 +65,12 @@ void fragment() {
 
 [sub_resource id=2 type="ShaderMaterial"]
 
+resource_name = "Material003"
 shader = SubResource(1)
 
 [sub_resource id=3 type="ArrayMesh"]
 
+resource_name = "Suzanne"
 surfaces/0 = {
 	"material":SubResource(2),
 	"primitive":4,
@@ -87,6 +90,7 @@ surfaces/0 = {
 
 [sub_resource id=4 type="Shader"]
 
+resource_name = "Shader Nodetree"
 code = "shader_type spatial;
 render_mode blend_mix,depth_draw_always,cull_back,diffuse_burley,specular_schlick_ggx;
 
@@ -145,10 +149,12 @@ void fragment() {
 
 [sub_resource id=5 type="ShaderMaterial"]
 
+resource_name = "Material006"
 shader = SubResource(4)
 
 [sub_resource id=6 type="Shader"]
 
+resource_name = "Shader Nodetree"
 code = "shader_type spatial;
 render_mode blend_mix,depth_draw_always,cull_back,diffuse_burley,specular_schlick_ggx;
 
@@ -208,10 +214,12 @@ void fragment() {
 
 [sub_resource id=7 type="ShaderMaterial"]
 
+resource_name = "Material004"
 shader = SubResource(6)
 
 [sub_resource id=8 type="Shader"]
 
+resource_name = "Shader Nodetree"
 code = "shader_type spatial;
 render_mode blend_mix,depth_draw_always,cull_back,diffuse_burley,specular_schlick_ggx;
 
@@ -270,10 +278,12 @@ void fragment() {
 
 [sub_resource id=9 type="ShaderMaterial"]
 
+resource_name = "Material005"
 shader = SubResource(8)
 
 [sub_resource id=10 type="Shader"]
 
+resource_name = "Shader Nodetree"
 code = "shader_type spatial;
 render_mode blend_mix,depth_draw_always,cull_back,diffuse_burley,specular_schlick_ggx;
 uniform sampler2D uni1_ImageTexturetexture_image;
@@ -336,11 +346,13 @@ void fragment() {
 
 [sub_resource id=11 type="ShaderMaterial"]
 
+resource_name = "Material"
 shader = SubResource(10)
 shader_param/uni1_ImageTexturetexture_image = ExtResource(1)
 
 [sub_resource id=12 type="ArrayMesh"]
 
+resource_name = "Cube"
 surfaces/0 = {
 	"material":SubResource(11),
 	"primitive":4,
@@ -360,6 +372,7 @@ surfaces/0 = {
 
 [sub_resource id=13 type="Shader"]
 
+resource_name = "Shader Nodetree"
 code = "shader_type spatial;
 render_mode blend_mix,depth_draw_always,cull_back,diffuse_burley,specular_schlick_ggx;
 uniform sampler2D uni1_ImageTexturetexture_image;
@@ -425,11 +438,13 @@ void fragment() {
 
 [sub_resource id=14 type="ShaderMaterial"]
 
+resource_name = "Material001"
 shader = SubResource(13)
 shader_param/uni1_ImageTexturetexture_image = ExtResource(1)
 
 [sub_resource id=15 type="Shader"]
 
+resource_name = "Shader Nodetree"
 code = "shader_type spatial;
 render_mode blend_mix,depth_draw_always,cull_back,diffuse_burley,specular_schlick_ggx;
 uniform sampler2D uni1_ImageTexturetexture_image;
@@ -510,11 +525,13 @@ void fragment() {
 
 [sub_resource id=16 type="ShaderMaterial"]
 
+resource_name = "Material002"
 shader = SubResource(15)
 shader_param/uni1_ImageTexturetexture_image = ExtResource(2)
 
 [sub_resource id=17 type="Shader"]
 
+resource_name = "Shader Nodetree"
 code = "shader_type spatial;
 render_mode blend_mix,depth_draw_always,cull_back,diffuse_burley,specular_schlick_ggx;
 uniform sampler2D uni1_ImageTexture001texture_image;
@@ -603,11 +620,13 @@ void fragment() {
 
 [sub_resource id=18 type="ShaderMaterial"]
 
+resource_name = "Material007"
 shader = SubResource(17)
 shader_param/uni1_ImageTexture001texture_image = ExtResource(2)
 
 [sub_resource id=19 type="ArrayMesh"]
 
+resource_name = "Cube001"
 surfaces/0 = {
 	"material":SubResource(18),
 	"primitive":4,
@@ -627,6 +646,7 @@ surfaces/0 = {
 
 [sub_resource id=20 type="Shader"]
 
+resource_name = "Shader Nodetree"
 code = "shader_type spatial;
 render_mode blend_mix,depth_draw_always,cull_back,diffuse_burley,specular_schlick_ggx;
 uniform sampler2D uni1_ImageTexturetexture_image;
@@ -688,11 +708,13 @@ void fragment() {
 
 [sub_resource id=21 type="ShaderMaterial"]
 
+resource_name = "Material008"
 shader = SubResource(20)
 shader_param/uni1_ImageTexturetexture_image = ExtResource(1)
 
 [sub_resource id=22 type="ArrayMesh"]
 
+resource_name = "Cube002"
 surfaces/0 = {
 	"material":SubResource(21),
 	"primitive":4,

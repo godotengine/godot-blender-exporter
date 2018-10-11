@@ -2,6 +2,7 @@
 
 [sub_resource id=1 type="ArrayMesh"]
 
+resource_name = "Cylinder003"
 surfaces/0 = {
 	"primitive":4,
 	"arrays":[
@@ -20,6 +21,7 @@ surfaces/0 = {
 
 [sub_resource id=2 type="ArrayMesh"]
 
+resource_name = "Cylinder002"
 surfaces/0 = {
 	"primitive":4,
 	"arrays":[
@@ -38,6 +40,7 @@ surfaces/0 = {
 
 [sub_resource id=3 type="ArrayMesh"]
 
+resource_name = "Cylinder001"
 surfaces/0 = {
 	"primitive":4,
 	"arrays":[
