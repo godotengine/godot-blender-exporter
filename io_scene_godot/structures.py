@@ -358,6 +358,18 @@ def fix_directional_transform(mtx):
     return mtx * _AXIS_CORRECT
 
 
+def fix_bone_attachment_transform(attachment_obj, blender_transform):
+    """Godot and blender bone children nodes' transform relative to
+    different bone joints, so there is a difference of bone_length
+    along bone direction axis"""
+    armature_obj = attachment_obj.parent
+    bone_length = armature_obj.data.bones[attachment_obj.parent_bone].length
+    # sometimes this transform could be read-only, so copy is required
+    mtx = copy.copy(blender_transform)
+    mtx[1][3] += bone_length
+    return mtx
+
+
 # ------------------ Implicit Conversions of Blender Types --------------------
 def mat4_to_string(mtx):
     """Converts a matrix to a "Transform" string that can be parsed by Godot"""

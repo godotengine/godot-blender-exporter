@@ -9,7 +9,8 @@ import bpy
 import bpy_extras.anim_utils
 import mathutils
 from ..structures import (NodeTemplate, NodePath, fix_directional_transform,
-                          InternalResource, Array, Map, fix_matrix)
+                          InternalResource, Array, Map, fix_matrix,
+                          fix_bone_attachment_transform)
 
 NEAREST_INTERPOLATION = 0
 LINEAR_INTERPOLATION = 1
@@ -465,6 +466,45 @@ def export_transform_action(godot_node, animation_player,
             )).to_4x4()
             return loc_mat * rot_mat * sca_mat
 
+    def init_transform_frame_values(object_path, blender_object, godot_node,
+                                    first_frame, last_frame):
+        """Initialize a list of TransformFrame for every animated object"""
+        if object_path.startswith('pose'):
+            bone_name = blender_path_to_bone_name(object_path)
+
+            # bone fcurve in a non armature object
+            if godot_node.get_type() != 'Skeleton':
+                logging.warning(
+                    "Skip a bone fcurve in a non-armature "
+                    "object '%s'",
+                    blender_object.name
+                )
+                return None
+
+            # if the correspond bone of this track not exported, skip
+            if godot_node.find_bone_id(bone_name) == -1:
+                return None
+
+            pose_bone = blender_object.pose.bones[
+                blender_object.pose.bones.find(bone_name)
+            ]
+
+            default_frame = TransformFrame(
+                pose_bone.matrix_basis,
+                pose_bone.rotation_mode
+            )
+        else:
+            # the fcurve location is matrix_basis.to_translation()
+            default_frame = TransformFrame(
+                blender_object.matrix_basis,
+                blender_object.rotation_mode
+            )
+
+        return [
+            copy.deepcopy(default_frame)
+            for _ in range(last_frame - first_frame)
+        ]
+
     first_frame, last_frame = get_action_frame_range(action)
 
     transform_frame_values_map = collections.OrderedDict()
@@ -478,45 +518,18 @@ def export_transform_action(godot_node, animation_player,
         if (object_path not in transform_frame_values_map and
                 attribute in TransformFrame.ATTRIBUTES):
 
-            default_frame = None
-
-            # the fcurve location is matrix_basis.to_translation()
-            default_frame = TransformFrame(
-                blender_object.matrix_basis,
-                blender_object.rotation_mode
+            frame_values = init_transform_frame_values(
+                object_path, blender_object,
+                godot_node, first_frame, last_frame
             )
 
-            if object_path.startswith('pose'):
-                bone_name = blender_path_to_bone_name(object_path)
+            # unsuccessfully initialize frames, then skip this fcurve
+            if not frame_values:
+                continue
 
-                # bone fcurve in a non armature object
-                if godot_node.get_type() != 'Skeleton':
-                    logging.warning(
-                        "Skip a bone fcurve in a non-armature "
-                        "object '%s'",
-                        blender_object.name
-                    )
-                    continue
-
-                    # if the correspond bone of this track not exported, skip
-                if godot_node.find_bone_id(bone_name) == -1:
-                    continue
-
-                pose_bone = blender_object.pose.bones[
-                    blender_object.pose.bones.find(bone_name)
-                ]
-                default_frame = TransformFrame(
-                    pose_bone.matrix_basis,
-                    pose_bone.rotation_mode
-                )
-
-            transform_frame_values_map[object_path] = [
-                copy.deepcopy(default_frame)
-                for _ in range(last_frame - first_frame)
-            ]
+            transform_frame_values_map[object_path] = frame_values
 
         if attribute in TransformFrame.ATTRIBUTES:
-
             for frame in range(first_frame, last_frame):
                 transform_frame_values_map[
                     object_path][frame - first_frame].update(
@@ -528,19 +541,25 @@ def export_transform_action(godot_node, animation_player,
     for object_path, frame_value_list in transform_frame_values_map.items():
         if object_path == '':
             # object_path equals '' represents node itself
+            if godot_node.parent.get_type() == 'BoneAttachment':
+                transform_mtx_list = [
+                    fix_bone_attachment_transform(
+                        blender_object,
+                        blender_object.matrix_parent_inverse * x.to_matrix
+                    ) for x in frame_value_list
+                ]
+            else:
+                transform_mtx_list = [
+                    blender_object.matrix_parent_inverse *
+                    x.to_matrix() for x in frame_value_list
+                ]
 
             # convert matrix_basis to matrix_local(parent space transform)
             if (godot_node.get_type()
                     in ("SpotLight", "DirectionalLight", "Camera")):
-                normalized_value_list = [
-                    fix_directional_transform(
-                        blender_object.matrix_parent_inverse * x.to_matrix()
-                    ) for x in frame_value_list
-                ]
-            else:
-                normalized_value_list = [
-                    blender_object.matrix_parent_inverse *
-                    x.to_matrix() for x in frame_value_list
+                transform_mtx_list = [
+                    fix_directional_transform(mtx)
+                    for mtx in transform_mtx_list
                 ]
 
             track_path = NodePath(
@@ -555,14 +574,14 @@ def export_transform_action(godot_node, animation_player,
                 blender_path_to_bone_name(object_path)
             )
 
-            normalized_value_list = [x.to_matrix() for x in frame_value_list]
+            transform_mtx_list = [x.to_matrix() for x in frame_value_list]
 
         animation_resource.add_track(
             Track(
                 'transform',
                 track_path,
                 range(first_frame, last_frame),
-                normalized_value_list
+                transform_mtx_list
             )
         )
 
