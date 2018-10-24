@@ -97,8 +97,10 @@ class GodotExporter:
             )
             exporter = converters.BLENDER_TYPE_TO_EXPORTER["EMPTY"]
 
+        is_bone_attachment = False
         if ("ARMATURE" in self.config['object_types'] and
                 node.parent_bone != ''):
+            is_bone_attachment = True
             parent_gd_node = converters.BONE_ATTACHMENT_EXPORTER(
                 self.escn_file,
                 node,
@@ -108,6 +110,12 @@ class GodotExporter:
         # Perform the export
         exported_node = exporter(self.escn_file, self.config, node,
                                  parent_gd_node)
+
+        if is_bone_attachment:
+            for child in parent_gd_node.children:
+                child['transform'] = structures.fix_bone_attachment_transform(
+                    node, child['transform']
+                )
 
         # if the blender node is exported and it has animation data
         if exported_node != parent_gd_node:
