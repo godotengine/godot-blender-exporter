@@ -1,4 +1,5 @@
 """Export a armature node"""
+import collections
 import mathutils
 from ..structures import NodeTemplate, NodePath, Array
 
@@ -10,7 +11,9 @@ def export_bone_attachment(escn_file, node, parent_gd_node):
 
     # node.parent_bone is exactly the bone name
     # in the parent armature node
-    bone_attachment['bone_name'] = "\"{}\"".format(node.parent_bone)
+    bone_attachment['bone_name'] = "\"{}\"".format(
+        parent_gd_node.find_bone_name(node.parent_bone)
+    )
 
     # parent_gd_node is the SkeletonNode with the parent bone
     bone_id = parent_gd_node.find_bone_id(node.parent_bone)
@@ -87,21 +90,51 @@ def export_bone(pose_bone, bl_bones_to_export):
 
 class SkeletonNode(NodeTemplate):
     """tscn node with type Skeleton"""
+    BoneInfo = collections.namedtuple(
+        "boneInfo",
+        ('id', 'name'),
+    )
+
     def __init__(self, name, parent):
         super().__init__(name, "Skeleton", parent)
-        self.bone_name_to_id_map = dict()
+        # Mapping from blender bone name to godot bone id and name
+        self.bones = dict()
 
-    def find_bone_id(self, bone_name):
-        """"Given bone name find the bone id in Skeleton node"""
-        return self.bone_name_to_id_map.get(bone_name, -1)
+    def find_bone_id(self, bl_bone_name):
+        """"Given blender bone name return the bone id in Skeleton node"""
+        if bl_bone_name not in self.bones:
+            return -1
+        return self.bones[bl_bone_name].id
+
+    def find_bone_name(self, bl_bone_name):
+        """"Given blender bone name return the bone name in Skeleton node"""
+        if bl_bone_name not in self.bones:
+            return ""
+        return self.bones[bl_bone_name].name
 
     def add_bones(self, bone_list):
         """Add a list of bone to skeleton node"""
         # need first add all bones into name_to_id_map,
         # otherwise the parent bone finding would be incorrect
+        bone_name_set = set()
         for bone in bone_list:
-            bone.id = len(self.bone_name_to_id_map)
-            self.bone_name_to_id_map[bone.name] = bone.id
+            bone.id = len(self.bones)
+            bl_bone_name = bone.name
+
+            # filter illegal char from blender bone name
+            bone.name = bone.name.replace(":", "").replace("/", "")
+            # solve possible name conflict
+            iterations = 1
+            gd_bone_name = bone.name
+            while gd_bone_name in bone_name_set:
+                gd_bone_name = bone.name + str(iterations).zfill(3)
+                iterations += 1
+            bone.name = gd_bone_name
+
+            bone_name_set.add(bone.name)
+            self.bones[bl_bone_name] = SkeletonNode.BoneInfo(
+                bone.id, bone.name
+            )
 
         for bone in bone_list:
             bone_prefix = 'bones/{}'.format(bone.id)

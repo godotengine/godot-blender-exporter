@@ -140,10 +140,10 @@ class MeshResourceExporter:
     def init_mesh_bones_data(self, skeleton_node):
         """Find the mapping relation between vertex groups
         and bone id"""
-        for bone_name, bone_id in skeleton_node.bone_name_to_id_map.items():
+        for bone_name, bone_info in skeleton_node.bones.items():
             group = self.object.vertex_groups.get(bone_name)
             if group is not None:
-                self.vgroup_to_bone_mapping[group.index] = bone_id
+                self.vgroup_to_bone_mapping[group.index] = bone_info.id
 
     def export_mesh(self, escn_file, export_settings):
         """Saves a mesh into the escn file """

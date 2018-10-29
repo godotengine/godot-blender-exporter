@@ -571,7 +571,9 @@ def export_transform_action(godot_node, animation_player,
             track_path = NodePath(
                 animation_player.parent.get_path(),
                 godot_node.get_path(),
-                blender_path_to_bone_name(object_path)
+                godot_node.find_bone_name(
+                    blender_path_to_bone_name(object_path)
+                ),
             )
 
             transform_mtx_list = [x.to_matrix() for x in frame_value_list]
