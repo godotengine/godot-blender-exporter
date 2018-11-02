@@ -55,9 +55,18 @@ resource_name = "LampAction"
 step = 0.1
 length = 1.25
 tracks/0/type = "value"
-tracks/0/path = NodePath(".:shadow_color")
-tracks/0/interp = 1
+tracks/0/path = NodePath(".:shadow_enabled")
+tracks/0/interp = 0
 tracks/0/keys = {
+	"times":PoolRealArray(0.0416667, 0.833333, 1.25),
+	"transitions":PoolRealArray(1, 1, 1),
+	"update":0,
+	"values":[true, false, false]
+}
+tracks/1/type = "value"
+tracks/1/path = NodePath(".:shadow_color")
+tracks/1/interp = 1
+tracks/1/keys = {
 	"times":PoolRealArray(0.0416667, 0.0833333, 0.125, 0.166667, 0.208333, 0.25, 0.291667, 0.333333, 0.375, 0.416667),
 	"transitions":PoolRealArray(1, 1, 1, 1, 1, 1, 1, 1, 1, 1),
 	"update":0,

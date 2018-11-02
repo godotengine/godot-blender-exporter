@@ -364,10 +364,19 @@ def fix_bone_attachment_transform(attachment_obj, blender_transform):
     along bone direction axis"""
     armature_obj = attachment_obj.parent
     bone_length = armature_obj.data.bones[attachment_obj.parent_bone].length
-    # sometimes this transform could be read-only, so copy is required
-    mtx = copy.copy(blender_transform)
+    mtx = mathutils.Matrix(blender_transform)
     mtx[1][3] += bone_length
     return mtx
+
+
+def fix_bone_attachment_location(attachment_obj, location_vec):
+    """Fix the bone length difference in location vec3 of
+    BoneAttachment object"""
+    armature_obj = attachment_obj.parent
+    bone_length = armature_obj.data.bones[attachment_obj.parent_bone].length
+    vec = mathutils.Vector(location_vec)
+    vec[1] += bone_length
+    return vec
 
 
 # ------------------ Implicit Conversions of Blender Types --------------------

@@ -7,9 +7,7 @@ import math
 import logging
 import mathutils
 from ..structures import NodeTemplate, fix_directional_transform
-from .animation import (export_animation_data, AttributeConvertInfo,
-                        CONVERT_AS_BOOL, CONVERT_AS_FLOAT,
-                        CONVERT_AS_MULTI_VALUE)
+from .animation import (export_animation_data, AttributeConvertInfo)
 
 
 def export_empty_node(escn_file, export_settings, node, parent_gd_node):
@@ -27,12 +25,9 @@ class CameraNode(NodeTemplate):
     """Camera node in godot scene"""
     _cam_attr_conv = [
         # blender attr, godot attr, converter lambda, type
-        AttributeConvertInfo(
-            'clip_end', 'far', lambda x: x, CONVERT_AS_FLOAT),
-        AttributeConvertInfo(
-            'clip_start', 'near', lambda x: x, CONVERT_AS_FLOAT),
-        AttributeConvertInfo(
-            'ortho_scale', 'size', lambda x: x, CONVERT_AS_FLOAT),
+        AttributeConvertInfo('clip_end', 'far', lambda x: x),
+        AttributeConvertInfo('clip_start', 'near', lambda x: x),
+        AttributeConvertInfo('ortho_scale', 'size', lambda x: x),
     ]
 
     def __init__(self, name, parent):
@@ -55,7 +50,7 @@ def export_camera_node(escn_file, export_settings, node, parent_gd_node):
     camera = node.data
 
     for item in cam_node.attribute_conversion:
-        blender_attr, gd_attr, converter, _ = item
+        blender_attr, gd_attr, converter = item
         cam_node[gd_attr] = converter(getattr(camera, blender_attr))
 
     if camera.type == "PERSP":
@@ -80,29 +75,23 @@ class LightNode(NodeTemplate):
     """Base class for godot light node"""
     _light_attr_conv = [
         AttributeConvertInfo(
-            'use_specular', 'light_specular',
-            lambda x: 1.0 if x else 0.0, CONVERT_AS_BOOL),
-        AttributeConvertInfo(
-            'energy', 'light_energy', lambda x: x, CONVERT_AS_FLOAT),
-        AttributeConvertInfo(
-            'color', 'light_color', mathutils.Color, CONVERT_AS_MULTI_VALUE),
-        AttributeConvertInfo(
-            'shadow_color', 'shadow_color',
-            mathutils.Color, CONVERT_AS_MULTI_VALUE),
+            'use_specular', 'light_specular', lambda x: 1.0 if x else 0.0
+        ),
+        AttributeConvertInfo('energy', 'light_energy', lambda x: x),
+        AttributeConvertInfo('color', 'light_color', mathutils.Color),
+        AttributeConvertInfo('shadow_color', 'shadow_color', mathutils.Color),
     ]
     _omni_attr_conv = [
-        AttributeConvertInfo(
-            'distance', 'omni_range', lambda x: x, CONVERT_AS_FLOAT)
+        AttributeConvertInfo('distance', 'omni_range', lambda x: x),
     ]
     _spot_attr_conv = [
         AttributeConvertInfo(
-            'spot_size', 'spot_angle',
-            lambda x: math.degrees(x/2), CONVERT_AS_FLOAT),
+            'spot_size', 'spot_angle', lambda x: math.degrees(x/2)
+        ),
         AttributeConvertInfo(
-            'spot_blend', 'spot_angle_attenuation',
-            lambda x: 0.2/(x + 0.01), CONVERT_AS_FLOAT),
-        AttributeConvertInfo('distance', 'spot_range',
-                             lambda x: x, CONVERT_AS_FLOAT),
+            'spot_blend', 'spot_angle_attenuation', lambda x: 0.2/(x + 0.01)
+        ),
+        AttributeConvertInfo('distance', 'spot_range', lambda x: x),
     ]
 
     @property
@@ -151,7 +140,7 @@ def export_lamp_node(escn_file, export_settings, node, parent_gd_node):
 
     if light_node is not None:
         for item in light_node.attribute_conversion:
-            bl_attr, gd_attr, converter, _ = item
+            bl_attr, gd_attr, converter = item
             light_node[gd_attr] = converter(getattr(light, bl_attr))
 
         # Properties common to all lights
