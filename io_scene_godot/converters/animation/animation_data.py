@@ -128,13 +128,14 @@ class ObjectAnimationExporter:
             # active action
             for track in self.unmute_nla_tracks:
                 for strip in track.strips:
-                    self.action_exporter_func(
-                        self.godot_node,
-                        self.animation_player,
-                        self.blender_object,
-                        ActionStrip(strip),
-                        self.animation_player.active_animation
-                    )
+                    if strip.action:
+                        self.action_exporter_func(
+                            self.godot_node,
+                            self.animation_player,
+                            self.blender_object,
+                            ActionStrip(strip),
+                            self.animation_player.active_animation
+                        )
 
     def export_active_action_from_nla(self, escn_file):
         """Export all unmute nla_tracks into an active action.
@@ -146,13 +147,14 @@ class ObjectAnimationExporter:
 
         for track in self.unmute_nla_tracks:
             for strip in track.strips:
-                self.action_exporter_func(
-                    self.godot_node,
-                    self.animation_player,
-                    self.blender_object,
-                    ActionStrip(strip),
-                    self.animation_player.active_animation
-                )
+                if strip.action:
+                    self.action_exporter_func(
+                        self.godot_node,
+                        self.animation_player,
+                        self.blender_object,
+                        ActionStrip(strip),
+                        self.animation_player.active_animation
+                    )
 
     def export_stashed_track(self, escn_file, stashed_track):
         """Export a muted nla_track, track with all its contained action
@@ -174,36 +176,38 @@ class ObjectAnimationExporter:
         )
 
         for strip in stashed_track.strips:
-            if self.need_baking:
-                action_baking_initialize(strip.action)
-                action_to_export = self.bake_to_new_action(strip.action)
-            else:
-                action_to_export = strip.action
+            if strip.action:
+                if self.need_baking:
+                    action_baking_initialize(strip.action)
+                    action_to_export = self.bake_to_new_action(strip.action)
+                else:
+                    action_to_export = strip.action
 
-            self.action_exporter_func(
-                self.godot_node,
-                self.animation_player,
-                self.blender_object,
-                ActionStrip(strip, action_to_export),
-                anim_resource
-            )
+                self.action_exporter_func(
+                    self.godot_node,
+                    self.animation_player,
+                    self.blender_object,
+                    ActionStrip(strip, action_to_export),
+                    anim_resource
+                )
 
-            if self.need_baking:
-                # remove baked action
-                bpy.data.actions.remove(action_to_export)
-                action_baking_finalize(strip.action)
+                if self.need_baking:
+                    # remove baked action
+                    bpy.data.actions.remove(action_to_export)
+                    action_baking_finalize(strip.action)
 
         if not self.need_baking:
             # if baking, nla_tracks are already baked into strips
             for nla_track in self.unmute_nla_tracks:
                 for strip in nla_track.strips:
-                    self.action_exporter_func(
-                        self.godot_node,
-                        self.animation_player,
-                        self.blender_object,
-                        ActionStrip(strip),
-                        anim_resource
-                    )
+                    if strip.action:
+                        self.action_exporter_func(
+                            self.godot_node,
+                            self.animation_player,
+                            self.blender_object,
+                            ActionStrip(strip),
+                            anim_resource
+                        )
 
 
 def export_animation_data(escn_file, export_settings, godot_node,
