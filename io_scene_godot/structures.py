@@ -160,7 +160,7 @@ class NodeTemplate(FileEntry):
         self.parent = parent_node
 
         # filter out special character
-        node_name = name.replace('.', '').replace('/', '')
+        node_name = name.replace('.', '').replace('/', '').replace('\\', '')
 
         if parent_node is not None:
             # solve duplication
@@ -308,7 +308,12 @@ class NodePath:
     """Node in scene points to other node or node's attribute,
     for example, a MeshInstane points to a Skeleton. """
     def __init__(self, from_here, to_there, attribute_pointed=''):
-        self.relative_path = os.path.relpath(to_there, from_here)
+        self.relative_path = os.path.normpath(
+            os.path.relpath(to_there, from_here)
+        )
+        if os.sep == '\\':
+            # Ensure node path use '/' on windows as well
+            self.relative_path = self.relative_path.replace('\\', '/')
         self.attribute_name = attribute_pointed
 
     def new_copy(self, attribute=None):
