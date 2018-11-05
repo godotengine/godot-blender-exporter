@@ -179,9 +179,15 @@ class MeshResourceExporter:
                 if not isinstance(modifier, bpy.types.ArmatureModifier):
                     modifier.show_render = False
 
+        # set shape key to basis key which would have index 0
+        self.object.show_only_shape_key = True
+        self.object.active_shape_key_index = 0
+
         mesh = self.object.to_mesh(bpy.context.scene,
                                    True,
                                    "RENDER")
+
+        self.object.show_only_shape_key = False
 
         # if the original mesh has an object link material,
         # the new created mesh would use it as data link material,
@@ -291,6 +297,8 @@ class MeshResourceExporter:
                 True,
                 "RENDER"
             )
+
+            self.object.show_only_shape_key = False
 
             triangulate_mesh(shape_key_mesh)
 
