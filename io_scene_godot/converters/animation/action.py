@@ -187,8 +187,8 @@ def export_transform_action(godot_node, animation_player, blender_object,
                 values_iter=frame_value_list,
             )
             track.set_parent_inverse(blender_object.matrix_parent_inverse)
-            if (godot_node.get_type()
-                    in ("SpotLight", "DirectionalLight", "Camera")):
+            if godot_node.get_type() in ("SpotLight", "DirectionalLight",
+                                         "Camera", "CollisionShape"):
                 track.is_directional = True
             animation_resource.add_track(track)
 
