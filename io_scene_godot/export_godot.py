@@ -28,7 +28,9 @@ import os
 import collections
 import functools
 import logging
+import math
 import bpy
+import mathutils
 
 from . import structures
 from . import converters
@@ -107,7 +109,9 @@ class GodotExporter:
                 parent_gd_node
             )
 
-        # Perform the export
+        # Perform the export, note that `exported_node.paren`t not
+        # always the same as `parent_gd_node`, as sometimes, one
+        # blender node exported as two parented node
         exported_node = exporter(self.escn_file, self.config, node,
                                  parent_gd_node)
 
@@ -116,6 +120,13 @@ class GodotExporter:
                 child['transform'] = structures.fix_bone_attachment_transform(
                     node, child['transform']
                 )
+
+        # CollisionShape node has different direction in blender
+        # and godot, so it has a -90 rotation around X axis,
+        # here rotate its children back
+        if exported_node.parent.get_type() == 'CollisionShape':
+            exported_node['transform'] *= (
+                mathutils.Matrix.Rotation(math.radians(90), 4, 'X'))
 
         # if the blender node is exported and it has animation data
         if exported_node != parent_gd_node:

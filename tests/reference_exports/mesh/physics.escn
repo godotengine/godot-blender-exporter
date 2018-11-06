@@ -171,11 +171,11 @@ collision_mask = 1
 transform = Transform(1.0, 0.0, 0.0, 0.0, -4.37114e-08, 1.0, 0.0, -1.0, -4.37114e-08, 0.0, 0.0, 0.0)
 shape = SubResource(1)
 
-[node name="Cube002" type="MeshInstance" parent="Cube002Physics"]
+[node name="Cube002" type="MeshInstance" parent="Cube002Physics/Cube002Collision"]
 
 mesh = SubResource(2)
 visible = true
-transform = Transform(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0)
+transform = Transform(1.0, 0.0, 0.0, 0.0, 7.54979e-08, -1.0, 0.0, 1.0, 7.54979e-08, 0.0, 0.0, 0.0)
 
 [node name="Cube001Physics" type="StaticBody" parent="."]
 
@@ -207,11 +207,11 @@ sleeping = false
 transform = Transform(1.0, 0.0, 0.0, 0.0, -4.37114e-08, 1.0, 0.0, -1.0, -4.37114e-08, 0.0, 0.0, 0.0)
 shape = SubResource(4)
 
-[node name="Sphere001" type="MeshInstance" parent="Sphere001Physics"]
+[node name="Sphere001" type="MeshInstance" parent="Sphere001Physics/Sphere001Collision"]
 
 mesh = SubResource(5)
 visible = true
-transform = Transform(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0)
+transform = Transform(1.0, 0.0, 0.0, 0.0, 7.54979e-08, -1.0, 0.0, 1.0, 7.54979e-08, 0.0, 0.0, 0.0)
 
 [node name="PlanePhysics" type="StaticBody" parent="."]
 
@@ -226,11 +226,11 @@ collision_mask = 1
 transform = Transform(1.0, 0.0, 0.0, 0.0, -4.37114e-08, 1.0, 0.0, -1.0, -4.37114e-08, 0.0, 0.0, 0.0)
 shape = SubResource(6)
 
-[node name="Plane" type="MeshInstance" parent="PlanePhysics"]
+[node name="Plane" type="MeshInstance" parent="PlanePhysics/PlaneCollision"]
 
 mesh = SubResource(7)
 visible = true
-transform = Transform(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0)
+transform = Transform(1.0, 0.0, 0.0, 0.0, 7.54979e-08, -1.0, 0.0, 1.0, 7.54979e-08, 0.0, 0.0, 0.0)
 
 [node name="CubePhysics" type="RigidBody" parent="."]
 
@@ -249,11 +249,11 @@ sleeping = false
 transform = Transform(1.0, 0.0, 0.0, 0.0, -4.37114e-08, 1.0, 0.0, -1.0, -4.37114e-08, 0.0, 0.0, 0.0)
 shape = SubResource(8)
 
-[node name="Cube" type="MeshInstance" parent="CubePhysics"]
+[node name="Cube" type="MeshInstance" parent="CubePhysics/CubeCollision"]
 
 mesh = SubResource(9)
 visible = true
-transform = Transform(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0)
+transform = Transform(1.0, 0.0, 0.0, 0.0, 7.54979e-08, -1.0, 0.0, 1.0, 7.54979e-08, 0.0, 0.0, 0.0)
 
 [node name="SpherePhysics" type="RigidBody" parent="."]
 
@@ -272,22 +272,22 @@ sleeping = false
 transform = Transform(1.0, 0.0, 0.0, 0.0, -4.37114e-08, 1.0, 0.0, -1.0, -4.37114e-08, 0.0, 0.0, 0.0)
 shape = SubResource(10)
 
-[node name="Sphere" type="MeshInstance" parent="SpherePhysics"]
+[node name="Sphere" type="MeshInstance" parent="SpherePhysics/SphereCollision"]
 
 mesh = SubResource(11)
 visible = true
-transform = Transform(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0)
+transform = Transform(1.0, 0.0, 0.0, 0.0, 7.54979e-08, -1.0, 0.0, 1.0, 7.54979e-08, 0.0, 0.0, 0.0)
 
 [node name="Sphere002Collision" type="CollisionShape" parent="SpherePhysics"]
 
 transform = Transform(1.0, 1.30385e-08, 2.98023e-08, 1.49012e-08, -2.97416e-08, 1.0, 2.42144e-08, -1.0, -5.1162e-08, 0.565972, 0.864336, 0.166554)
 shape = SubResource(12)
 
-[node name="Sphere002" type="MeshInstance" parent="SpherePhysics/Sphere"]
+[node name="Sphere002" type="MeshInstance" parent="SpherePhysics/Sphere002Collision"]
 
 mesh = SubResource(13)
 visible = true
-transform = Transform(1.0, -4.47035e-08, -5.96046e-08, -7.45058e-08, 1.0, 2.98023e-08, 5.96046e-08, 2.98023e-08, 1.0, 0.565971, 0.864337, 0.166554)
+transform = Transform(1.0, 0.0, 0.0, 0.0, 7.54979e-08, -1.0, 0.0, 1.0, 7.54979e-08, 0.0, 0.0, 0.0)
 
 [node name="Sphere003Physics" type="RigidBody" parent="."]
 
@@ -306,11 +306,11 @@ sleeping = false
 transform = Transform(1.0, 0.0, 0.0, 0.0, -4.37114e-08, 1.0, 0.0, -1.0, -4.37114e-08, 0.0, 0.0, 0.0)
 shape = SubResource(14)
 
-[node name="Sphere003" type="MeshInstance" parent="Sphere003Physics"]
+[node name="Sphere003" type="MeshInstance" parent="Sphere003Physics/Sphere003Collision"]
 
 mesh = SubResource(13)
 visible = true
-transform = Transform(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0)
+transform = Transform(1.0, 0.0, 0.0, 0.0, 7.54979e-08, -1.0, 0.0, 1.0, 7.54979e-08, 0.0, 0.0, 0.0)
 
 [node name="Lamp" type="OmniLight" parent="."]
 

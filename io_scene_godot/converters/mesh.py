@@ -49,10 +49,14 @@ def export_mesh_node(escn_file, export_settings, node, parent_gd_node):
 
         mesh_node['mesh'] = "SubResource({})".format(mesh_id)
         mesh_node['visible'] = not node.hide
-        if not physics.has_physics(node) or not physics.is_physics_root(node):
+
+        # Transform of rigid mesh is moved up to its collision
+        # shapes.
+        if not physics.has_physics(node):
             mesh_node['transform'] = node.matrix_local
         else:
             mesh_node['transform'] = mathutils.Matrix.Identity(4)
+
         escn_file.add_node(mesh_node)
 
         export_object_link_material(

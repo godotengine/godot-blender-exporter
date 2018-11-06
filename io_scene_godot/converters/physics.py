@@ -4,15 +4,12 @@ object is exported. In blender, the object owns the physics. In Godot, the
 physics owns the object.
 """
 
-import math
 import logging
 import bpy
 import mathutils
 import bmesh
-from ..structures import NodeTemplate, InternalResource, Array
+from ..structures import NodeTemplate, InternalResource, Array, _AXIS_CORRECT
 
-
-AXIS_CORRECT = mathutils.Matrix.Rotation(math.radians(-90), 4, 'X')
 PHYSICS_TYPES = {'KinematicBody', 'RigidBody', 'StaticBody'}
 
 
@@ -65,11 +62,11 @@ def export_collision_shape(escn_file, export_settings, node, parent_gd_node,
     col_node = NodeTemplate(col_name, "CollisionShape", parent_gd_node)
 
     if parent_override is None:
-        col_node['transform'] = mathutils.Matrix.Identity(4) * AXIS_CORRECT
+        col_node['transform'] = mathutils.Matrix.Identity(4)
     else:
         parent_to_world = parent_override.matrix_world.inverted()
-        col_node['transform'] = (
-            parent_to_world * node.matrix_world * AXIS_CORRECT)
+        col_node['transform'] = parent_to_world * node.matrix_world
+    col_node['transform'] *= _AXIS_CORRECT
 
     rbd = node.rigid_body
 
@@ -239,9 +236,7 @@ def export_physics_properties(escn_file, export_settings, node,
         gd_node_ptr = gd_node_ptr.parent
     physics_gd_node = gd_node_ptr
 
-    export_collision_shape(
+    return export_collision_shape(
         escn_file, export_settings, node, physics_gd_node,
         parent_override=parent_rbd
     )
-
-    return parent_gd_node
