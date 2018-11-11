@@ -10,6 +10,40 @@ from ...structures import (NodeTemplate, NodePath, Array, Map,
 NEAREST_INTERPOLATION = 0
 LINEAR_INTERPOLATION = 1
 
+UPDATE_CONTINUOUS = 0
+UPDATE_DISCRETE = 1
+UPDATE_TRIGGER = 2
+UPDATE_CAPTURE = 3
+
+
+def strip_adjacent_dup_keyframes(frames, values):
+    """Strip removable keyframes to reduce export size"""
+    stripped_frames = list()
+    stripped_values = list()
+
+    assert len(frames) == len(values)
+    length = len(frames)
+
+    stripped_frames.append(frames[0])
+    stripped_values.append(values[0])
+
+    duplicated = False
+    for index in range(1, length - 1):
+        if not duplicated:
+            stripped_frames.append(frames[index])
+            stripped_values.append(values[index])
+            if values[index] == values[index - 1]:
+                duplicated = True
+        elif values[index] != values[index + 1]:
+            duplicated = False
+            stripped_frames.append(frames[index])
+            stripped_values.append(values[index])
+
+    stripped_frames.append(frames[length - 1])
+    stripped_values.append(values[length - 1])
+
+    return stripped_frames, stripped_values
+
 
 class TransformFrame:
     """A data structure hold transform values of an animation key,
@@ -25,6 +59,16 @@ class TransformFrame:
         self.rotation_mode = 'QUATERNION'
         self.rotation_euler = mathutils.Euler((0, 0, 0))
         self.rotation_quaternion = mathutils.Quaternion()
+
+    def __eq__(self, other):
+        """Overrides the default implementation"""
+        if isinstance(other, TransformFrame):
+            return (self.location == other.location and
+                    self.scale == other.scale and
+                    self.rotation_mode == other.rotation_mode and
+                    self.rotation_quaternion == other.rotation_quaternion and
+                    self.rotation_euler == other.rotation_euler)
+        return False
 
     @classmethod
     def factory(cls, trans_mat, rotation_mode):
@@ -231,25 +275,32 @@ class TransformTrack(Track):
     def convert_to_keys_object(self):
         """Convert a transform track to godot structure"""
         array = Array(prefix='[', suffix=']')
-        last_mat = None
-        for index, frame in enumerate(self.frames):
-            mat = self.parent_trans_inverse * self.values[index].to_matrix()
+
+        time_per_frame = 1 / bpy.context.scene.render.fps
+        scene_frame_start = bpy.context.scene.frame_start
+
+        if self.interp == LINEAR_INTERPOLATION:
+            frames, values = strip_adjacent_dup_keyframes(
+                self.frames, self.values)
+        else:
+            frames = self.frames
+            values = self.values
+
+        for frame, trans_frame in zip(frames, values):
+            if frame < scene_frame_start:
+                continue
+
+            mat = self.parent_trans_inverse * trans_frame.to_matrix()
             if self.is_directional:
                 mat = fix_directional_transform(mat)
             # convert from z-up to y-up
             mat = fix_matrix(mat)
 
-            if last_mat and last_mat == mat:
-                # avoid export duplicate keyframe
-                continue
-
             location = mat.to_translation()
             quaternion = mat.to_quaternion()
             scale = mat.to_scale()
 
-            last_mat = mat
-
-            array.append(frame / bpy.context.scene.render.fps)
+            array.append((frame - scene_frame_start) * time_per_frame)
             # transition default 1.0
             array.append(1.0)
             array.append(location.x)
@@ -282,20 +333,32 @@ class ValueTrack(Track):
         time_array = Array(prefix='PoolRealArray(', suffix=')')
         transition_array = Array(prefix='PoolRealArray(', suffix=')')
         value_array = Array(prefix='[', suffix=']')
-        for index, frame in enumerate(self.frames):
-            if (self.interp == LINEAR_INTERPOLATION and index > 0 and
-                    self.values[index] == self.values[index - 1]):
+
+        time_per_frame = 1 / bpy.context.scene.render.fps
+        scene_frame_start = bpy.context.scene.frame_start
+
+        if self.interp == LINEAR_INTERPOLATION:
+            frames, values = strip_adjacent_dup_keyframes(
+                self.frames, self.values)
+        else:
+            frames = self.frames
+            values = self.values
+
+        for frame, frame_val in zip(frames, values):
+            # move animation first frame to scene.frame_start
+            # and cut off frames exceed scene.frame_end
+            if frame < scene_frame_start:
                 continue
 
-            time = frame / bpy.context.scene.render.fps
+            time = (frame - scene_frame_start) * time_per_frame
             time_array.append(time)
             transition_array.append(1)
-            value_array.append(self.values[index])
+            value_array.append(frame_val)
 
         keys_map = Map()
         keys_map["times"] = time_array.to_string()
         keys_map["transitions"] = transition_array.to_string()
-        keys_map["update"] = 0
+        keys_map["update"] = UPDATE_CONTINUOUS
         keys_map["values"] = value_array.to_string()
 
         return keys_map
