@@ -2,7 +2,6 @@
 
 import bpy
 import bpy_extras.anim_utils
-from .action import get_action_frame_range
 
 # a suffix append to action need baking to avoid name collision
 # with baked action's name
@@ -44,7 +43,7 @@ def bake_constraint_to_action(blender_object, base_action, bake_type,
     """Bake pose or object constrainst (e.g. IK) to action"""
     if base_action is not None:
         blender_object.animation_data.action = base_action
-        frame_range = get_action_frame_range(base_action)
+        frame_range = tuple([int(x) for x in base_action.frame_range])
     else:
         frame_range = (1, 250)  # default, can be improved
 
