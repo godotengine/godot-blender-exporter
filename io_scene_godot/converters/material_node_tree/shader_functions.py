@@ -269,7 +269,7 @@ void node_bump(float strength, float dist, float height, vec3 normal,
     ShaderFunction(code="""
 void node_normal_map_tangent(float strength, vec4 color, vec3 normal,
         vec3 tangent, vec3 binormal, out vec3 out_normal) {
-    vec3 signed_color = vec3(2.0, -2.0, 2.0) * (color.xzy - vec3(0.5));
+    vec3 signed_color = vec3(2.0, 2.0, 2.0) * (color.xzy - vec3(0.5));
     vec3 tex_normal = signed_color.x * tangent +
                       signed_color.y * binormal +
                       signed_color.z * normal;

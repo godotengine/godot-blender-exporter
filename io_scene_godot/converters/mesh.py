@@ -426,7 +426,9 @@ class VerticesArrays:
         something to do with normal mapping"""
         cross_product = vert.normal.cross(vert.tangent)
         dot_product = cross_product.dot(vert.bitangent)
-        return 1.0 if dot_product > 0.0 else -1.0
+        # godot use a different `handedness` in tangent space,
+        # so here need to negate the dot product
+        return -1.0 if dot_product > 0.0 else 1.0
 
     def get_color_array(self):
         """Generate a single array that contains the colors of all the vertices
