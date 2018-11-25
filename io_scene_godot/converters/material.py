@@ -8,7 +8,8 @@ import logging
 import os
 import bpy
 from .material_node_tree.exporters import export_node_tree
-from ..structures import InternalResource, ExternalResource, ValidationError
+from ..structures import (
+    InternalResource, ExternalResource, gamma_correct, ValidationError)
 
 
 def export_image(escn_file, export_settings, image):
@@ -61,8 +62,8 @@ def generate_material_resource(escn_file, export_settings, material):
         return resource_id
 
     engine = bpy.context.scene.render.engine
-
     mat = None
+
     if engine == 'CYCLES' and material.node_tree is not None:
         mat = InternalResource("ShaderMaterial", material.name)
         try:
@@ -82,7 +83,7 @@ def generate_material_resource(escn_file, export_settings, material):
         mat['flags_vertex_lighting'] = material.use_vertex_color_light
         mat['flags_transparent'] = material.use_transparency
         mat['vertex_color_use_as_albedo'] = material.use_vertex_color_paint
-        mat['albedo_color'] = material.diffuse_color
+        mat['albedo_color'] = gamma_correct(material.diffuse_color)
         mat['subsurf_scatter_enabled'] = material.subsurface_scattering.use
     return escn_file.add_internal_resource(mat, material)
 

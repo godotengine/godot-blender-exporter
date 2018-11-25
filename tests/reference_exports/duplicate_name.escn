@@ -38,21 +38,10 @@ surfaces/0 = {
 	"morph_arrays":[]
 }
 
-[sub_resource id=3 type="SpatialMaterial"]
-
-resource_name = "Material"
-flags_unshaded = false
-flags_vertex_lighting = false
-flags_transparent = false
-vertex_color_use_as_albedo = false
-albedo_color = Color(0.8, 0.8, 0.8, 1.0)
-subsurf_scatter_enabled = false
-
-[sub_resource id=4 type="ArrayMesh"]
+[sub_resource id=3 type="ArrayMesh"]
 
 resource_name = "Cube"
 surfaces/0 = {
-	"material":SubResource(3),
 	"primitive":4,
 	"arrays":[
 		Vector3Array(1.0, -1.0, 1.0, -1.0, -1.0, -1.0, 1.0, -1.0, -1.0, -1.0, 1.0, -1.0, 0.999999, 1.0, 1.0, 1.0, 1.0, -0.999999, 1.0, 1.0, -0.999999, 1.0, -1.0, 1.0, 1.0, -1.0, -1.0, 0.999999, 1.0, 1.0, -1.0, -1.0, 1.0, 1.0, -1.0, 1.0, -1.0, 1.0, 1.0, -1.0, -1.0, -1.0, -1.0, -1.0, 1.0, 1.0, -1.0, -1.0, -1.0, 1.0, -1.0, 1.0, 1.0, -0.999999, 1.0, -1.0, 1.0, -1.0, -1.0, 1.0, -1.0, -1.0, -1.0, -1.0, 1.0, -1.0, -1.0, 1.0, 1.0, 0.999999, 1.0, 1.0, 1.0, 1.0, -0.999999, 0.999999, 1.0, 1.0, 1.0, -1.0, 1.0, 0.999999, 1.0, 1.0, -1.0, 1.0, 1.0, -1.0, -1.0, 1.0, -1.0, 1.0, 1.0, -1.0, 1.0, -1.0, -1.0, -1.0, -1.0, 1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, 1.0, -1.0),
@@ -84,6 +73,6 @@ transform = Transform(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 1.13324, 0.30
 
 [node name="Cube002" type="MeshInstance" parent="."]
 
-mesh = SubResource(4)
+mesh = SubResource(3)
 visible = true
 transform = Transform(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0)
