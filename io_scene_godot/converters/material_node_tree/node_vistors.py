@@ -1,10 +1,29 @@
 """A set of node visitor functions to convert material node to shader script"""
 import logging
+from collections import deque
 import mathutils
 from .shaders import (FragmentShader, VertexShader,
                       Value, Variable, FragmentBSDFContainer)
 from .shader_functions import find_node_function
 from ...structures import ValidationError
+
+
+def _is_normal_texture(image_texture_node):
+    assert image_texture_node.bl_idname == 'ShaderNodeTexImage'
+    node_queue = deque()
+    for link in image_texture_node.outputs['Color'].links:
+        node_queue.append((link.to_node, link.to_socket))
+
+    while node_queue:
+        node, socket = node_queue.popleft()
+        if (socket.name == 'Color' and
+                node.bl_idname == 'ShaderNodeNormalMap'):
+            return True
+        for sock in node.outputs:
+            for link in sock.links:
+                node_queue.append((link.to_node, link.to_socket))
+
+    return False
 
 
 def visit_add_shader_node(shader, node):
@@ -372,9 +391,15 @@ def visit_image_texture_node(shader, node):
         )
 
     if node.image is None or node.image not in shader.global_ref.textures:
-        tex_image_var = shader.global_ref.define_uniform(
-            "sampler2D", node.name + "texture_image"
-        )
+        if _is_normal_texture(node):
+            tex_image_var = shader.global_ref.define_uniform(
+                "sampler2D", node.name + "texture_image", hint='hint_normal'
+            )
+        else:
+            tex_image_var = shader.global_ref.define_uniform(
+                "sampler2D", node.name + "texture_image",
+            )
+
         shader.global_ref.add_image_texture(
             tex_image_var, node.image
         )
@@ -493,6 +518,27 @@ def visit_tangent_node(shader, node):
     )
 
 
+def visit_uvmap_node(shader, node):
+    """Visit UV Map node"""
+    if node.from_dupli:
+        raise ValidationError(
+            "'{}' from_dupli not supported, at '{}'".format(
+                node.bl_idname,
+                node.name
+            )
+        )
+
+    shader.assign_variable_to_socket(
+        node.outputs['UV'],
+        Value("vec3", ('UV', 0.0)),
+    )
+
+    logging.warning(
+        "'%s' use the active UV map, make sure the correct "
+        "one is selected, at'%s", node.bl_idname, node.name
+    )
+
+
 NODE_VISITOR_FUNCTIONS = {
     'ShaderNodeMapping': visit_mapping_node,
     'ShaderNodeTexImage': visit_image_texture_node,
@@ -504,6 +550,7 @@ NODE_VISITOR_FUNCTIONS = {
     'ShaderNodeMixShader': visit_mix_shader_node,
     'ShaderNodeAddShader': visit_add_shader_node,
     'ShaderNodeTangent': visit_tangent_node,
+    'ShaderNodeUVMap': visit_uvmap_node,
 }
 
 

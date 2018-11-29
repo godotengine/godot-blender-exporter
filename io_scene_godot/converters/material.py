@@ -64,8 +64,15 @@ def generate_material_resource(escn_file, export_settings, material):
     engine = bpy.context.scene.render.engine
     mat = None
 
+    if export_settings['generate_external_material']:
+        material_rsc_name = material.name
+    else:
+        # leave material_name as empty, prevent godot
+        # to convert material to external file
+        material_rsc_name = ''
+
     if engine == 'CYCLES' and material.node_tree is not None:
-        mat = InternalResource("ShaderMaterial", material.name)
+        mat = InternalResource("ShaderMaterial", material_rsc_name)
         try:
             export_node_tree(
                 escn_file, export_settings, material, mat
@@ -73,11 +80,11 @@ def generate_material_resource(escn_file, export_settings, material):
         except ValidationError as exception:
             mat = None  # revert to SpatialMaterial
             logging.error(
-                str(exception) + ", in material '{}'".format(material.name)
+                "%s, in material '%s'", str(exception), material.name
             )
 
     if mat is None:
-        mat = InternalResource("SpatialMaterial", material.name)
+        mat = InternalResource("SpatialMaterial", material_rsc_name)
 
         mat['flags_unshaded'] = material.use_shadeless
         mat['flags_vertex_lighting'] = material.use_vertex_color_light

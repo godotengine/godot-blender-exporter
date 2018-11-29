@@ -2,7 +2,7 @@
 
 [sub_resource id=1 type="SpatialMaterial"]
 
-resource_name = "Material001"
+resource_name = ""
 flags_unshaded = false
 flags_vertex_lighting = false
 flags_transparent = false
@@ -12,7 +12,7 @@ subsurf_scatter_enabled = false
 
 [sub_resource id=2 type="SpatialMaterial"]
 
-resource_name = "Material"
+resource_name = ""
 flags_unshaded = false
 flags_vertex_lighting = false
 flags_transparent = false
@@ -58,7 +58,7 @@ surfaces/1 = {
 
 [sub_resource id=4 type="SpatialMaterial"]
 
-resource_name = "Material002"
+resource_name = ""
 flags_unshaded = false
 flags_vertex_lighting = false
 flags_transparent = false
@@ -68,7 +68,7 @@ subsurf_scatter_enabled = false
 
 [sub_resource id=5 type="SpatialMaterial"]
 
-resource_name = "Material003"
+resource_name = ""
 flags_unshaded = false
 flags_vertex_lighting = false
 flags_transparent = false

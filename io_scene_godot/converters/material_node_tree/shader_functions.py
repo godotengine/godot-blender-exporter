@@ -1,4 +1,6 @@
-"""Prewritten shader scripts for node in material node tree"""
+"""Prewritten shader scripts for node in material node tree,
+reference: https://developer.blender.org/diffusion/B/browse/
+blender2.8/source/blender/gpu/shaders/gpu_shader_material.glsl"""
 import re
 from ...structures import ValidationError
 
@@ -60,7 +62,6 @@ class BsdfShaderFunction(ShaderFunction):
 #
 #   e.g. Blender node 'ShaderNodeMath' with `operation` set as 'ADD',
 #     `clamp` not checked. It's function name is 'node_math_add_no_clamp'.
-
 
 FUNCTION_LIBS = [
     # bsdf shader node functions
@@ -268,31 +269,30 @@ void node_bump(float strength, float dist, float height, vec3 normal,
     ShaderFunction(code="""
 void node_normal_map_tangent(float strength, vec4 color, vec3 normal,
         vec3 tangent, vec3 binormal, out vec3 out_normal) {
-    vec3 signed_color = 2.0 * (color.xyz - vec3(0.5, 0.5, 0.5));
-    out_normal = signed_color.x * tangent +
-                 signed_color.y * binormal +
-                 signed_color.z * normal;
-    // XXX: TBN are no longer orthogonal, does it bring some problem?
-    out_normal = strength * out_normal + (1.0 - strength) * normal;
+    vec3 signed_color = vec3(2.0, -2.0, 2.0) * (color.xzy - vec3(0.5));
+    vec3 tex_normal = signed_color.x * tangent +
+                      signed_color.y * binormal +
+                      signed_color.z * normal;
+    out_normal = strength * tex_normal + (1.0 - strength) * normal;
 }
 """),
 
     ShaderFunction(code="""
 void node_normal_map_world(float strength, vec4 color, vec3 view_normal,
         mat4 inv_view_mat, out vec3 out_normal) {
-    vec3 signed_color = 2.0 * (color.xyz - vec3(0.5, 0.5, 0.5));
+    vec3 tex_normal = vec3(2.0, -2.0, -2.0) * (color.xzy - vec3(0.5));
     vec3 world_normal = (inv_view_mat * vec4(view_normal, 0.0)).xyz;
-    out_normal = strength * signed_color + (1.0 - strength) * world_normal;
+    out_normal = strength * tex_normal + (1.0 - strength) * world_normal;
 }
 """),
 
     ShaderFunction(code="""
 void node_normal_map_object(float strength, vec4 color, vec3 view_normal,
         mat4 inv_view_mat, mat4 model_mat, out vec3 out_normal) {
-    vec3 signed_color = 2.0 * (color.xyz - vec3(0.5, 0.5, 0.5));
+    vec3 signed_color = vec3(2.0, -2.0, -2.0) * (color.xzy - vec3(0.5));
+    vec3 tex_normal = (model_mat * vec4(signed_color, 0.0)).xyz;
     vec3 world_normal = (inv_view_mat * vec4(view_normal, 0.0)).xyz;
-    out_normal = (model_mat * vec4(signed_color, 0.0)).xyz;
-    out_normal = strength * signed_color + (1.0 - strength) * world_normal;
+    out_normal = strength * tex_normal + (1.0 - strength) * world_normal;
 }
 """),
 
@@ -300,6 +300,21 @@ void node_normal_map_object(float strength, vec4 color, vec3 view_normal,
 void node_tex_image(vec3 co, sampler2D ima, out vec4 color, out float alpha) {
     color = texture(ima, co.xy);
     alpha = color.a;
+}
+"""),
+
+    ShaderFunction(code="""
+void node_gamma(vec4 color, float gamma, out vec4 out_color) {
+    out_color = color
+    if (out_color.r > 0.0) {
+        out_color.r = pow(color.r, gamma);
+    }
+    if (out_color.g > 0.0) {
+        out_color.g = pow(color.g, gamma);
+    }
+    if (out_color.b > 0.0) {
+        out_color.b = pow(color.b, gamma);
+    }
 }
 """),
 

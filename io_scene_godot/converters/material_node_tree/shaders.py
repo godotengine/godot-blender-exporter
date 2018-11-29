@@ -551,7 +551,7 @@ class ShaderGlobals:
             self.function_name_set.add(function.name)
             self.function_codes.append(function.code)
 
-    def define_uniform(self, uni_type, uni_base_name):
+    def define_uniform(self, uni_type, uni_base_name, hint=None):
         """Define an uniform variable"""
         self._uniform_var_count += 1
         raw_var_name = 'uni{}_{}'.format(
@@ -560,7 +560,10 @@ class ShaderGlobals:
         )
         var_name = re.sub(r'\W', '', raw_var_name)
         new_var = Variable(uni_type, var_name)
-        def_str = 'uniform {} {};'.format(uni_type, var_name)
+        if hint is not None:
+            def_str = 'uniform {} {} : {};'.format(uni_type, var_name, hint)
+        else:
+            def_str = 'uniform {} {};'.format(uni_type, var_name)
         self.uniform_codes.append(def_str)
         return new_var
 
