@@ -6,7 +6,7 @@ import mathutils
 
 from .material import export_material
 from ..structures import (Array, NodeTemplate, InternalResource, NodePath,
-                          Map)
+                          Map, gamma_correct)
 from . import physics
 from . import armature
 from . import animation
@@ -634,7 +634,7 @@ class Vertex:
 
         if mesh.vertex_colors:
             new_vert.color = mathutils.Vector(
-                mesh.vertex_colors[0].data[loop_index].color)
+                gamma_correct(mesh.vertex_colors[0].data[loop_index].color))
 
         new_vert.normal = fix_vertex(loop.normal)
 

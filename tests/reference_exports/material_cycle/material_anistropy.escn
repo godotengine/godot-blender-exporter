@@ -92,7 +92,7 @@ void fragment() {
 
 [sub_resource id=2 type="ShaderMaterial"]
 
-resource_name = "Material001"
+resource_name = ""
 shader = SubResource(1)
 
 [sub_resource id=3 type="ArrayMesh"]
@@ -215,7 +215,7 @@ void fragment() {
 
 [sub_resource id=5 type="ShaderMaterial"]
 
-resource_name = "Material002"
+resource_name = ""
 shader = SubResource(4)
 
 [sub_resource id=6 type="ArrayMesh"]

@@ -112,6 +112,13 @@ class ExportGodot(bpy.types.Operator, ExportHelper):
                     "animation and place into AnimationPlayer",
         default=True,
     )
+    generate_external_material = BoolProperty(
+        name="Generate External Material",
+        description="If turned on, materials in the exported scene would "
+                    "generate external .material files when imported to "
+                    "godot,  thus make it easy for material reusing",
+        default=False,
+    )
     animation_modes = EnumProperty(
         name="Animation Modes",
         description="Configuration of how blender animation data being "
