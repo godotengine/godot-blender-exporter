@@ -35,7 +35,7 @@ surfaces/0 = {
 
 resource_name = "KeyAction"
 step = 0.1
-length = 1.25
+length = 1.20833
 tracks/0/type = "value"
 tracks/0/path = NodePath(".:blend_shapes/Key 1")
 tracks/0/interp = 1
@@ -50,7 +50,7 @@ tracks/0/keys = {
 
 resource_name = "SuzanneAction"
 step = 0.1
-length = 1.25
+length = 1.20833
 tracks/0/type = "transform"
 tracks/0/path = NodePath(".:")
 tracks/0/interp = 1

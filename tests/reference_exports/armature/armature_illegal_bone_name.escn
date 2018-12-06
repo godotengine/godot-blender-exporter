@@ -4,7 +4,7 @@
 
 resource_name = "ArmatureAction"
 step = 0.1
-length = 2.5
+length = 2.45833
 tracks/0/type = "transform"
 tracks/0/path = NodePath(".:bone")
 tracks/0/interp = 1

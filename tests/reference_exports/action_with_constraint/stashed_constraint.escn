@@ -4,7 +4,7 @@
 
 resource_name = "ArmatureAction001"
 step = 0.1
-length = 10.4167
+length = 10.375
 tracks/0/type = "transform"
 tracks/0/path = NodePath(".:Bone")
 tracks/0/interp = 1

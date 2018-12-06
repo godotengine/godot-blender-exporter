@@ -23,7 +23,7 @@ surfaces/0 = {
 
 resource_name = "SuzanneAction002"
 step = 0.1
-length = 1.25
+length = 1.20833
 tracks/0/type = "transform"
 tracks/0/path = NodePath(".:")
 tracks/0/interp = 1
@@ -33,7 +33,7 @@ tracks/0/keys = [0.0, 1.0, 0.374198, 0.122969, 0.0, -0.00014795, -0.000250295, -
 
 resource_name = "SuzanneAction"
 step = 0.1
-length = 1.20833
+length = 1.16667
 tracks/0/type = "transform"
 tracks/0/path = NodePath(".:")
 tracks/0/interp = 1
