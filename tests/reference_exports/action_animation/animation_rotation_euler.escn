@@ -23,7 +23,7 @@ surfaces/0 = {
 
 resource_name = "CubeAction"
 step = 0.1
-length = 7.08333
+length = 7.04167
 tracks/0/type = "transform"
 tracks/0/path = NodePath(".:")
 tracks/0/interp = 1

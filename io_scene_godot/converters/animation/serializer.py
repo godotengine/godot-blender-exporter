@@ -287,6 +287,7 @@ class TransformTrack(Track):
             values = self.values
 
         for frame, trans_frame in zip(frames, values):
+            # move animation first frame to scene.frame_start
             if frame < scene_frame_start:
                 continue
 
@@ -346,7 +347,6 @@ class ValueTrack(Track):
 
         for frame, frame_val in zip(frames, values):
             # move animation first frame to scene.frame_start
-            # and cut off frames exceed scene.frame_end
             if frame < scene_frame_start:
                 continue
 
@@ -434,21 +434,17 @@ class AnimationResource(InternalResource):
     def add_track(self, track):
         """add a track to animation resource"""
         node_path_str = track.path.to_string()
+        track_length = (
+            track.frame_end() - bpy.context.scene.frame_start) / self.fps
+        if track_length > self['length']:
+            self['length'] = track_length
+
         if node_path_str in self.tracks:
             updated_track = self.tracks[node_path_str]
             updated_track.blend(track)
-            track_length = updated_track.frame_end() / self.fps
-            if track_length > self['length']:
-                self['length'] = track_length
         else:
             track_id_str = 'tracks/{}'.format(len(self.tracks))
             self.tracks[node_path_str] = track
-            updated_track = track
-
-            track_length = track.frame_end() / self.fps
-            if track_length > self['length']:
-                self['length'] = track_length
-
             self[track_id_str + '/type'] = '"{}"'.format(track.type)
             self[track_id_str + '/path'] = node_path_str
             self[track_id_str + '/interp'] = track.interp
