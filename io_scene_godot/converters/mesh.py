@@ -93,7 +93,8 @@ def get_modifier_armature_data(mesh_object):
     """Get the armature modifier of a blender object
     if does not have one, return None"""
     for modifier in mesh_object.modifiers:
-        if isinstance(modifier, bpy.types.ArmatureModifier):
+        if (isinstance(modifier, bpy.types.ArmatureModifier) and
+                modifier.object is not None):
             return modifier.object.data
     return None
 
