@@ -125,8 +125,9 @@ class GodotExporter:
         # and godot, so it has a -90 rotation around X axis,
         # here rotate its children back
         if exported_node.parent.get_type() == 'CollisionShape':
-            exported_node['transform'] *= (
-                mathutils.Matrix.Rotation(math.radians(90), 4, 'X'))
+            exported_node['transform'] = (
+                mathutils.Matrix.Rotation(math.radians(90), 4, 'X') *
+                exported_node['transform'])
 
         # if the blender node is exported and it has animation data
         if exported_node != parent_gd_node:
