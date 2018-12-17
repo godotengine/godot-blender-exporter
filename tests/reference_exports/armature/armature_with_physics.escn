@@ -45,7 +45,7 @@ shape = SubResource(1)
 
 [node name="Rig" type="Skeleton" parent="PhysicsPhysics/PhysicsCollision"]
 
-transform = Transform(1.0, 0.0, 0.0, 0.0, 7.54979e-08, -1.0, 0.0, 1.0, 7.54979e-08, 0.0, -0.7, 0.0)
+transform = Transform(1.0, 0.0, 0.0, 0.0, 7.54979e-08, -1.0, 0.0, 1.0, 7.54979e-08, 0.0, -5.28485e-08, -0.7)
 bones/0/name = "Bone"
 bones/0/parent = -1
 bones/0/rest = Transform(1.0, 0.0, 0.0, 0.0, 0.0, -1.0, 0.0, 1.0, 0.0, 0.0, -0.1, 0.0)
