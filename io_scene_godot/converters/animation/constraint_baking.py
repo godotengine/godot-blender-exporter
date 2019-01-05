@@ -74,12 +74,22 @@ def bake_constraint_to_action(blender_object, base_action, bake_type,
         )
 
         bpy.context.scene.objects.active = active_obj_backup
-    else:
+    elif bpy.app.version < (2, 80, 0):
         baked_action = bpy_extras.anim_utils.bake_action(
             obj=blender_object,
             frame_start=frame_range[0],
             frame_end=frame_range[1],
             frame_step=1,
+            only_selected=False,
+            action=action_bake_into,
+            do_pose=do_pose,
+            do_object=do_object,
+            do_visual_keying=True,
+        )
+    else:
+        baked_action = bpy_extras.anim_utils.bake_action(
+            obj=blender_object,
+            frames=range(frame_range[0], frame_range[1]),
             only_selected=False,
             action=action_bake_into,
             do_pose=do_pose,
