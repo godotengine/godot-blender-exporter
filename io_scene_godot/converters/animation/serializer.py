@@ -1,11 +1,11 @@
 """Export animation into Godot scene tree"""
 import collections
 import re
+import math
 import bpy
 import mathutils
 from ...structures import (NodeTemplate, NodePath, Array, Map,
-                           InternalResource, fix_matrix,
-                           fix_directional_transform)
+                           InternalResource)
 
 NEAREST_INTERPOLATION = 0
 LINEAR_INTERPOLATION = 1
@@ -63,11 +63,9 @@ class TransformFrame:
     def __eq__(self, other):
         """Overrides the default implementation"""
         if isinstance(other, TransformFrame):
-            return (self.location == other.location and
-                    self.scale == other.scale and
-                    self.rotation_mode == other.rotation_mode and
-                    self.rotation_quaternion == other.rotation_quaternion and
-                    self.rotation_euler == other.rotation_euler)
+            return (self.get_scale() == other.get_scale() and
+                    self.get_quaternion() == other.get_quaternion() and
+                    self.get_translation() == other.get_translation())
         return False
 
     @classmethod
@@ -84,9 +82,7 @@ class TransformFrame:
         if rotation_mode == 'QUATERNION':
             ret.rotation_euler = trans_mat.to_euler()
         else:
-            ret.rotation_euler = trans_mat.to_euler(
-                rotation_mode
-            )
+            ret.rotation_euler = trans_mat.to_euler(rotation_mode)
         return ret
 
     def update(self, attribute, array_index, value):
@@ -100,19 +96,22 @@ class TransformFrame:
         elif attribute == 'rotation_euler':
             self.rotation_euler[array_index] = value
 
-    def to_matrix(self):
-        """Convert location, scale, rotation to a transform matrix"""
+    def get_quaternion(self):
+        """Return the rotation Quaternion"""
         if self.rotation_mode == 'QUATERNION':
-            rot_mat = self.rotation_quaternion.to_matrix().to_4x4()
-        else:
-            rot_mat = self.rotation_euler.to_matrix().to_4x4()
-        loc_mat = mathutils.Matrix.Translation(self.location)
-        sca_mat = mathutils.Matrix((
-            (self.scale[0], 0, 0),
-            (0, self.scale[1], 0),
-            (0, 0, self.scale[2]),
-        )).to_4x4()
-        return loc_mat @ rot_mat @ sca_mat
+            return self.rotation_quaternion
+        return self.rotation_euler.to_quaternion()
+
+    def get_scale(self):
+        """Return a Vector 3d with scale values along axis"""
+        return self.scale
+
+    def get_translation(self):
+        """Return a Vector 4d with translation value
+        in homogeneous coordinates"""
+        translation = self.location.copy()
+        translation.resize_4d()
+        return translation
 
 
 class Track:
@@ -291,15 +290,25 @@ class TransformTrack(Track):
             if frame < scene_frame_start:
                 continue
 
-            mat = self.parent_trans_inverse @ trans_frame.to_matrix()
-            if self.is_directional:
-                mat = fix_directional_transform(mat)
-            # convert from z-up to y-up
-            mat = fix_matrix(mat)
+            # get actual translation from blender weird location..
+            translation = (
+                self.parent_trans_inverse @ trans_frame.get_translation())
 
-            location = mat.to_translation()
-            quaternion = mat.to_quaternion()
-            scale = mat.to_scale()
+            location = mathutils.Vector(
+                [x / translation[3] for x in translation[:3]])
+            quaternion = trans_frame.get_quaternion()
+            scale = trans_frame.get_scale()
+
+            # convert from z-up to y-up
+            location = mathutils.Vector([location.x, location.z, -location.y])
+            quaternion = mathutils.Quaternion(
+                [quaternion.w, quaternion.x, quaternion.z, -quaternion.y])
+            scale = mathutils.Vector([scale.x, scale.z, scale.y])
+
+            # for directional objects like SpotLight, camera, etc.
+            if self.is_directional:
+                rotation = mathutils.Euler((math.radians(-90), 0, 0))
+                quaternion = quaternion @ rotation.to_quaternion()
 
             array.append((frame - scene_frame_start) * time_per_frame)
             # transition default 1.0
