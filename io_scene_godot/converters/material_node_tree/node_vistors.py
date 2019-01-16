@@ -26,9 +26,43 @@ def _is_normal_texture(image_texture_node):
     return False
 
 
+def _mix_fragment_bsdf(frag_shader, shader_node_a, shader_node_b,
+                       output, fac):
+    for attribute_name in FragmentBSDFContainer.attribute_names_iterable():
+        attr_a = shader_node_a.get_attribute(attribute_name)
+        attr_b = shader_node_b.get_attribute(attribute_name)
+
+        if attribute_name == 'alpha':
+            # if one shader input has alpha, the other one should
+            # default to have alpha = 1.0
+            if attr_a and not attr_b:
+                attr_b = Value('float', 1.0)
+            elif attr_b and not attr_a:
+                attr_a = Value('float', 1.0)
+
+        if attr_a and attr_b:
+            attr_type = FragmentBSDFContainer.attribute_type(
+                attribute_name)
+            if attribute_name in ("normal", "tangent"):
+                # don't mix normal and tangent, use default
+                continue
+            mix_code_pattern = '{} = mix({}, {}, {});'
+            attr_mixed = frag_shader.define_variable(
+                attr_type, attribute_name
+            )
+            frag_shader.append_code_line(
+                mix_code_pattern,
+                (attr_mixed, attr_a, attr_b, fac)
+            )
+            output.set_attribute(attribute_name, attr_mixed)
+        elif attr_a:
+            output.set_attribute(attribute_name, attr_a)
+        elif attr_b:
+            output.set_attribute(attribute_name, attr_b)
+
+
 def visit_add_shader_node(shader, node):
-    """apply addition to albedo and it may have HDR, alpha is added with
-    its complementary, other attributes are averaged"""
+    """alpha is added with its complementary, other attributes are averaged"""
     output = FragmentBSDFContainer()
 
     shader_socket_a = node.inputs[0]
@@ -43,34 +77,7 @@ def visit_add_shader_node(shader, node):
     else:
         in_shader_b = FragmentBSDFContainer.default()
 
-    for attr_name in FragmentBSDFContainer.attribute_names_iterable():
-        attr_a = in_shader_a.get_attribute(attr_name)
-        attr_b = in_shader_b.get_attribute(attr_name)
-
-        if attr_a and attr_b:
-            attr_type = FragmentBSDFContainer.attribute_type(attr_name)
-            if attr_name in ("normal", "tangent"):
-                # don't mix normal and tangent, use default
-                continue
-            elif attr_name == "alpha":
-                code_pattern = '{} = 1 - clamp(2 - {} - {}, 0.0, 1.0);'
-            elif attr_name == "albedo":
-                # HDR
-                code_pattern = ('{} = {} + {};')
-            else:
-                code_pattern = '{} = mix({}, {}, 0.5);'
-            added_attr = shader.define_variable(
-                attr_type, node.name + '_' + attr_name
-            )
-            shader.append_code_line(
-                code_pattern,
-                (added_attr, attr_a, attr_b)
-            )
-            output.set_attribute(attr_name, added_attr)
-        elif attr_a:
-            output.set_attribute(attr_name, attr_a)
-        elif attr_b:
-            output.set_attribute(attr_name, attr_b)
+    _mix_fragment_bsdf(shader, in_shader_a, in_shader_b, output, 0.5)
 
     shader.assign_variable_to_socket(node.outputs[0], output)
 
@@ -95,34 +102,7 @@ def visit_mix_shader_node(shader, node):
     if in_shader_socket_b.is_linked:
         in_shader_b = shader.fetch_variable_from_socket(in_shader_socket_b)
 
-    for attribute_name in FragmentBSDFContainer.attribute_names_iterable():
-        attr_a = in_shader_a.get_attribute(attribute_name)
-        attr_b = in_shader_b.get_attribute(attribute_name)
-        # if one shader input has alpha, the other one should default to have
-        # alpha = 1.0
-        if attribute_name == 'alpha' and attr_a and not attr_b:
-            attr_b = Value('float', 1.0)
-        if attribute_name == 'alpha' and attr_b and not attr_a:
-            attr_a = Value('float', 1.0)
-
-        if attr_a and attr_b:
-            attr_type = FragmentBSDFContainer.attribute_type(attribute_name)
-            if attribute_name in ("normal", "tangent"):
-                # don't mix normal and tangent, use default
-                continue
-            mix_code_pattern = '{} = mix({}, {}, {});'
-            attr_mixed = shader.define_variable(
-                attr_type, node.name + '_' + attribute_name
-            )
-            shader.append_code_line(
-                mix_code_pattern,
-                (attr_mixed, attr_a, attr_b, in_fac)
-            )
-            output.set_attribute(attribute_name, attr_mixed)
-        elif attr_a:
-            output.set_attribute(attribute_name, attr_a)
-        elif attr_b:
-            output.set_attribute(attribute_name, attr_b)
+    _mix_fragment_bsdf(shader, in_shader_a, in_shader_b, output, in_fac)
 
     shader.assign_variable_to_socket(node.outputs[0], output)
 
@@ -153,7 +133,7 @@ def visit_bsdf_node(shader, node):
     for attr_name in function.out_sockets:
         var_type = FragmentBSDFContainer.attribute_type(attr_name)
         new_var = shader.define_variable(
-            var_type, node.name + '_output_' + attr_name
+            var_type, 'out_' + attr_name
         )
 
         output.set_attribute(attr_name, new_var)
@@ -227,7 +207,7 @@ def visit_bump_node(shader, node):
         in_arguments.append(Value('float', 0.0))
 
     out_normal = shader.define_variable(
-        'vec3', node.name + '_out_normal'
+        'vec3', 'out_normal'
     )
     shader.add_function_call(function, in_arguments, [out_normal])
 
@@ -261,7 +241,7 @@ def visit_normal_map_node(shader, node):
                 Value.create_from_blender_value(socket.default_value)
             )
     function = find_node_function(node)
-    output_normal = shader.define_variable('vec3', node.name + '_out_normal')
+    output_normal = shader.define_variable('vec3', 'out_normal')
     if node.space == 'TANGENT':
         in_arguments.append(Variable('vec3', 'NORMAL'))
         in_arguments.append(Variable('vec3', 'TANGENT'))
@@ -391,13 +371,15 @@ def visit_image_texture_node(shader, node):
         )
 
     if node.image is None or node.image not in shader.global_ref.textures:
+        shader.append_comment_line(
+            'texture image from node {}'.format(node.name))
         if _is_normal_texture(node):
             tex_image_var = shader.global_ref.define_uniform(
-                "sampler2D", node.name + "texture_image", hint='hint_normal'
+                "sampler2D", node.image.name, hint='hint_normal'
             )
         else:
             tex_image_var = shader.global_ref.define_uniform(
-                "sampler2D", node.name + "texture_image",
+                "sampler2D", node.image.name,
             )
 
         shader.global_ref.add_image_texture(

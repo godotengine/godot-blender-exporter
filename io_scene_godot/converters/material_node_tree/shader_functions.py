@@ -147,7 +147,7 @@ void node_bsdf_diffuse(vec4 color, float roughness, out vec3 albedo,
         output_sockets=[
             "albedo",
             "specular",
-            "roughness",
+            "oren_nayar_roughness",
         ]
     ),
 

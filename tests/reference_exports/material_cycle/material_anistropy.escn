@@ -42,6 +42,11 @@ void vertex() {
 
 
 void fragment() {
+	// node: Tangent
+	// type: ShaderNodeTangent
+	
+	// node: Principled BSDF
+	// type: ShaderNodeBsdfPrincipled
 	vec4 var1_PrincipledBSDF_BaseColor;
 	var1_PrincipledBSDF_BaseColor = vec4(0.800000011920929, 0.800000011920929, 0.800000011920929, 1.0);
 	float var2_PrincipledBSDF_Subsurface;
@@ -64,27 +69,34 @@ void fragment() {
 	var10_PrincipledBSDF_Transmission = 0.0;
 	float var11_PrincipledBSDF_IOR;
 	var11_PrincipledBSDF_IOR = 1.4500000476837158;
-	vec3 var12_PrincipledBSDF_output_albedo;
-	float var13_PrincipledBSDF_output_sss_strength;
-	float var14_PrincipledBSDF_output_metallic;
-	float var15_PrincipledBSDF_output_specular;
-	float var16_PrincipledBSDF_output_roughness;
-	float var17_PrincipledBSDF_output_clearcoat;
-	float var18_PrincipledBSDF_output_clearcoat_gloss;
-	float var19_PrincipledBSDF_output_anisotropy;
-	float var20_PrincipledBSDF_output_transmission;
-	float var21_PrincipledBSDF_output_ior;
-	node_bsdf_principled(var1_PrincipledBSDF_BaseColor, var2_PrincipledBSDF_Subsurface, var3_PrincipledBSDF_SubsurfaceColor, var4_PrincipledBSDF_Metallic, var5_PrincipledBSDF_Specular, var6_PrincipledBSDF_Roughness, var7_PrincipledBSDF_Clearcoat, var8_PrincipledBSDF_ClearcoatRoughness, var9_PrincipledBSDF_Anisotropic, var10_PrincipledBSDF_Transmission, var11_PrincipledBSDF_IOR, var12_PrincipledBSDF_output_albedo, var13_PrincipledBSDF_output_sss_strength, var14_PrincipledBSDF_output_metallic, var15_PrincipledBSDF_output_specular, var16_PrincipledBSDF_output_roughness, var17_PrincipledBSDF_output_clearcoat, var18_PrincipledBSDF_output_clearcoat_gloss, var19_PrincipledBSDF_output_anisotropy, var20_PrincipledBSDF_output_transmission, var21_PrincipledBSDF_output_ior);
+	vec3 var12_out_albedo;
+	float var13_out_sss_strength;
+	float var14_out_metallic;
+	float var15_out_specular;
+	float var16_out_roughness;
+	float var17_out_clearcoat;
+	float var18_out_clearcoat_gloss;
+	float var19_out_anisotropy;
+	float var20_out_transmission;
+	float var21_out_ior;
+	node_bsdf_principled(var1_PrincipledBSDF_BaseColor, var2_PrincipledBSDF_Subsurface, var3_PrincipledBSDF_SubsurfaceColor, var4_PrincipledBSDF_Metallic, var5_PrincipledBSDF_Specular, var6_PrincipledBSDF_Roughness, var7_PrincipledBSDF_Clearcoat, var8_PrincipledBSDF_ClearcoatRoughness, var9_PrincipledBSDF_Anisotropic, var10_PrincipledBSDF_Transmission, var11_PrincipledBSDF_IOR, var12_out_albedo, var13_out_sss_strength, var14_out_metallic, var15_out_specular, var16_out_roughness, var17_out_clearcoat, var18_out_clearcoat_gloss, var19_out_anisotropy, var20_out_transmission, var21_out_ior);
+	// convert from z-up to y-up
 	TANGENT = mat3(vec3(1, 0, 0), vec3(0, 0, -1), vec3(0, 1, 0)) * TANGENT;
+	// convert from world space to view space
 	TANGENT = normalize(INV_CAMERA_MATRIX * vec4(TANGENT, 0.0)).xyz;
-	ALBEDO = var12_PrincipledBSDF_output_albedo;
-	SSS_STRENGTH = var13_PrincipledBSDF_output_sss_strength;
-	SPECULAR = var15_PrincipledBSDF_output_specular;
-	METALLIC = var14_PrincipledBSDF_output_metallic;
-	ROUGHNESS = var16_PrincipledBSDF_output_roughness;
-	CLEARCOAT = var17_PrincipledBSDF_output_clearcoat;
-	CLEARCOAT_GLOSS = var18_PrincipledBSDF_output_clearcoat_gloss;
-	ANISOTROPY = var19_PrincipledBSDF_output_anisotropy;
+	
+	ALBEDO = var12_out_albedo;
+	SSS_STRENGTH = var13_out_sss_strength;
+	SPECULAR = var15_out_specular;
+	METALLIC = var14_out_metallic;
+	ROUGHNESS = var16_out_roughness;
+	CLEARCOAT = var17_out_clearcoat;
+	CLEARCOAT_GLOSS = var18_out_clearcoat_gloss;
+	// transmission usually does not work..
+	// TRANSMISSION = vec3(1.0, 1.0, 1.0) * var20_out_transmission;
+	// uncomment it only when you set diffuse mode to oren nayar
+	// ROUGHNESS = oren_nayar_rougness
+	ANISOTROPY = var19_out_anisotropy;
 	TANGENT = normalize(cross(cross(TANGENT, NORMAL), NORMAL));
 	BINORMAL = cross(TANGENT, NORMAL);
 }
@@ -157,57 +169,71 @@ void vertex() {
 
 
 void fragment() {
+	mat4 inverted_view_matrix;
+	inverted_view_matrix = inverse(INV_CAMERA_MATRIX);
+	mat4 inverted_model_matrix;
+	inverted_model_matrix = inverse(WORLD_MATRIX);
+	// node: Texture Coordinate
+	// type: ShaderNodeTexCoord
 	vec3 var1_TextureCoordinate_Object;
 	var1_TextureCoordinate_Object = VERTEX;
-	mat4 var2_inverted_model_matrix;
-	var2_inverted_model_matrix = inverse(WORLD_MATRIX);
-	mat4 var3_inverted_view_matrix;
-	var3_inverted_view_matrix = inverse(INV_CAMERA_MATRIX);
-	var1_TextureCoordinate_Object = (var2_inverted_model_matrix * (var3_inverted_view_matrix * vec4(var1_TextureCoordinate_Object, 1.0))).xyz;
+	// convert from view space to model space
+	var1_TextureCoordinate_Object = (inverted_model_matrix * (inverted_view_matrix * vec4(var1_TextureCoordinate_Object, 1.0))).xyz;
+	// convert from y-up to z-up
 	var1_TextureCoordinate_Object = mat3(vec3(1, 0, 0), vec3(0, 0, 1), vec3(0, -1, 0)) * var1_TextureCoordinate_Object;
-	vec4 var4_PrincipledBSDF_BaseColor;
-	var4_PrincipledBSDF_BaseColor = vec4(0.800000011920929, 0.800000011920929, 0.800000011920929, 1.0);
-	float var5_PrincipledBSDF_Subsurface;
-	var5_PrincipledBSDF_Subsurface = 0.0;
-	vec4 var6_PrincipledBSDF_SubsurfaceColor;
-	var6_PrincipledBSDF_SubsurfaceColor = vec4(0.699999988079071, 0.10000000149011612, 0.10000000149011612, 1.0);
-	float var7_PrincipledBSDF_Metallic;
-	var7_PrincipledBSDF_Metallic = 1.0;
-	float var8_PrincipledBSDF_Specular;
-	var8_PrincipledBSDF_Specular = 0.5;
-	float var9_PrincipledBSDF_Roughness;
-	var9_PrincipledBSDF_Roughness = 0.12921348214149475;
-	float var10_PrincipledBSDF_Clearcoat;
-	var10_PrincipledBSDF_Clearcoat = 0.0;
-	float var11_PrincipledBSDF_ClearcoatRoughness;
-	var11_PrincipledBSDF_ClearcoatRoughness = 0.029999999329447746;
-	float var12_PrincipledBSDF_Anisotropic;
-	var12_PrincipledBSDF_Anisotropic = 1.0;
-	float var13_PrincipledBSDF_Transmission;
-	var13_PrincipledBSDF_Transmission = 0.0;
-	float var14_PrincipledBSDF_IOR;
-	var14_PrincipledBSDF_IOR = 1.4500000476837158;
-	vec3 var15_PrincipledBSDF_output_albedo;
-	float var16_PrincipledBSDF_output_sss_strength;
-	float var17_PrincipledBSDF_output_metallic;
-	float var18_PrincipledBSDF_output_specular;
-	float var19_PrincipledBSDF_output_roughness;
-	float var20_PrincipledBSDF_output_clearcoat;
-	float var21_PrincipledBSDF_output_clearcoat_gloss;
-	float var22_PrincipledBSDF_output_anisotropy;
-	float var23_PrincipledBSDF_output_transmission;
-	float var24_PrincipledBSDF_output_ior;
-	node_bsdf_principled(var4_PrincipledBSDF_BaseColor, var5_PrincipledBSDF_Subsurface, var6_PrincipledBSDF_SubsurfaceColor, var7_PrincipledBSDF_Metallic, var8_PrincipledBSDF_Specular, var9_PrincipledBSDF_Roughness, var10_PrincipledBSDF_Clearcoat, var11_PrincipledBSDF_ClearcoatRoughness, var12_PrincipledBSDF_Anisotropic, var13_PrincipledBSDF_Transmission, var14_PrincipledBSDF_IOR, var15_PrincipledBSDF_output_albedo, var16_PrincipledBSDF_output_sss_strength, var17_PrincipledBSDF_output_metallic, var18_PrincipledBSDF_output_specular, var19_PrincipledBSDF_output_roughness, var20_PrincipledBSDF_output_clearcoat, var21_PrincipledBSDF_output_clearcoat_gloss, var22_PrincipledBSDF_output_anisotropy, var23_PrincipledBSDF_output_transmission, var24_PrincipledBSDF_output_ior);
+	
+	// node: Principled BSDF
+	// type: ShaderNodeBsdfPrincipled
+	vec4 var2_PrincipledBSDF_BaseColor;
+	var2_PrincipledBSDF_BaseColor = vec4(0.800000011920929, 0.800000011920929, 0.800000011920929, 1.0);
+	float var3_PrincipledBSDF_Subsurface;
+	var3_PrincipledBSDF_Subsurface = 0.0;
+	vec4 var4_PrincipledBSDF_SubsurfaceColor;
+	var4_PrincipledBSDF_SubsurfaceColor = vec4(0.699999988079071, 0.10000000149011612, 0.10000000149011612, 1.0);
+	float var5_PrincipledBSDF_Metallic;
+	var5_PrincipledBSDF_Metallic = 1.0;
+	float var6_PrincipledBSDF_Specular;
+	var6_PrincipledBSDF_Specular = 0.5;
+	float var7_PrincipledBSDF_Roughness;
+	var7_PrincipledBSDF_Roughness = 0.12921348214149475;
+	float var8_PrincipledBSDF_Clearcoat;
+	var8_PrincipledBSDF_Clearcoat = 0.0;
+	float var9_PrincipledBSDF_ClearcoatRoughness;
+	var9_PrincipledBSDF_ClearcoatRoughness = 0.029999999329447746;
+	float var10_PrincipledBSDF_Anisotropic;
+	var10_PrincipledBSDF_Anisotropic = 1.0;
+	float var11_PrincipledBSDF_Transmission;
+	var11_PrincipledBSDF_Transmission = 0.0;
+	float var12_PrincipledBSDF_IOR;
+	var12_PrincipledBSDF_IOR = 1.4500000476837158;
+	vec3 var13_out_albedo;
+	float var14_out_sss_strength;
+	float var15_out_metallic;
+	float var16_out_specular;
+	float var17_out_roughness;
+	float var18_out_clearcoat;
+	float var19_out_clearcoat_gloss;
+	float var20_out_anisotropy;
+	float var21_out_transmission;
+	float var22_out_ior;
+	node_bsdf_principled(var2_PrincipledBSDF_BaseColor, var3_PrincipledBSDF_Subsurface, var4_PrincipledBSDF_SubsurfaceColor, var5_PrincipledBSDF_Metallic, var6_PrincipledBSDF_Specular, var7_PrincipledBSDF_Roughness, var8_PrincipledBSDF_Clearcoat, var9_PrincipledBSDF_ClearcoatRoughness, var10_PrincipledBSDF_Anisotropic, var11_PrincipledBSDF_Transmission, var12_PrincipledBSDF_IOR, var13_out_albedo, var14_out_sss_strength, var15_out_metallic, var16_out_specular, var17_out_roughness, var18_out_clearcoat, var19_out_clearcoat_gloss, var20_out_anisotropy, var21_out_transmission, var22_out_ior);
+	// convert from z-up to y-up
 	var1_TextureCoordinate_Object = mat3(vec3(1, 0, 0), vec3(0, 0, -1), vec3(0, 1, 0)) * var1_TextureCoordinate_Object;
+	// convert from world space to view space
 	var1_TextureCoordinate_Object = normalize(INV_CAMERA_MATRIX * vec4(var1_TextureCoordinate_Object, 0.0)).xyz;
-	ALBEDO = var15_PrincipledBSDF_output_albedo;
-	SSS_STRENGTH = var16_PrincipledBSDF_output_sss_strength;
-	SPECULAR = var18_PrincipledBSDF_output_specular;
-	METALLIC = var17_PrincipledBSDF_output_metallic;
-	ROUGHNESS = var19_PrincipledBSDF_output_roughness;
-	CLEARCOAT = var20_PrincipledBSDF_output_clearcoat;
-	CLEARCOAT_GLOSS = var21_PrincipledBSDF_output_clearcoat_gloss;
-	ANISOTROPY = var22_PrincipledBSDF_output_anisotropy;
+	
+	ALBEDO = var13_out_albedo;
+	SSS_STRENGTH = var14_out_sss_strength;
+	SPECULAR = var16_out_specular;
+	METALLIC = var15_out_metallic;
+	ROUGHNESS = var17_out_roughness;
+	CLEARCOAT = var18_out_clearcoat;
+	CLEARCOAT_GLOSS = var19_out_clearcoat_gloss;
+	// transmission usually does not work..
+	// TRANSMISSION = vec3(1.0, 1.0, 1.0) * var21_out_transmission;
+	// uncomment it only when you set diffuse mode to oren nayar
+	// ROUGHNESS = oren_nayar_rougness
+	ANISOTROPY = var20_out_anisotropy;
 	TANGENT = normalize(cross(cross(var1_TextureCoordinate_Object, NORMAL), NORMAL));
 	BINORMAL = cross(TANGENT, NORMAL);
 }
