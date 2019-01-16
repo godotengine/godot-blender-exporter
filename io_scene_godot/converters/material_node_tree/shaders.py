@@ -7,6 +7,12 @@ from .shader_functions import find_function_by_name
 from ...structures import Array, ValidationError
 
 
+def _clear_variable_name(raw_var_name):
+    """Remove illegal charactors from given name and
+    return the cleared one"""
+    return re.sub(r'\W', '', raw_var_name)
+
+
 class Variable:
     """A variable in material shader scripts"""
 
@@ -64,6 +70,10 @@ class Value:
 class FragmentBSDFContainer:
     """Several attributes altogether represents
     blender shader output closure"""
+    # 'roughness' mixing of mix_shader and add_shader, there are two
+    # different 'roughness' among all the shaders. one is Oren Nayar
+    # roughness term used in diffuse shader, the other one is ggx roughness
+    # used in glossy, principle, etc.
     _ATTRIBUTES_META = collections.OrderedDict([
         ('albedo', 'vec3'),
         ('alpha', 'float'),
@@ -71,6 +81,7 @@ class FragmentBSDFContainer:
         ('specular', 'float'),
         ('metallic', 'float'),
         ('roughness', 'float'),
+        ('oren_nayar_roughness', 'float'),
         ('clearcoat', 'float'),
         ('clearcoat_gloss', 'float'),
         ('anisotropy', 'float'),
@@ -134,6 +145,22 @@ class BaseShader:
             code_pattern.format(*tuple([str(x) for x in variables]))
         )
 
+    def append_code_lines_left(self, lines):
+        """Format a line of code string and append it to codes"""
+        for i, line in enumerate(lines):
+            assert line[-1] == ';'
+            self.code_array.insert(i, line)
+
+    def append_comment_line(self, comment):
+        """Add a line of comment"""
+        self.code_array.append(
+            '// ' + comment
+        )
+
+    def append_empty_line(self):
+        """Add an empty linef"""
+        self.code_array.append("")
+
     def _append_defination_code(self, var_to_define):
         definition_str = '{} {};'.format(
             var_to_define.type, str(var_to_define)
@@ -147,7 +174,7 @@ class BaseShader:
             self._variable_count,
             var_base_name,
         )
-        var_name = re.sub(r'\W', '', raw_var_name)
+        var_name = _clear_variable_name(raw_var_name)
         new_var = Variable(var_type, var_name)
         self._append_defination_code(new_var)
         return new_var
@@ -169,12 +196,11 @@ class BaseShader:
             )
 
         self._variable_count += 1
-        raw_var_name = 'var{}_{}_{}'.format(
+        raw_var_name = 'var{}_{}'.format(
             self._variable_count,
-            node.name,
             socket.identifier
         )
-        var_name = re.sub(r'\W', '', raw_var_name)
+        var_name = _clear_variable_name(raw_var_name)
         new_var = Variable(var_type, var_name)
         self._append_defination_code(new_var)
         return new_var
@@ -223,7 +249,7 @@ class BaseShader:
         if (to_socket_type == 'VALUE' and
                 from_socket_type in ('VECTOR', 'RGBA')):
             converted_var = self.define_variable(
-                'float', 'auto_insert_RGBtoBW'
+                'float', 'converted_' + str(src_variable)
             )
             if from_socket_type == 'VECTOR':
                 src_variable = Value('vec4', (src_variable, 1.0))
@@ -240,7 +266,7 @@ class BaseShader:
 
         if to_socket_type == 'RGBA' and from_socket_type == 'VECTOR':
             converted_var = self.define_variable(
-                'vec4', 'auto_insert_VecToColor'
+                'vec4', 'converted_' + str(src_variable)
             )
             self.append_code_line(
                 ('{} = vec4(clamp({}, vec3(0.0, 0.0, 0.0),'
@@ -251,7 +277,7 @@ class BaseShader:
 
         if to_socket_type == 'VECTOR' and from_socket_type == 'RGBA':
             converted_var = self.define_variable(
-                'vec3', 'auto_insert_ColorToVec'
+                'vec3', 'converted_' + str(src_variable)
             )
             self.append_code_line(
                 '{} = {}.xyz;', (converted_var, src_variable)
@@ -288,6 +314,7 @@ class BaseShader:
     def zup_to_yup(self, var_to_convert):
         """Convert a vec3 from z-up space to y-up space"""
         assert var_to_convert.type == 'vec3'
+        self.append_comment_line("convert from z-up to y-up")
         self.append_code_line(
             '{} = mat3(vec3(1, 0, 0), vec3(0, 0, -1), vec3(0, 1, 0)) * {};',
             (var_to_convert, var_to_convert)
@@ -296,6 +323,7 @@ class BaseShader:
     def yup_to_zup(self, var_to_convert):
         """Convert a vec3 from y-up space to z-up space"""
         assert var_to_convert.type == 'vec3'
+        self.append_comment_line("convert from y-up to z-up")
         self.append_code_line(
             '{} = mat3(vec3(1, 0, 0), vec3(0, 0, 1), vec3(0, -1, 0)) * {};',
             (var_to_convert, var_to_convert)
@@ -328,26 +356,28 @@ class FragmentShader(BaseShader):
     def invert_view_mat(self):
         """Return inverted view matrix"""
         if self._invert_view_mat is None:
-            self._invert_view_mat = self.define_variable(
-                'mat4', 'inverted_view_matrix'
-            )
-            self.append_code_line(
-                '{} = inverse({});',
-                (self._invert_view_mat, Variable('mat4', 'INV_CAMERA_MATRIX'))
-            )
+            self._invert_view_mat = Variable('mat4', 'inverted_view_matrix')
+            self.append_code_lines_left([
+                'mat4 {};'.format(str(self._invert_view_mat)),
+                '{} = inverse({});'.format(
+                    str(self._invert_view_mat),
+                    str(Variable('mat4', 'INV_CAMERA_MATRIX'))
+                )
+            ])
         return self._invert_view_mat
 
     @property
     def invert_model_mat(self):
         """Return inverted model matrix"""
         if self._invert_model_mat is None:
-            self._invert_model_mat = self.define_variable(
-                'mat4', 'inverted_model_matrix'
-            )
-            self.append_code_line(
-                '{} = inverse({});',
-                (self._invert_model_mat, Variable('mat4', 'WORLD_MATRIX'))
-            )
+            self._invert_model_mat = Variable('mat4', 'inverted_model_matrix')
+            self.append_code_lines_left([
+                'mat4 {};'.format(str(self._invert_model_mat)),
+                '{} = inverse({});'.format(
+                    str(self._invert_model_mat),
+                    str(Variable('mat4', 'WORLD_MATRIX'))
+                )
+            ])
         return self._invert_model_mat
 
     def add_bsdf_surface(self, bsdf_output):
@@ -361,12 +391,19 @@ class FragmentShader(BaseShader):
                     '{} = {};'.format(name.upper(), str(var))
                 )
         # XXX: transmission for thick object is not supported in godot
-        # transmission_var = bsdf_output.get_attribute('transmission')
-        # if transmission_var is not None:
-        #     self.append_code_line(
-        #         'TRANSMISSION = vec3(1.0, 1.0, 1.0) * {};'
-        #         (transmission_var,)
-        #     )
+        transmission_var = bsdf_output.get_attribute('transmission')
+        if transmission_var is not None:
+            self.append_comment_line("transmission usually does not work..")
+            self.append_code_line(
+                '// TRANSMISSION = vec3(1.0, 1.0, 1.0) * {};',
+                (transmission_var,)
+            )
+
+        self.append_comment_line("uncomment it only when you set diffuse "
+                                 "mode to oren nayar")
+        self.append_comment_line(
+            'ROUGHNESS = oren_nayar_rougness'
+        )
 
         tangent = bsdf_output.get_attribute('tangent')
         anisotropy = bsdf_output.get_attribute('anisotropy')
@@ -426,6 +463,7 @@ class FragmentShader(BaseShader):
         """Convert a vec3 from view space to model space,
         note that conversion is done in y-up space"""
         assert var_to_convert.type == 'vec3'
+        self.append_comment_line("convert from view space to model space")
         if is_direction:
             self.append_code_line(
                 '{} = normalize({} * ({} * vec4({}, 0.0))).xyz;',
@@ -443,6 +481,7 @@ class FragmentShader(BaseShader):
         """Convert a vec3 from model space to view space,
         note that conversion is done in y-up space"""
         assert var_to_convert.type == 'vec3'
+        self.append_comment_line("convert from model space to view space")
         view_mat = Variable('mat4', 'INV_CAMERA_MATRIX')
         model_mat = Variable('mat4', 'WORLD_MATRIX')
         if is_direction:
@@ -460,6 +499,7 @@ class FragmentShader(BaseShader):
         """Convert a vec3 from view space to world space,
         note that it is done in y-up space"""
         assert var_to_convert.type == 'vec3'
+        self.append_comment_line("convert from view space to world space")
         if is_direction:
             self.append_code_line(
                 '{} = normalize({} * vec4({}, 0.0)).xyz;',
@@ -475,6 +515,7 @@ class FragmentShader(BaseShader):
         """Convert a vec3 from world space to view space,
         note that it is done in y-up space"""
         assert var_to_convert.type == 'vec3'
+        self.append_comment_line("convert from world space to view space")
         view_mat = Variable('mat4', 'INV_CAMERA_MATRIX')
         if is_direction:
             self.append_code_line(
@@ -558,7 +599,7 @@ class ShaderGlobals:
             self._uniform_var_count,
             uni_base_name,
         )
-        var_name = re.sub(r'\W', '', raw_var_name)
+        var_name = _clear_variable_name(raw_var_name)
         new_var = Variable(uni_type, var_name)
         if hint is not None:
             def_str = 'uniform {} {} : {};'.format(uni_type, var_name, hint)

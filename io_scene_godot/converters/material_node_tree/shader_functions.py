@@ -85,7 +85,7 @@ void node_bsdf_principled(vec4 color, float subsurface, vec4 subsurface_color,
     sss_strength_out = subsurface;
     metallic_out = metallic;
     specular_out = pow((IOR - 1.0)/(IOR + 1.0), 2)/0.08;
-    roughness_out = sqrt(roughness);
+    roughness_out = roughness;
     clearcoat_out = clearcoat * (1.0 - transmission);
     clearcoat_gloss_out = 1.0 - clearcoat_roughness;
     anisotropy_out = clamp(anisotropy, 0.0, 1.0);
@@ -147,7 +147,7 @@ void node_bsdf_diffuse(vec4 color, float roughness, out vec3 albedo,
         output_sockets=[
             "albedo",
             "specular",
-            "roughness",
+            "oren_nayar_roughness",
         ]
     ),
 
@@ -156,7 +156,7 @@ void node_bsdf_diffuse(vec4 color, float roughness, out vec3 albedo,
 void node_bsdf_glossy(vec4 color, float roughness, out vec3 albedo,
         out float metallic_out, out float roughness_out){
     albedo = color.rgb;
-    roughness_out = sqrt(roughness);
+    roughness_out = roughness;
     metallic_out = 1.0;
 }
 """,
