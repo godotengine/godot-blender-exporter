@@ -74,7 +74,10 @@ def traversal_tree_from_socket(shader, root_socket):
             cur_node = next_node
 
         visitor = find_node_visitor(shader, cur_node)
+        shader.append_comment_line("node: {}".format(cur_node.name))
+        shader.append_comment_line("type: {}".format(cur_node.bl_idname))
         visitor(shader, cur_node)
+        shader.append_empty_line()
 
         if stack:
             cur_node = stack.pop()
