@@ -432,8 +432,6 @@ def build_linear_interp_value_track(track_path, action_strip, converter,
 
 class AnimationResource(InternalResource):
     """Internal resource with type Animation"""
-    fps = bpy.context.scene.render.fps
-
     def __init__(self, name):
         super().__init__('Animation', name)
         self['step'] = 0.1
@@ -444,7 +442,9 @@ class AnimationResource(InternalResource):
         """add a track to animation resource"""
         node_path_str = track.path.to_string()
         track_length = (
-            track.frame_end() - bpy.context.scene.frame_start) / self.fps
+            (track.frame_end() - bpy.context.scene.frame_start) /
+            bpy.context.scene.render.fps
+        )
         if track_length > self['length']:
             self['length'] = track_length
 
