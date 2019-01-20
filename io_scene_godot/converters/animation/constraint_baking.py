@@ -89,7 +89,7 @@ def bake_constraint_to_action(blender_object, base_action, bake_type,
     else:
         baked_action = bpy_extras.anim_utils.bake_action(
             obj=blender_object,
-            frames=range(frame_range[0], frame_range[1]),
+            frames=range(frame_range[0], frame_range[1] + 1),
             only_selected=False,
             action=action_bake_into,
             do_pose=do_pose,
