@@ -106,7 +106,8 @@ def export_object_link_material(escn_file, export_settings, mesh_object,
     for index, slot in enumerate(mesh_object.material_slots):
         if slot.link == 'OBJECT' and slot.material is not None:
             surface_id = mesh_resource.get_surface_id(index)
-            if surface_id is not None:
+            if (surface_id is not None and
+                    export_settings['use_export_material']):
                 gd_node['material/{}'.format(surface_id)] = export_material(
                     escn_file,
                     export_settings,
@@ -360,7 +361,8 @@ class MeshResourceExporter:
                 surfaces.append(surface)
                 if mesh.materials:
                     mat = mesh.materials[face.material_index]
-                    if mat is not None:
+                    if (mat is not None and
+                            export_settings['use_export_material']):
                         surface.material = export_material(
                             escn_file,
                             export_settings,

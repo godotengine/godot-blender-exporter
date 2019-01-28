@@ -56,7 +56,7 @@ class ExportGodot(bpy.types.Operator, ExportHelper):
         items=(
             ("EMPTY", "Empty", ""),
             ("CAMERA", "Camera", ""),
-            ("LIGHT", "LIGHT", ""),
+            ("LIGHT", "Light", ""),
             ("ARMATURE", "Armature", ""),
             ("MESH", "Mesh", ""),
             # ("CURVE", "Curve", ""),
@@ -71,15 +71,21 @@ class ExportGodot(bpy.types.Operator, ExportHelper):
         },
     )
 
-    use_export_shape_key = BoolProperty(
-        name="Export Shape Key",
-        description="Export all the shape keys in mesh objects",
+    use_visible_objects = BoolProperty(
+        name="Only Visible Object",
+        description="Export only objects which are in the current view layer "
+                    "and are visible.",
         default=True,
     )
     use_export_selected = BoolProperty(
-        name="Selected Objects",
+        name="Only Selected Objects",
         description="Export only selected objects",
         default=False,
+    )
+    use_mesh_modifiers = BoolProperty(
+        name="Apply Modifiers",
+        description="Apply modifiers to mesh objects (on a copy!).",
+        default=True,
     )
     use_exclude_ctrl_bone = BoolProperty(
         name="Exclude Control Bones",
@@ -94,15 +100,14 @@ class ExportGodot(bpy.types.Operator, ExportHelper):
                     "own AnimationPlayer hold their actions",
         default=True,
     )
-    use_mesh_modifiers = BoolProperty(
-        name="Apply Modifiers",
-        description="Apply modifiers to mesh objects (on a copy!).",
+    use_export_material = BoolProperty(
+        name="Export Materinal",
+        description="Export all the material associated with mesh surfaces",
         default=True,
     )
-    use_visible_objects = BoolProperty(
-        name="Visible Object",
-        description="Export only objects which are in the current view layer "
-                    "and are visible.",
+    use_export_shape_key = BoolProperty(
+        name="Export Shape Key",
+        description="Export all the shape keys in mesh objects",
         default=True,
     )
     use_stashed_action = BoolProperty(
