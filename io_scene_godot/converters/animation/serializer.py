@@ -52,13 +52,13 @@ class TransformFrame:
     matrix."""
     ATTRIBUTES = {'location', 'scale', 'rotation_quaternion', 'rotation_euler'}
 
-    def __init__(self):
+    def __init__(self, rotation_mode='QUATERNION'):
         self.location = mathutils.Vector((0, 0, 0))
         self.scale = mathutils.Vector((1, 1, 1))
 
-        self.rotation_mode = 'QUATERNION'
+        self.rotation_mode = rotation_mode
         self.rotation_euler = mathutils.Euler((0, 0, 0))
-        self.rotation_quaternion = mathutils.Quaternion()
+        self.rotation_quaternion = mathutils.Quaternion((1.0, 0.0, 0.0, 0.0))
 
     def __eq__(self, other):
         """Overrides the default implementation"""
@@ -69,21 +69,20 @@ class TransformFrame:
         return False
 
     @classmethod
-    def factory(cls, trans_mat, rotation_mode):
-        """Factory function, create cls from a transform matrix"""
-        ret = cls()
-        ret.location = trans_mat.to_translation()
-        # fixme: lose negative scale
-        ret.scale = trans_mat.to_scale()
+    def factory(cls, xform_matrix, rotation_mode='QUATERNION'):
+        """Factory method return an instance created from a transform matrix"""
+        xform_frame = cls()
+        xform_frame.rotation_mode = rotation_mode
+        xform_frame.location = xform_matrix.to_translation()
+        xform_frame.rotation_quaternion = xform_matrix.to_quaternion()
+        # FIXME: lose negative scale
+        xform_frame.scale = xform_matrix.to_scale()
 
-        # quaternion and euler fcurves may both exist in fcurves
-        ret.rotation_mode = rotation_mode
-        ret.rotation_quaternion = trans_mat.to_quaternion()
         if rotation_mode == 'QUATERNION':
-            ret.rotation_euler = trans_mat.to_euler()
+            xform_frame.rotation_euler = xform_matrix.to_euler()
         else:
-            ret.rotation_euler = trans_mat.to_euler(rotation_mode)
-        return ret
+            xform_frame.rotation_euler = xform_matrix.to_euler(rotation_mode)
+        return xform_frame
 
     def update(self, attribute, array_index, value):
         """Use fcurve data to update the frame"""
@@ -254,7 +253,7 @@ class TransformTrack(Track):
 
     def blend_frames(self, frame_val1, frame_val2):
         """Blend two transform frames into one"""
-        # fixme: currently only blend with ADD
+        # FIXME: currently only blend with ADD
         new_frame = TransformFrame()
         for frame in (frame_val1, frame_val2):
             if frame.rotation_mode != 'QUATERNION':
@@ -335,7 +334,7 @@ class ValueTrack(Track):
         self.interp = interp
 
     def blend_frames(self, frame_val1, frame_val2):
-        # xxx: default use REPLACE
+        # XXX: default use REPLACE
         return max(frame_val1, frame_val2)
 
     def convert_to_keys_object(self):
@@ -458,6 +457,23 @@ class AnimationResource(InternalResource):
             self[track_id_str + '/path'] = node_path_str
             self[track_id_str + '/interp'] = track.interp
             self[track_id_str + '/keys'] = track
+
+    # pylint: disable-msg=too-many-arguments
+    def add_obj_xform_track(self, node_type, track_path,
+                            xform_frames_list, frame_range,
+                            parent_mat_inverse=mathutils.Matrix.Identity(4)):
+        """Add a object transform track to AnimationResource"""
+        track = TransformTrack(
+            track_path,
+            frames_iter=range(frame_range[0], frame_range[1]),
+            values_iter=xform_frames_list,
+        )
+        track.set_parent_inverse(parent_mat_inverse)
+        if node_type in ("SpotLight", "DirectionalLight",
+                         "Camera", "CollisionShape"):
+            track.is_directional = True
+
+        self.add_track(track)
 
     def add_attribute_track(self, action_strip, fcurve,
                             converter, node_path):
