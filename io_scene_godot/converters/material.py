@@ -71,7 +71,8 @@ def generate_material_resource(escn_file, export_settings, material):
         # to convert material to external file
         material_rsc_name = ''
 
-    if engine == 'CYCLES' and material.node_tree is not None:
+    if (engine in ('CYCLES', 'BLENDER_EEVEE') and
+            material.node_tree is not None):
         mat = InternalResource("ShaderMaterial", material_rsc_name)
         try:
             export_node_tree(

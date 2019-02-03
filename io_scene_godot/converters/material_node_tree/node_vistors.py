@@ -346,11 +346,20 @@ def visit_texture_coord_node(shader, node):
 
 def visit_rgb_node(shader, node):
     """Convert rgb input node to shader scripts"""
-    output = node.outputs[0]
-    shader.assign_variable_to_socket(
-        output,
-        Value.create_from_blender_value(output.default_value)
-    )
+    rgb_socket = node.outputs[0]
+    var = shader.define_variable_from_socket(node, rgb_socket)
+    shader.append_assignment_code(
+        var, Value.create_from_blender_value(rgb_socket.default_value))
+    shader.assign_variable_to_socket(rgb_socket, var)
+
+
+def visit_value_node(shader, node):
+    """Visit ShaderNodeValue"""
+    value_socket = node.outputs['Value']
+    var = shader.define_variable_from_socket(node, value_socket)
+    shader.append_assignment_code(
+        var, Value.create_from_blender_value(value_socket.default_value))
+    shader.assign_variable_to_socket(value_socket, var)
 
 
 def visit_image_texture_node(shader, node):
@@ -525,6 +534,7 @@ NODE_VISITOR_FUNCTIONS = {
     'ShaderNodeAddShader': visit_add_shader_node,
     'ShaderNodeTangent': visit_tangent_node,
     'ShaderNodeUVMap': visit_uvmap_node,
+    'ShaderNodeValue': visit_value_node,
 }
 
 
