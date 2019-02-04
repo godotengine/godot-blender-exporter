@@ -2,19 +2,16 @@
 AnimationPlayer as well as distribute Blender action into various
 action exporting functions"""
 
-import bpy
 from .action import (
     export_camera_action,
     export_shapekey_action,
     export_light_action,
-    export_transform_action
+    export_transform_action,
+    export_constrained_xform_action,
 )
 from .constraint_baking import (
-    bake_constraint_to_action,
     check_object_constraint,
     check_pose_constraint,
-    action_baking_finalize,
-    action_baking_initialize
 )
 from .serializer import get_animation_player
 from .action import ActionStrip
@@ -35,11 +32,8 @@ class ObjectAnimationExporter:
         self.godot_node = godot_node
         self.blender_object = blender_object
 
-        self.action_exporter_func = ACTION_EXPORTER_MAP[action_type]
         self.animation_player = None
 
-        self.has_object_constraint = False
-        self.has_pose_constraint = False
         self.need_baking = False
 
         self.unmute_nla_tracks = []
@@ -47,6 +41,11 @@ class ObjectAnimationExporter:
 
         self.check_baking_condition(action_type)
         self.preprocess_nla_tracks(blender_object)
+
+        if not self.need_baking:
+            self.action_exporter_func = ACTION_EXPORTER_MAP[action_type]
+        else:
+            self.action_exporter_func = export_constrained_xform_action
 
     def check_baking_condition(self, action_type):
         """Check whether the animated object has any constraint and
@@ -56,8 +55,6 @@ class ObjectAnimationExporter:
         self.need_baking = (
             action_type == 'transform' and (has_obj_cst or has_pose_cst)
         )
-        self.has_object_constraint = has_obj_cst
-        self.has_pose_constraint = has_pose_cst
 
     def preprocess_nla_tracks(self, blender_object):
         """Iterative through nla tracks, separately store mute and unmuted
@@ -72,57 +69,32 @@ class ObjectAnimationExporter:
                 else:
                     self.mute_nla_tracks.append(nla_track)
 
-    def bake_to_new_action(self, action_to_bake):
-        """Baking object and pose constraint altogether.
-
-        Note that it accept a action to bake (which would not be modified)
-        and always return a new created baked actiony"""
-        if self.has_object_constraint and self.has_pose_constraint:
-            tmp = bake_constraint_to_action(
-                self.blender_object, action_to_bake, "OBJECT", False
-            )
-            ret = bake_constraint_to_action(
-                self.blender_object, action_to_bake, "POSE", True
-            )
-        elif self.has_pose_constraint:
-            ret = bake_constraint_to_action(
-                self.blender_object, action_to_bake, "POSE", False
-            )
-        elif self.has_object_constraint:
-            ret = bake_constraint_to_action(
-                self.blender_object, action_to_bake, "OBJECT", False
-            )
-        return ret
-
     def export_active_action(self, escn_file, active_action):
         """Export the active action, if needed, would call bake.
 
         Note that active_action maybe None, which would happen when object has
         some constraint (so even no action it is still animated)"""
-        if self.need_baking:
-            action_baking_initialize(active_action)
-            action_active_to_export = self.bake_to_new_action(active_action)
+        if active_action is None:
+            # object has constraints on other objects
+            assert self.need_baking
+            anim_rsc_name = self.blender_object.name + 'Action'
         else:
-            action_active_to_export = active_action
+            anim_rsc_name = active_action.name
 
         if self.animation_player.active_animation is None:
             self.animation_player.add_active_animation_resource(
-                escn_file, action_active_to_export.name
+                escn_file, anim_rsc_name
             )
 
         self.action_exporter_func(
             self.godot_node,
             self.animation_player,
             self.blender_object,
-            ActionStrip(action_active_to_export),
+            ActionStrip(active_action),
             self.animation_player.active_animation
         )
 
-        if self.need_baking:
-            # remove new created action
-            bpy.data.actions.remove(action_active_to_export)
-            action_baking_finalize(active_action)
-        else:
+        if not self.need_baking:
             # here export unmuted nla_tracks into animation resource,
             # this is not needed for baking, as baking has applied to
             # active action
@@ -175,28 +147,22 @@ class ObjectAnimationExporter:
             escn_file, anim_name
         )
 
+        if self.need_baking:
+            stashed_track.mute = False
+
         for strip in stashed_track.strips:
             if strip.action:
-                if self.need_baking:
-                    action_baking_initialize(strip.action)
-                    action_to_export = self.bake_to_new_action(strip.action)
-                else:
-                    action_to_export = strip.action
-
                 self.action_exporter_func(
                     self.godot_node,
                     self.animation_player,
                     self.blender_object,
-                    ActionStrip(strip, action_to_export),
+                    ActionStrip(strip),
                     anim_resource
                 )
 
-                if self.need_baking:
-                    # remove baked action
-                    bpy.data.actions.remove(action_to_export)
-                    action_baking_finalize(strip.action)
-
-        if not self.need_baking:
+        if self.need_baking:
+            stashed_track.mute = True
+        else:  # not self.need_baking:
             # if baking, nla_tracks are already baked into strips
             for nla_track in self.unmute_nla_tracks:
                 for strip in nla_track.strips:
@@ -245,8 +211,11 @@ def export_animation_data(escn_file, export_settings, godot_node,
     # export actions in nla_tracks, each exported to seperate
     # animation resources
     if export_settings['use_stashed_action']:
+        if blender_object.animation_data:
+            # clear active action, isolate NLA track
+            blender_object.animation_data.action = None
         for stashed_track in anim_exporter.mute_nla_tracks:
             anim_exporter.export_stashed_track(escn_file, stashed_track)
 
-    if active_action is not None:
+    if blender_object.animation_data is not None:
         blender_object.animation_data.action = active_action
