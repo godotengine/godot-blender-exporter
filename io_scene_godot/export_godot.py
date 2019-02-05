@@ -159,7 +159,7 @@ class GodotExporter:
             if not obj.visible_get():
                 return False
 
-        if self.config["use_export_selected"] and not obj.select:
+        if self.config["use_export_selected"] and not obj.select_get():
             return False
 
         self.exporting_objects.add(obj)
