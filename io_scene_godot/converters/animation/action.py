@@ -9,6 +9,7 @@ import copy
 import bpy
 import mathutils
 from .serializer import FloatTrack, TransformTrack, ColorTrack, TransformFrame
+from .constraint_baking import check_object_constraint
 from ...structures import (NodePath, fix_bone_attachment_location)
 
 
@@ -35,7 +36,7 @@ def get_strip_frame_range(strip):
 class ActionStrip:
     """Abstract of blender action strip, it may override attributes
     of an action object"""
-    def __init__(self, action_or_strip, action_override=None):
+    def __init__(self, action_or_strip):
         self.action = None
         self.frame_range = (0, 0)
 
@@ -47,21 +48,18 @@ class ActionStrip:
 
         if isinstance(action_or_strip, bpy.types.NlaStrip):
             strip = action_or_strip
-            if action_override:
-                self.action = action_override
-            else:
-                self.action = strip.action
+            self.action = strip.action
             self._fk = (
                 (strip.frame_end - strip.frame_start) /
                 (self.action.frame_range[1] - self.action.frame_range[0])
             )
             self._fb = self.action.frame_range[1] - self._fk * strip.frame_end
             self.frame_range = get_strip_frame_range(strip)
-        else:
-            if action_override:
-                assert False
+        elif isinstance(action_or_strip, bpy.types.Action):
             self.action = action_or_strip
             self.frame_range = get_action_frame_range(self.action)
+        else:  # action_or_strip is None
+            self.frame_range = (0, 190)
 
     def evaluate_fcurve(self, fcurve, frame):
         """Evaluate a value of fcurve, DO NOT use fcurve.evalute, as
@@ -93,12 +91,96 @@ def split_fcurve_data_path(data_path):
     return path_list[0], path_list[1]
 
 
+def has_obj_fcurves(action_strip):
+    """Check whether action has object transform information"""
+    if action_strip.action is None:
+        return False
+    for fcurve in action_strip.action.fcurves:
+        obj_path, attribute = split_fcurve_data_path(fcurve.data_path)
+        if obj_path == '':
+            return True
+    return False
+
+
+def export_constrained_xform_action(godot_node, animation_player,
+                                    blender_object, action_strip,
+                                    animation_resource):
+    """Export transform animation of any object has constraints,
+    it use frame_set to traversal each frame, so it's costly"""
+    first_frame, last_frame = action_strip.frame_range
+
+    obj_xform_mats = list()
+    pbone_xform_mats = collections.OrderedDict()
+
+    scene = bpy.context.scene
+    frame_backup = scene.frame_current
+    for frame in range(first_frame, last_frame):
+        scene.frame_set(frame)
+        obj_xform_mats.append(blender_object.matrix_local.copy())
+        if blender_object.pose is not None:
+            for pbone in blender_object.pose.bones:
+                if pbone.name not in pbone_xform_mats:
+                    pbone_xform_mats[pbone.name] = list()
+                pbone_xform_mats[pbone.name].append(
+                    blender_object.convert_space(
+                        pose_bone=pbone, matrix=pbone.matrix,
+                        from_space='POSE', to_space='LOCAL'
+                    )
+                )
+    scene.frame_set(frame_backup)
+
+    if (check_object_constraint(blender_object) or
+            has_obj_fcurves(action_strip)):
+        xform_frames_list = [
+            TransformFrame.factory(mat)
+            for mat in obj_xform_mats
+        ]
+
+        track_path = NodePath(
+            animation_player.parent.get_path(),
+            godot_node.get_path()
+        )
+
+        if godot_node.parent.get_type() == 'BoneAttachment':
+            xform_frames_list = [
+                fix_bone_attachment_location(blender_object, x.location)
+                for x in xform_frames_list
+            ]
+
+        animation_resource.add_obj_xform_track(
+            godot_node.get_type(), track_path,
+            xform_frames_list, action_strip.frame_range,
+            # no need for parent_inverse, as it is directly access matrix_local
+        )
+
+    for pbone_name, pbone_xform_mat_list in pbone_xform_mats.items():
+        if godot_node.find_bone_id(pbone_name) != -1:
+            pbone_xform_frames_list = [
+                TransformFrame.factory(mat)
+                for mat in pbone_xform_mat_list
+            ]
+
+            track_path = NodePath(
+                animation_player.parent.get_path(),
+                godot_node.get_path(),
+                godot_node.find_bone_name(pbone_name),
+            )
+
+            animation_resource.add_track(
+                TransformTrack(
+                    track_path,
+                    frames_iter=range(first_frame, last_frame),
+                    values_iter=pbone_xform_frames_list,
+                )
+            )
+
+
 def export_transform_action(godot_node, animation_player, blender_object,
                             action_strip, animation_resource):
     """Export a action with bone and object transform"""
-    def init_transform_frame_values(object_path, blender_object, godot_node,
-                                    first_frame, last_frame):
-        """Initialize a list of TransformFrame for every animated object"""
+    def init_transform_frames_list(object_path, blender_object, godot_node,
+                                   first_frame, last_frame):
+        """Initialize a list of TransformFrame for an animated object"""
         if object_path.startswith('pose'):
             bone_name = blender_path_to_bone_name(object_path)
 
@@ -136,7 +218,7 @@ def export_transform_action(godot_node, animation_player, blender_object,
         ]
 
     first_frame, last_frame = action_strip.frame_range
-    transform_frame_values_map = collections.OrderedDict()
+    xform_frames_list_map = collections.OrderedDict()
     for fcurve in action_strip.action.fcurves:
         # fcurve data are seperated into different channels,
         # for example a transform action would have several fcurves
@@ -145,9 +227,9 @@ def export_transform_action(godot_node, animation_player, blender_object,
         object_path, attribute = split_fcurve_data_path(fcurve.data_path)
 
         if attribute in TransformFrame.ATTRIBUTES:
-            if object_path not in transform_frame_values_map:
+            if object_path not in xform_frames_list_map:
 
-                frame_values = init_transform_frame_values(
+                frame_values = init_transform_frames_list(
                     object_path, blender_object,
                     godot_node, first_frame, last_frame
                 )
@@ -156,20 +238,18 @@ def export_transform_action(godot_node, animation_player, blender_object,
                 if not frame_values:
                     continue
 
-                transform_frame_values_map[object_path] = frame_values
+                xform_frames_list_map[object_path] = frame_values
 
             for frame in range(first_frame, last_frame):
-                transform_frame_values_map[
-                    object_path][frame - first_frame].update(
-                        attribute,
-                        fcurve.array_index,
-                        action_strip.evaluate_fcurve(fcurve, frame)
-                    )
+                xform_frames_list_map[object_path][frame - first_frame].update(
+                    attribute,
+                    fcurve.array_index,
+                    action_strip.evaluate_fcurve(fcurve, frame)
+                )
 
-    for object_path, frame_value_list in transform_frame_values_map.items():
+    for object_path, frame_value_list in xform_frames_list_map.items():
         if object_path == '':
-            # object_path equals '' represents node itself
-
+            # empty object_path represents transform of object itself
             track_path = NodePath(
                 animation_player.parent.get_path(),
                 godot_node.get_path()
@@ -181,16 +261,11 @@ def export_transform_action(godot_node, animation_player, blender_object,
                     for x in frame_value_list
                 ]
 
-            track = TransformTrack(
-                track_path,
-                frames_iter=range(first_frame, last_frame),
-                values_iter=frame_value_list,
+            animation_resource.add_obj_xform_track(
+                godot_node.get_type(), track_path,
+                frame_value_list, action_strip.frame_range,
+                blender_object.matrix_parent_inverse
             )
-            track.set_parent_inverse(blender_object.matrix_parent_inverse)
-            if godot_node.get_type() in ("SpotLight", "DirectionalLight",
-                                         "Camera", "CollisionShape"):
-                track.is_directional = True
-            animation_resource.add_track(track)
 
         elif object_path.startswith('pose'):
             track_path = NodePath(
