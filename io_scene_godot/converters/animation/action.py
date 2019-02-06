@@ -153,26 +153,32 @@ def export_constrained_xform_action(godot_node, animation_player,
             # no need for parent_inverse, as it is directly access matrix_local
         )
 
-    for pbone_name, pbone_xform_mat_list in pbone_xform_mats.items():
-        if godot_node.find_bone_id(pbone_name) != -1:
-            pbone_xform_frames_list = [
-                TransformFrame.factory(mat)
-                for mat in pbone_xform_mat_list
-            ]
+    if godot_node.get_type() == 'Skeleton':
+        for pbone_name, pbone_xform_mat_list in pbone_xform_mats.items():
+            if godot_node.find_bone_id(pbone_name) != -1:
+                pbone_xform_frames_list = [
+                    TransformFrame.factory(mat)
+                    for mat in pbone_xform_mat_list
+                ]
 
-            track_path = NodePath(
-                animation_player.parent.get_path(),
-                godot_node.get_path(),
-                godot_node.find_bone_name(pbone_name),
-            )
-
-            animation_resource.add_track(
-                TransformTrack(
-                    track_path,
-                    frames_iter=range(first_frame, last_frame),
-                    values_iter=pbone_xform_frames_list,
+                track_path = NodePath(
+                    animation_player.parent.get_path(),
+                    godot_node.get_path(),
+                    godot_node.find_bone_name(pbone_name),
                 )
-            )
+
+                animation_resource.add_track(
+                    TransformTrack(
+                        track_path,
+                        frames_iter=range(first_frame, last_frame),
+                        values_iter=pbone_xform_frames_list,
+                    )
+                )
+    else:
+        logging.warning(
+            "Skip bone actions of Armature object not being exported. "
+            "object '%s'", blender_object.name
+        )
 
 
 def export_transform_action(godot_node, animation_player, blender_object,
@@ -187,7 +193,7 @@ def export_transform_action(godot_node, animation_player, blender_object,
             # bone fcurve in a non armature object
             if godot_node.get_type() != 'Skeleton':
                 logging.warning(
-                    "Skip a bone fcurve in a non-armature "
+                    "Skip bone fcurves of Armature object not being exported. "
                     "object '%s'",
                     blender_object.name
                 )
