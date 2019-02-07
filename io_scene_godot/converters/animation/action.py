@@ -114,19 +114,38 @@ def export_constrained_xform_action(godot_node, animation_player,
 
     scene = bpy.context.scene
     frame_backup = scene.frame_current
+
+    has_pbone_actions = (godot_node.get_type() == 'Skeleton' and
+                         blender_object.pose is not None)
+    pbone_parent_map = dict()
+    if has_pbone_actions:
+        for pbone in blender_object.pose.bones:
+            pbone_parent = pbone.parent
+            # find parent bone and ensure it is exported in godot node
+            while (pbone_parent is not None and
+                   godot_node.find_bone_id(pbone_parent.name) == -1):
+                pbone_parent = pbone_parent.parent
+            pbone_parent_map[pbone.name] = pbone_parent
+
     for frame in range(first_frame, last_frame):
         scene.frame_set(frame)
         obj_xform_mats.append(blender_object.matrix_local.copy())
-        if blender_object.pose is not None:
+        if has_pbone_actions:
             for pbone in blender_object.pose.bones:
+                pbone_parent = pbone_parent_map[pbone.name]
+                if pbone_parent is None:
+                    bone_space_xform = (
+                        pbone.bone.matrix_local.inverted_safe() @ pbone.matrix)
+                else:
+                    bone_space_xform = (
+                        (pbone_parent.bone.matrix_local.inverted_safe() @
+                         pbone.bone.matrix_local).inverted_safe() @
+                        pbone_parent.matrix.inverted_safe() @
+                        pbone.matrix)
+
                 if pbone.name not in pbone_xform_mats:
                     pbone_xform_mats[pbone.name] = list()
-                pbone_xform_mats[pbone.name].append(
-                    blender_object.convert_space(
-                        pose_bone=pbone, matrix=pbone.matrix,
-                        from_space='POSE', to_space='LOCAL'
-                    )
-                )
+                pbone_xform_mats[pbone.name].append(bone_space_xform)
     scene.frame_set(frame_backup)
 
     if (check_object_constraint(blender_object) or
@@ -153,7 +172,7 @@ def export_constrained_xform_action(godot_node, animation_player,
             # no need for parent_inverse, as it is directly access matrix_local
         )
 
-    if godot_node.get_type() == 'Skeleton':
+    if has_pbone_actions:
         for pbone_name, pbone_xform_mat_list in pbone_xform_mats.items():
             if godot_node.find_bone_id(pbone_name) != -1:
                 pbone_xform_frames_list = [
@@ -174,11 +193,6 @@ def export_constrained_xform_action(godot_node, animation_player,
                         values_iter=pbone_xform_frames_list,
                     )
                 )
-    else:
-        logging.warning(
-            "Skip bone actions of Armature object not being exported. "
-            "object '%s'", blender_object.name
-        )
 
 
 def export_transform_action(godot_node, animation_player, blender_object,
