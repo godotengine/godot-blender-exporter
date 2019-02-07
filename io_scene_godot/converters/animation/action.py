@@ -102,11 +102,23 @@ def has_obj_fcurves(action_strip):
     return False
 
 
+# pylint: disable-msg=too-many-locals
 def export_constrained_xform_action(godot_node, animation_player,
                                     blender_object, action_strip,
                                     animation_resource):
     """Export transform animation of any object has constraints,
     it use frame_set to traversal each frame, so it's costly"""
+    def build_pbone_parent_map(godot_node, blender_object):
+        pose_bone_parent_map = dict()
+        for pbone in blender_object.pose.bones:
+            pbone_parent = pbone.parent
+            # find parent bone and ensure it is exported in godot node
+            while (pbone_parent is not None and
+                   godot_node.find_bone_id(pbone_parent.name) == -1):
+                pbone_parent = pbone_parent.parent
+            pose_bone_parent_map[pbone.name] = pbone_parent
+        return pose_bone_parent_map
+
     first_frame, last_frame = action_strip.frame_range
 
     obj_xform_mats = list()
@@ -117,15 +129,8 @@ def export_constrained_xform_action(godot_node, animation_player,
 
     has_pbone_actions = (godot_node.get_type() == 'Skeleton' and
                          blender_object.pose is not None)
-    pbone_parent_map = dict()
     if has_pbone_actions:
-        for pbone in blender_object.pose.bones:
-            pbone_parent = pbone.parent
-            # find parent bone and ensure it is exported in godot node
-            while (pbone_parent is not None and
-                   godot_node.find_bone_id(pbone_parent.name) == -1):
-                pbone_parent = pbone_parent.parent
-            pbone_parent_map[pbone.name] = pbone_parent
+        pbone_parent_map = build_pbone_parent_map(godot_node, blender_object)
 
     for frame in range(first_frame, last_frame):
         scene.frame_set(frame)
@@ -138,9 +143,9 @@ def export_constrained_xform_action(godot_node, animation_player,
                         pbone.bone.matrix_local.inverted_safe() @ pbone.matrix)
                 else:
                     bone_space_xform = (
-                        godot_node.find_bone_rest(pbone.name).inverted_safe()
-                        @ pbone_parent.matrix.inverted_safe()
-                        @ pbone.matrix)
+                        godot_node.find_bone_rest(pbone.name).inverted_safe() @
+                        pbone_parent.matrix.inverted_safe() @
+                        pbone.matrix)
 
                 if pbone.name not in pbone_xform_mats:
                     pbone_xform_mats[pbone.name] = list()
