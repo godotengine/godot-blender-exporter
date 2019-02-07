@@ -107,26 +107,47 @@ def export_constrained_xform_action(godot_node, animation_player,
                                     animation_resource):
     """Export transform animation of any object has constraints,
     it use frame_set to traversal each frame, so it's costly"""
+    def build_pbone_parent_map(godot_node, blender_object):
+        pose_bone_parent_map = dict()
+        for pbone in blender_object.pose.bones:
+            pbone_parent = pbone.parent
+            # find parent bone and ensure it is exported in godot node
+            while (pbone_parent is not None and
+                   godot_node.find_bone_id(pbone_parent.name) == -1):
+                pbone_parent = pbone_parent.parent
+            pose_bone_parent_map[pbone.name] = pbone_parent
+        return pose_bone_parent_map
+
     first_frame, last_frame = action_strip.frame_range
 
     obj_xform_mats = list()
     pbone_xform_mats = collections.OrderedDict()
+
+    has_pbone_actions = (godot_node.get_type() == 'Skeleton' and
+                         blender_object.pose is not None)
+    if has_pbone_actions:
+        pbone_parent_map = build_pbone_parent_map(godot_node, blender_object)
 
     scene = bpy.context.scene
     frame_backup = scene.frame_current
     for frame in range(first_frame, last_frame):
         scene.frame_set(frame)
         obj_xform_mats.append(blender_object.matrix_local.copy())
-        if blender_object.pose is not None:
+        if has_pbone_actions:
             for pbone in blender_object.pose.bones:
+                pbone_parent = pbone_parent_map[pbone.name]
+                if pbone_parent is None:
+                    bone_space_xform = (
+                        pbone.bone.matrix_local.inverted_safe() * pbone.matrix)
+                else:
+                    bone_space_xform = (
+                        godot_node.find_bone_rest(pbone.name).inverted_safe()
+                        * pbone_parent.matrix.inverted_safe()
+                        * pbone.matrix)
+
                 if pbone.name not in pbone_xform_mats:
                     pbone_xform_mats[pbone.name] = list()
-                pbone_xform_mats[pbone.name].append(
-                    blender_object.convert_space(
-                        pbone, pbone.matrix,
-                        'POSE', 'LOCAL'
-                    )
-                )
+                pbone_xform_mats[pbone.name].append(bone_space_xform)
     scene.frame_set(frame_backup)
 
     if (check_object_constraint(blender_object) or
@@ -153,26 +174,27 @@ def export_constrained_xform_action(godot_node, animation_player,
             # no need for parent_inverse, as it is directly access matrix_local
         )
 
-    for pbone_name, pbone_xform_mat_list in pbone_xform_mats.items():
-        if godot_node.find_bone_id(pbone_name) != -1:
-            pbone_xform_frames_list = [
-                TransformFrame.factory(mat)
-                for mat in pbone_xform_mat_list
-            ]
+    if has_pbone_actions:
+        for pbone_name, pbone_xform_mat_list in pbone_xform_mats.items():
+            if godot_node.find_bone_id(pbone_name) != -1:
+                pbone_xform_frames_list = [
+                    TransformFrame.factory(mat)
+                    for mat in pbone_xform_mat_list
+                ]
 
-            track_path = NodePath(
-                animation_player.parent.get_path(),
-                godot_node.get_path(),
-                godot_node.find_bone_name(pbone_name),
-            )
-
-            animation_resource.add_track(
-                TransformTrack(
-                    track_path,
-                    frames_iter=range(first_frame, last_frame),
-                    values_iter=pbone_xform_frames_list,
+                track_path = NodePath(
+                    animation_player.parent.get_path(),
+                    godot_node.get_path(),
+                    godot_node.find_bone_name(pbone_name),
                 )
-            )
+
+                animation_resource.add_track(
+                    TransformTrack(
+                        track_path,
+                        frames_iter=range(first_frame, last_frame),
+                        values_iter=pbone_xform_frames_list,
+                    )
+                )
 
 
 def export_transform_action(godot_node, animation_player, blender_object,
@@ -187,7 +209,7 @@ def export_transform_action(godot_node, animation_player, blender_object,
             # bone fcurve in a non armature object
             if godot_node.get_type() != 'Skeleton':
                 logging.warning(
-                    "Skip a bone fcurve in a non-armature "
+                    "Skip bone fcurves of Armature object not being exported. "
                     "object '%s'",
                     blender_object.name
                 )
