@@ -138,10 +138,9 @@ def export_constrained_xform_action(godot_node, animation_player,
                         pbone.bone.matrix_local.inverted_safe() @ pbone.matrix)
                 else:
                     bone_space_xform = (
-                        (pbone_parent.bone.matrix_local.inverted_safe() @
-                         pbone.bone.matrix_local).inverted_safe() @
-                        pbone_parent.matrix.inverted_safe() @
-                        pbone.matrix)
+                        godot_node.find_bone_rest(pbone.name).inverted_safe()
+                        @ pbone_parent.matrix.inverted_safe()
+                        @ pbone.matrix)
 
                 if pbone.name not in pbone_xform_mats:
                     pbone_xform_mats[pbone.name] = list()
