@@ -96,9 +96,15 @@ class GodotExporter:
                 obj in self.exporting_objects):
             exporter = converters.BLENDER_TYPE_TO_EXPORTER[obj.type]
         else:
-            logging.warning(
-                "Unknown object type. Treating as empty: %s", obj.name
-            )
+            if obj not in self.exporting_objects:
+                logging.warning(
+                    "Object is parent of exported objects. "
+                    "Treating as empty: %s", obj.name
+                )
+            else:
+                logging.warning(
+                    "Unknown object type. Treating as empty: %s", obj.name
+                )
             exporter = converters.BLENDER_TYPE_TO_EXPORTER["EMPTY"]
 
         is_bone_attachment = False
@@ -171,10 +177,10 @@ class GodotExporter:
 
         # Decide what objects to export
         for obj in self.scene.objects:
-            if obj in self.valid_objects:
+            if obj in self.exporting_objects:
                 continue
             if self.should_export_object(obj):
-                # Ensure  parents of current valid object is
+                # Ensure parents of current valid object is
                 # going to the exporting recursion
                 tmp = obj
                 while tmp is not None:
@@ -226,6 +232,8 @@ class GodotExporter:
         # valid object would contain object should be exported
         # and their parents to retain the hierarchy
         self.valid_objects = set()
+        # exporting objects would only contain objects need
+        # to be exported
         self.exporting_objects = set()
 
         self.escn_file = None

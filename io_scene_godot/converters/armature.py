@@ -112,6 +112,14 @@ class SkeletonNode(NodeTemplate):
             return ""
         return self.bones[bl_bone_name].name
 
+    def find_bone_rest(self, bl_bone_name):
+        """Given a blender bone name , return its rest matrix"""
+        gd_bone_id = self.find_bone_id(bl_bone_name)
+        if gd_bone_id == -1 or gd_bone_id >= len(self.bones):
+            return mathutils.Matrix.Identity(4)
+        bone_rest_key = 'bones/{}/rest'.format(gd_bone_id)
+        return self[bone_rest_key]
+
     def add_bones(self, bone_list):
         """Add a list of bone to skeleton node"""
         # need first add all bones into name_to_id_map,
