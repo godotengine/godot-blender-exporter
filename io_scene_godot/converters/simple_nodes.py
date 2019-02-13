@@ -72,6 +72,24 @@ def export_camera_node(escn_file, export_settings, node, parent_gd_node):
     return cam_node
 
 
+def find_shader_node(node_tree, name):
+    """Find the shader node from the tree with the given name."""
+    for node in node_tree.nodes:
+        if node.bl_idname == name:
+            return node
+    logging.warning("%s node not found", name)
+    return None
+
+
+def node_input(node, name):
+    """Get the named input value from the shader node."""
+    for inp in node.inputs:
+        if inp.name == name:
+            return inp.default_value
+    logging.warning("%s input not found in %s", name, node.bl_idname)
+    return None
+
+
 class LightNode(NodeTemplate):
     """Base class for godot light node"""
     _light_attr_conv = [
@@ -118,14 +136,14 @@ def export_lamp_node(escn_file, export_settings, node, parent_gd_node):
     if light.type == "POINT":
         light_node = LightNode(node.name, 'OmniLight', parent_gd_node)
 
-        if not light.use_sphere:
+        if not light.use_sphere and not light.use_nodes:
             logging.warning(
                 "Ranged light without sphere enabled: %s", node.name
             )
 
     elif light.type == "SPOT":
         light_node = LightNode(node.name, 'SpotLight', parent_gd_node)
-        if not light.use_sphere:
+        if not light.use_sphere and not light.use_nodes:
             logging.warning(
                 "Ranged light without sphere enabled: %s", node.name
             )
@@ -144,9 +162,26 @@ def export_lamp_node(escn_file, export_settings, node, parent_gd_node):
             light_node[gd_attr] = converter(getattr(light, bl_attr))
 
         # Properties common to all lights
+        # These cannot be set via AttributeConvertInfo as it will not handle
+        # animations correctly
         light_node['transform'] = fix_directional_transform(node.matrix_local)
-        light_node['shadow_enabled'] = light.shadow_method != "NOSHADOW"
-        light_node['light_negative'] = light.use_negative
+        if light.use_nodes:
+            emission = find_shader_node(light.node_tree, 'ShaderNodeEmission')
+            if emission:
+                strength = node_input(emission, 'Strength') or 100
+                color = node_input(emission, 'Color') or [1, 1, 1]
+                # we don't have an easy way to get these in cycles
+                # don't set them and let godot use its defaults
+                del light_node['light_specular']
+                del light_node['shadow_color']
+                # strength=100 in cycles is roughly equivalent to energy=1
+                light_node['light_energy'] = abs(strength / 100.0)
+                light_node['light_color'] = gamma_correct(color)
+                light_node['shadow_enabled'] = light.cycles.cast_shadow
+                light_node['light_negative'] = strength < 0
+        else:
+            light_node['shadow_enabled'] = light.shadow_method != "NOSHADOW"
+            light_node['light_negative'] = light.use_negative
 
         escn_file.add_node(light_node)
 
