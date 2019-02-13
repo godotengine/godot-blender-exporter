@@ -844,12 +844,11 @@ material/0 = SubResource(12)
 
 [node name="Lamp" type="DirectionalLight" parent="."]
 
-light_specular = 1.0
-light_energy = 1.0
+light_energy = 0.04
 light_color = Color(1.0, 1.0, 1.0, 1.0)
-shadow_color = Color(0.0, 0.0, 0.0, 1.0)
 transform = Transform(-0.404791, -0.439839, 0.801677, 0.221124, 0.803611, 0.552553, -0.88727, 0.400938, -0.228035, 4.07625, 1.70784, -1.00545)
 shadow_enabled = true
+light_negative = false
 
 [node name="test_displacement" type="MeshInstance" parent="."]
 
