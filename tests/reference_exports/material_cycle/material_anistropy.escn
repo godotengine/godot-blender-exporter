@@ -268,12 +268,10 @@ surfaces/0 = {
 
 [node name="Point" type="DirectionalLight" parent="."]
 
-light_specular = 1.0
 light_energy = 1.0
 light_color = Color(1.0, 1.0, 1.0, 1.0)
-shadow_color = Color(0.0, 0.0, 0.0, 1.0)
 transform = Transform(0.701062, -0.562597, -0.438174, 0.452107, -0.124517, 0.88323, -0.551463, -0.8173, 0.16706, -2.09735, 4.28268, -0.137035)
-shadow_enabled = false
+shadow_enabled = true
 light_negative = false
 
 [node name="object_with_uv" type="MeshInstance" parent="."]
