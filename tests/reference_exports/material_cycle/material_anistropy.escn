@@ -20,7 +20,6 @@ void node_bsdf_principled(vec4 color, float subsurface, vec4 subsurface_color,
     transmission = clamp(transmission, 0.0, 1.0);
 
     subsurface = subsurface * (1.0 - metallic);
-    transmission = transmission * (1.0 - metallic);
 
     albedo = mix(color.rgb, subsurface_color.rgb, subsurface);
     sss_strength_out = subsurface;
@@ -30,7 +29,7 @@ void node_bsdf_principled(vec4 color, float subsurface, vec4 subsurface_color,
     clearcoat_out = clearcoat * (1.0 - transmission);
     clearcoat_gloss_out = 1.0 - clearcoat_roughness;
     anisotropy_out = clamp(anisotropy, 0.0, 1.0);
-    transmission_out = transmission;
+    transmission_out = (1.0 - transmission) * (1.0 - metallic);
     ior = IOR;
 }
 
@@ -92,8 +91,6 @@ void fragment() {
 	ROUGHNESS = var16_out_roughness;
 	CLEARCOAT = var17_out_clearcoat;
 	CLEARCOAT_GLOSS = var18_out_clearcoat_gloss;
-	// transmission usually does not work..
-	// TRANSMISSION = vec3(1.0, 1.0, 1.0) * var20_out_transmission;
 	// uncomment it only when you set diffuse mode to oren nayar
 	// ROUGHNESS = oren_nayar_rougness
 	ANISOTROPY = var19_out_anisotropy;
@@ -147,7 +144,6 @@ void node_bsdf_principled(vec4 color, float subsurface, vec4 subsurface_color,
     transmission = clamp(transmission, 0.0, 1.0);
 
     subsurface = subsurface * (1.0 - metallic);
-    transmission = transmission * (1.0 - metallic);
 
     albedo = mix(color.rgb, subsurface_color.rgb, subsurface);
     sss_strength_out = subsurface;
@@ -157,7 +153,7 @@ void node_bsdf_principled(vec4 color, float subsurface, vec4 subsurface_color,
     clearcoat_out = clearcoat * (1.0 - transmission);
     clearcoat_gloss_out = 1.0 - clearcoat_roughness;
     anisotropy_out = clamp(anisotropy, 0.0, 1.0);
-    transmission_out = transmission;
+    transmission_out = (1.0 - transmission) * (1.0 - metallic);
     ior = IOR;
 }
 
@@ -229,8 +225,6 @@ void fragment() {
 	ROUGHNESS = var17_out_roughness;
 	CLEARCOAT = var18_out_clearcoat;
 	CLEARCOAT_GLOSS = var19_out_clearcoat_gloss;
-	// transmission usually does not work..
-	// TRANSMISSION = vec3(1.0, 1.0, 1.0) * var21_out_transmission;
 	// uncomment it only when you set diffuse mode to oren nayar
 	// ROUGHNESS = oren_nayar_rougness
 	ANISOTROPY = var20_out_anisotropy;
