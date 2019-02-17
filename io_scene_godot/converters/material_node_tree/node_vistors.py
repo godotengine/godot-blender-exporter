@@ -135,9 +135,15 @@ def visit_bsdf_node(shader, node):
         new_var = shader.define_variable(
             var_type, 'out_' + attr_name
         )
-
-        output.set_attribute(attr_name, new_var)
         out_arguments.append(new_var)
+
+        if attr_name == "transmission" and "Transmission" in node.inputs:
+            # due to different implementation of transmission between
+            # godot and blender, only export it when it is set.
+            socket = node.inputs["Transmission"]
+            if not socket.is_linked and socket.default_value == 0.0:
+                continue
+        output.set_attribute(attr_name, new_var)
 
     shader.add_function_call(function, in_arguments, out_arguments)
 

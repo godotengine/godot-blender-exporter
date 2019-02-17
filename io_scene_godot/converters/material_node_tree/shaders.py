@@ -390,12 +390,11 @@ class FragmentShader(BaseShader):
                 self.code_array.append(
                     '{} = {};'.format(name.upper(), str(var))
                 )
-        # XXX: transmission for thick object is not supported in godot
+
         transmission_var = bsdf_output.get_attribute('transmission')
         if transmission_var is not None:
-            self.append_comment_line("transmission usually does not work..")
             self.append_code_line(
-                '// TRANSMISSION = vec3(1.0, 1.0, 1.0) * {};',
+                'TRANSMISSION = vec3(1.0, 1.0, 1.0) * {};',
                 (transmission_var,)
             )
 
