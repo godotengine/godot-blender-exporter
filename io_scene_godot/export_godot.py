@@ -62,6 +62,7 @@ def find_godot_project_dir(export_path):
 class ExporterLogHandler(logging.Handler):
     """Custom handler for exporter, would report logging message
     to GUI"""
+
     def __init__(self, operator):
         super().__init__()
         self.setLevel(logging.WARNING)
@@ -192,6 +193,38 @@ class GodotExporter:
             if obj in self.valid_nodes and obj.parent is None:
                 self.export_node(obj, root_gd_node)
 
+    def load_supported_features(self):
+        """According to `project.godot`, determine all new feature supported
+        by that godot version"""
+        project_dir = ""
+        try:
+            project_dir = self.config["project_path_func"]()
+        except structures.ValidationError:
+            project_dir = False
+            logging.warning(
+                "Not export to Godot project dir, disable all beta features.")
+
+        # minimal supported version
+        conf_versiton = 3
+        if project_dir:
+            project_file_path = os.path.join(project_dir, "project.godot")
+            with open(project_file_path, "r") as proj_f:
+                for line in proj_f:
+                    if not line.startswith("config_version"):
+                        continue
+
+                    _, version_str = tuple(line.split("="))
+                    conf_versiton = int(version_str)
+                    break
+
+        if conf_versiton < 2:
+            logging.error(
+                "Godot version smaller than 3.0, not supported by this addon")
+
+        if conf_versiton >= 4:
+            # godot >=3.1
+            self.config["feature_bezier_track"] = True
+
     def export(self):
         """Begin the export"""
         self.escn_file = structures.ESCNFile(structures.FileEntry(
@@ -218,8 +251,12 @@ class GodotExporter:
         self.config["project_path_func"] = functools.partial(
             find_godot_project_dir, path
         )
-        self.valid_nodes = []
+        # optional features
+        self.config["feature_bezier_track"] = False
+        if self.config["use_beta_features"]:
+            self.load_supported_features()
 
+        self.valid_nodes = []
         self.escn_file = None
 
     def __enter__(self):
