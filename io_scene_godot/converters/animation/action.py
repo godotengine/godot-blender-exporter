@@ -36,6 +36,7 @@ def get_strip_frame_range(strip):
 class ActionStrip:
     """Abstract of blender action strip, it may override attributes
     of an action object"""
+
     def __init__(self, action_or_strip):
         self.action = None
         self.frame_range = (0, 0)
@@ -103,9 +104,9 @@ def has_obj_fcurves(action_strip):
 
 
 # pylint: disable-msg=too-many-locals
-def export_constrained_xform_action(godot_node, animation_player,
+def export_constrained_xform_action(godot_node, export_settings,
                                     blender_object, action_strip,
-                                    animation_resource):
+                                    anim_rsc):
     """Export transform animation of any object has constraints,
     it use frame_set to traversal each frame, so it's costly"""
     def build_pbone_parent_map(godot_node, blender_object):
@@ -160,7 +161,7 @@ def export_constrained_xform_action(godot_node, animation_player,
         ]
 
         track_path = NodePath(
-            animation_player.parent.get_path(),
+            anim_rsc.anim_player.parent.get_path(),
             godot_node.get_path()
         )
 
@@ -170,7 +171,7 @@ def export_constrained_xform_action(godot_node, animation_player,
                 for x in xform_frames_list
             ]
 
-        animation_resource.add_obj_xform_track(
+        anim_rsc.add_obj_xform_track(
             godot_node.get_type(), track_path,
             xform_frames_list, action_strip.frame_range,
             # no need for parent_inverse, as it is directly access matrix_local
@@ -185,12 +186,12 @@ def export_constrained_xform_action(godot_node, animation_player,
                 ]
 
                 track_path = NodePath(
-                    animation_player.parent.get_path(),
+                    anim_rsc.anim_player.parent.get_path(),
                     godot_node.get_path(),
                     godot_node.find_bone_name(pbone_name),
                 )
 
-                animation_resource.add_track(
+                anim_rsc.add_track(
                     TransformTrack(
                         track_path,
                         frames_iter=range(first_frame, last_frame),
@@ -199,8 +200,8 @@ def export_constrained_xform_action(godot_node, animation_player,
                 )
 
 
-def export_transform_action(godot_node, animation_player, blender_object,
-                            action_strip, animation_resource):
+def export_transform_action(godot_node, export_settings, blender_object,
+                            action_strip, anim_rsc):
     """Export a action with bone and object transform"""
     def init_transform_frames_list(object_path, blender_object, godot_node,
                                    first_frame, last_frame):
@@ -275,7 +276,7 @@ def export_transform_action(godot_node, animation_player, blender_object,
         if object_path == '':
             # empty object_path represents transform of object itself
             track_path = NodePath(
-                animation_player.parent.get_path(),
+                anim_rsc.anim_player.parent.get_path(),
                 godot_node.get_path()
             )
 
@@ -285,7 +286,7 @@ def export_transform_action(godot_node, animation_player, blender_object,
                     for x in frame_value_list
                 ]
 
-            animation_resource.add_obj_xform_track(
+            anim_rsc.add_obj_xform_track(
                 godot_node.get_type(), track_path,
                 frame_value_list, action_strip.frame_range,
                 blender_object.matrix_parent_inverse
@@ -293,13 +294,13 @@ def export_transform_action(godot_node, animation_player, blender_object,
 
         elif object_path.startswith('pose'):
             track_path = NodePath(
-                animation_player.parent.get_path(),
+                anim_rsc.anim_player.parent.get_path(),
                 godot_node.get_path(),
                 godot_node.find_bone_name(
                     blender_path_to_bone_name(object_path)
                 ),
             )
-            animation_resource.add_track(
+            anim_rsc.add_track(
                 TransformTrack(
                     track_path,
                     frames_iter=range(first_frame, last_frame),
@@ -308,130 +309,148 @@ def export_transform_action(godot_node, animation_player, blender_object,
             )
 
 
-def export_shapekey_action(godot_node, animation_player, blender_object,
-                           action_strip, animation_resource):
+def export_shapekey_action(godot_node, export_settings, blender_object,
+                           action_strip, anim_rsc):
     """Export shapekey value action"""
-    first_frame, last_frame = action_strip.frame_range
+    base_node_path = NodePath(
+        anim_rsc.anim_player.parent.get_path(), godot_node.get_path()
+    )
     for fcurve in action_strip.action.fcurves:
-
         object_path, attribute = split_fcurve_data_path(fcurve.data_path)
 
         if attribute == 'value':
             shapekey_name = re.search(r'key_blocks\["([^"]+)"\]',
                                       object_path).group(1)
 
-            track_path = NodePath(
-                animation_player.parent.get_path(),
-                godot_node.get_path(),
-                "blend_shapes/{}".format(shapekey_name)
+            anim_rsc.add_attribute_track(
+                action_strip,
+                fcurve,
+                lambda x: x,
+                base_node_path.new_copy(
+                    "blend_shapes/{}".format(shapekey_name)),
+                use_bezier=export_settings['feature_bezier_track']
             )
 
-            track = FloatTrack(track_path)
 
-            for frame in range(first_frame, last_frame):
-                track.add_frame_data(
-                    frame,
-                    action_strip.evaluate_fcurve(fcurve, frame)
-                )
-
-            animation_resource.add_track(track)
-
-
-def export_light_action(light_node, animation_player, blender_lamp,
-                        action_strip, animation_resource):
+def export_light_action(light_node, export_settings, blender_lamp,
+                        action_strip, anim_rsc):
     """Export light(lamp in Blender) action"""
-    # pylint: disable-msg=R0914
+    # pylint: disable-msg=too-many-branches
     base_node_path = NodePath(
-        animation_player.parent.get_path(), light_node.get_path()
+        anim_rsc.anim_player.parent.get_path(), light_node.get_path()
     )
 
     fcurves = action_strip.action.fcurves
-    animation_resource.add_attribute_track(
+    # CONSTANT tracks
+    anim_rsc.add_attribute_track(
         action_strip,
         fcurves.find('use_negative'),
         lambda x: x > 0.0,
         base_node_path.new_copy('light_negative'),
     )
-
-    animation_resource.add_attribute_track(
+    anim_rsc.add_attribute_track(
         action_strip,
         fcurves.find('shadow_method'),
         lambda x: x > 0.0,
         base_node_path.new_copy('shadow_enabled'),
     )
 
+    color_attr_conversion = list()
+    # simple value tracks
     for item in light_node.attribute_conversion:
         bl_attr, gd_attr, converter = item
-        if bl_attr not in ('color', 'shadow_color'):
-            animation_resource.add_attribute_track(
+        if bl_attr in ('color', 'shadow_color'):
+            color_attr_conversion.append(item)
+        else:
+            anim_rsc.add_attribute_track(
                 action_strip,
                 fcurves.find(bl_attr),
                 converter,
-                base_node_path.new_copy(gd_attr)
+                base_node_path.new_copy(gd_attr),
+                use_bezier=export_settings["feature_bezier_track"]
             )
 
-    # color tracks is not one-one mapping to fcurve, they
-    # need to be treated like transform track
-    color_frame_values_map = collections.OrderedDict()
+    if export_settings["feature_bezier_track"]:
+        rgba_names = ('r', 'g', 'b', 'a')
+        for fcurve in fcurves:
+            if fcurve is None:
+                continue
+            _, attribute = split_fcurve_data_path(fcurve.data_path)
 
-    first_frame, last_frame = action_strip.frame_range
-    for fcurve in fcurves:
-        _, attribute = split_fcurve_data_path(fcurve.data_path)
+            for bl_attr, gd_attr, converter in color_attr_conversion:
+                if bl_attr == attribute:
+                    track_path = base_node_path.new_copy(
+                        gd_attr + ':' + rgba_names[fcurve.array_index]
+                    )
+                    anim_rsc.add_attribute_track(
+                        action_strip,
+                        fcurve,
+                        converter,
+                        track_path,
+                        use_bezier=True)
+    else:
+        # color tracks is not one-one mapping to fcurve, they
+        # need to be treated like transform track
+        color_frame_values_map = collections.OrderedDict()
 
-        if attribute in ('color', 'shadow_color'):
-            if attribute not in color_frame_values_map:
-                color_frame_values_map[attribute] = [
-                    mathutils.Color()
-                    for _ in range(first_frame, last_frame)
+        first_frame, last_frame = action_strip.frame_range
+        for fcurve in fcurves:
+            _, attribute = split_fcurve_data_path(fcurve.data_path)
+
+            if attribute in ('color', 'shadow_color'):
+                if attribute not in color_frame_values_map:
+                    color_frame_values_map[attribute] = [
+                        mathutils.Color()
+                        for _ in range(first_frame, last_frame)
+                    ]
+                color_list = color_frame_values_map[attribute]
+                for frame in range(first_frame, last_frame):
+                    color_list[frame - first_frame][fcurve.array_index] = (
+                        action_strip.evaluate_fcurve(fcurve, frame)
+                    )
+
+        for bl_attr, _, converter in light_node.attribute_conversion:
+            if (bl_attr in ('color', 'shadow_color') and
+                    bl_attr in color_frame_values_map):
+                color_frame_values_map[bl_attr] = [
+                    converter(x) for x in color_frame_values_map[bl_attr]
                 ]
-            color_list = color_frame_values_map[attribute]
-            for frame in range(first_frame, last_frame):
-                color_list[frame - first_frame][fcurve.array_index] = (
-                    action_strip.evaluate_fcurve(fcurve, frame)
+
+        for attribute, frame_value_list in color_frame_values_map.items():
+            if attribute == 'color':
+                track_path = base_node_path.new_copy('light_color')
+            else:
+                track_path = base_node_path.new_copy('shadow_color')
+
+            anim_rsc.add_track(
+                ColorTrack(
+                    track_path,
+                    frames_iter=range(first_frame, last_frame),
+                    values_iter=frame_value_list
                 )
-
-    for bl_attr, _, converter in light_node.attribute_conversion:
-        if (bl_attr in ('color', 'shadow_color') and
-                bl_attr in color_frame_values_map):
-            color_frame_values_map[bl_attr] = [
-                converter(x) for x in color_frame_values_map[bl_attr]
-            ]
-
-    for attribute, frame_value_list in color_frame_values_map.items():
-        if attribute == 'color':
-            track_path = base_node_path.new_copy('light_color')
-        else:
-            track_path = base_node_path.new_copy('shadow_color')
-
-        animation_resource.add_track(
-            ColorTrack(
-                track_path,
-                frames_iter=range(first_frame, last_frame),
-                values_iter=frame_value_list
             )
-        )
 
 
-def export_camera_action(camera_node, animation_player, blender_cam,
-                         action_strip, animation_resource):
+def export_camera_action(camera_node, export_settings, blender_cam,
+                         action_strip, anim_rsc):
     """Export camera action"""
-    # pylint: disable-msg=R0914
     first_frame, last_frame = action_strip.frame_range
     base_node_path = NodePath(
-        animation_player.parent.get_path(), camera_node.get_path()
+        anim_rsc.anim_player.parent.get_path(), camera_node.get_path()
     )
 
     fcurves = action_strip.action.fcurves
     for item in camera_node.attribute_conversion:
         bl_attr, gd_attr, converter = item
-        animation_resource.add_attribute_track(
+        anim_rsc.add_attribute_track(
             action_strip,
             fcurves.find(bl_attr),
             converter,
-            base_node_path.new_copy(gd_attr)
+            base_node_path.new_copy(gd_attr),
+            use_bezier=export_settings['feature_bezier_track'],
         )
 
-    animation_resource.add_attribute_track(
+    anim_rsc.add_attribute_track(
         action_strip,
         fcurves.find('type'),
         lambda x: 0 if x == 0.0 else 1,
@@ -476,7 +495,7 @@ def export_camera_action(camera_node, animation_player, blender_cam,
                 )
             ))
 
-        animation_resource.add_track(
+        anim_rsc.add_track(
             FloatTrack(
                 base_node_path.new_copy('fov'),
                 frames_iter=range(first_frame, last_frame),
