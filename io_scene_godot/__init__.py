@@ -116,6 +116,16 @@ class ExportGodot(bpy.types.Operator, ExportHelper):
                     "animation and place into AnimationPlayer",
         default=True,
     )
+    use_export_material = BoolProperty(
+        name="Export Materinal",
+        description="Export all the material associated with mesh surfaces",
+        default=True,
+    )
+    use_beta_features = BoolProperty(
+        name="Use Beta Features",
+        description="Export using new features coming in Godot beta versions",
+        default=True,
+    )
     generate_external_material = BoolProperty(
         name="Generate External Material",
         description="If turned on, materials in the exported scene would "
