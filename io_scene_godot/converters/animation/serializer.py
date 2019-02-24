@@ -45,6 +45,14 @@ def strip_adjacent_dup_keyframes(frames, values):
     return stripped_frames, stripped_values
 
 
+class BezierFrame:
+    """A keyframe point in a bezier fcurve"""
+    def __init__(self, value, left_handle, right_handle):
+        self.value = value
+        self.left_handle = left_handle
+        self.right_handle = right_handle
+
+
 class TransformFrame:
     """A data structure hold transform values of an animation key,
     it is used as an intermedia data structure, being updated during
@@ -386,9 +394,33 @@ class ColorTrack(ValueTrack):
         )
 
 
-def get_fcurve_frame_range(fcurve):
-    """Return the a tuple denoting the frame range of fcurve"""
-    return int(fcurve.range()[0]), int(fcurve.range()[1]) + 1
+class BezierTrack(Track):
+    """Track using bezier interpolcation"""
+    def __init__(self, track_path, frames_iter=(), values_iter=()):
+        super().__init__("bezier", track_path, frames_iter, values_iter)
+
+    def blend_frames(self, frame_val1, frame_val2):
+        # xxx: default use REPLACE
+        return max(frame_val1, frame_val2)
+
+    def convert_to_keys_object(self):
+        """Convert a list of bezier point to a pool real array"""
+        time_array = Array(prefix='PoolRealArray(', suffix=')')
+        points_array = Array(prefix='PoolRealArray(', suffix=')')
+        fps = bpy.context.scene.render.fps
+        scene_frame_start = bpy.context.scene.frame_start
+        for frame, frame_val in zip(self.frames, self.values):
+            time = (frame - scene_frame_start) / fps
+            time_array.append(time)
+            points_array.append(frame_val.value)
+            points_array.append((frame_val.left_handle[0] - frame) / fps)
+            points_array.append(frame_val.left_handle[1])
+            points_array.append((frame_val.right_handle[0] - frame) / fps)
+            points_array.append(frame_val.right_handle[1])
+        keys_map = Map()
+        keys_map["points"] = points_array
+        keys_map["times"] = time_array
+        return keys_map
 
 
 def build_const_interp_value_track(track_path, action_strip, converter,
@@ -414,7 +446,7 @@ def build_linear_interp_value_track(track_path, action_strip, converter,
     """Build a godot value track by evaluate every frame of Blender fcurve"""
     track = FloatTrack(track_path)
 
-    frame_range = get_fcurve_frame_range(fcurve)
+    frame_range = action_strip.frame_range
     if converter is None:
         for frame in range(frame_range[0], frame_range[1]):
             track.add_frame_data(
@@ -429,13 +461,38 @@ def build_linear_interp_value_track(track_path, action_strip, converter,
     return track
 
 
+def build_beizer_interp_value_track(track_path, action_strip, converter,
+                                    fcurve):
+    """Build a godot bezier track"""
+    track = BezierTrack(track_path)
+
+    for keyframe in fcurve.keyframe_points:
+        point_value = converter(keyframe.co[1])
+        # bezier curve handle use margin
+        track.add_frame_data(
+            int(keyframe.co[0]),
+            BezierFrame(
+                point_value,
+                (keyframe.handle_left.x,
+                 converter(keyframe.handle_left.y) - point_value),
+                (keyframe.handle_right.x,
+                 converter(keyframe.handle_right.y) - point_value),
+            )
+        )
+
+    return track
+
+
 class AnimationResource(InternalResource):
     """Internal resource with type Animation"""
-    def __init__(self, name):
+    def __init__(self, name, owner_anim_player):
         super().__init__('Animation', name)
         self['step'] = 0.1
         self['length'] = 0
+
+        # helper attributes, not exported to ESCN
         self.tracks = collections.OrderedDict()
+        self.anim_player = owner_anim_player
 
     def add_track(self, track):
         """add a track to animation resource"""
@@ -475,14 +532,19 @@ class AnimationResource(InternalResource):
 
         self.add_track(track)
 
+    # pylint: disable-msg=too-many-arguments
     def add_attribute_track(self, action_strip, fcurve,
-                            converter, node_path):
+                            converter, node_path, use_bezier=False):
         """Add a track into AnimationResource, the track is a
         one-one mapping to one fcurve."""
         if fcurve is not None and fcurve.keyframe_points:
             interpolation = fcurve.keyframe_points[0].interpolation
             if interpolation == 'CONSTANT':
                 new_track = build_const_interp_value_track(
+                    node_path, action_strip, converter, fcurve
+                )
+            elif use_bezier and interpolation == 'BEZIER':
+                new_track = build_beizer_interp_value_track(
                     node_path, action_strip, converter, fcurve
                 )
             else:
@@ -513,7 +575,7 @@ class AnimationPlayer(NodeTemplate):
         """Create a new animation resource and add it into escn file"""
         resource_name_filtered = re.sub(r'[\[\]\{\}]+', '', resource_name)
 
-        new_anim_resource = AnimationResource(resource_name_filtered)
+        new_anim_resource = AnimationResource(resource_name_filtered, self)
         # add animation resource without checking hash,
         # blender action is in world space, while godot animation
         # is in local space (parent space),  so identical actions
