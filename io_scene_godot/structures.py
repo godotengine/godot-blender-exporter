@@ -386,6 +386,10 @@ def fix_bone_attachment_location(attachment_obj, location_vec):
 
 def gamma_correct(color):
     """Apply sRGB color space gamma correction to the given color"""
+    if isinstance(color, float):
+        # seperate color channel
+        return color ** (1 / 2.2)
+
     # mathutils.Color does not support alpha yet, so just use RGB
     # see: https://developer.blender.org/T53540
     color = color[0:3]

@@ -28,6 +28,7 @@ ACTION_EXPORTER_MAP = {
 class ObjectAnimationExporter:
     """A helper class holding states while exporting
     animation data from a blender object"""
+
     def __init__(self, godot_node, blender_object, action_type):
         self.godot_node = godot_node
         self.blender_object = blender_object
@@ -69,7 +70,7 @@ class ObjectAnimationExporter:
                 else:
                     self.mute_nla_tracks.append(nla_track)
 
-    def export_active_action(self, escn_file, active_action):
+    def export_active_action(self, escn_file, export_settings, active_action):
         """Export the active action, if needed, would call bake.
 
         Note that active_action maybe None, which would happen when object has
@@ -88,7 +89,7 @@ class ObjectAnimationExporter:
 
         self.action_exporter_func(
             self.godot_node,
-            self.animation_player,
+            export_settings,
             self.blender_object,
             ActionStrip(active_action),
             self.animation_player.active_animation
@@ -103,13 +104,13 @@ class ObjectAnimationExporter:
                     if strip.action:
                         self.action_exporter_func(
                             self.godot_node,
-                            self.animation_player,
+                            export_settings,
                             self.blender_object,
                             ActionStrip(strip),
                             self.animation_player.active_animation
                         )
 
-    def export_active_action_from_nla(self, escn_file):
+    def export_active_action_from_nla(self, escn_file, export_settings):
         """Export all unmute nla_tracks into an active action.
         Note that it would not do baking for constraint"""
         if self.animation_player.active_animation is None:
@@ -122,13 +123,13 @@ class ObjectAnimationExporter:
                 if strip.action:
                     self.action_exporter_func(
                         self.godot_node,
-                        self.animation_player,
+                        export_settings,
                         self.blender_object,
                         ActionStrip(strip),
                         self.animation_player.active_animation
                     )
 
-    def export_stashed_track(self, escn_file, stashed_track):
+    def export_stashed_track(self, escn_file, export_settings, stashed_track):
         """Export a muted nla_track, track with all its contained action
         is exported to a single animation_resource.
 
@@ -154,7 +155,7 @@ class ObjectAnimationExporter:
             if strip.action:
                 self.action_exporter_func(
                     self.godot_node,
-                    self.animation_player,
+                    export_settings,
                     self.blender_object,
                     ActionStrip(strip),
                     anim_resource
@@ -169,7 +170,7 @@ class ObjectAnimationExporter:
                     if strip.action:
                         self.action_exporter_func(
                             self.godot_node,
-                            self.animation_player,
+                            export_settings,
                             self.blender_object,
                             ActionStrip(strip),
                             anim_resource
@@ -203,10 +204,12 @@ def export_animation_data(escn_file, export_settings, godot_node,
         active_action = None
 
     if (active_action is not None or anim_exporter.need_baking):
-        anim_exporter.export_active_action(escn_file, active_action)
+        anim_exporter.export_active_action(
+            escn_file, export_settings, active_action)
     elif anim_exporter.unmute_nla_tracks:
         # if has effective nla_tracks but no active action, fake one
-        anim_exporter.export_active_action_from_nla(escn_file)
+        anim_exporter.export_active_action_from_nla(
+            escn_file, export_settings)
 
     # export actions in nla_tracks, each exported to seperate
     # animation resources
@@ -217,7 +220,8 @@ def export_animation_data(escn_file, export_settings, godot_node,
             obj_use_nla_backup = blender_object.animation_data.use_nla
             blender_object.animation_data.use_nla = True
         for stashed_track in anim_exporter.mute_nla_tracks:
-            anim_exporter.export_stashed_track(escn_file, stashed_track)
+            anim_exporter.export_stashed_track(
+                escn_file, export_settings, stashed_track)
         if blender_object.animation_data:
             blender_object.animation_data.use_nla = obj_use_nla_backup
 
