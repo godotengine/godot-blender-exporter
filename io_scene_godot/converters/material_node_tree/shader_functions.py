@@ -79,7 +79,6 @@ void node_bsdf_principled(vec4 color, float subsurface, vec4 subsurface_color,
     transmission = clamp(transmission, 0.0, 1.0);
 
     subsurface = subsurface * (1.0 - metallic);
-    transmission = transmission * (1.0 - metallic);
 
     albedo = mix(color.rgb, subsurface_color.rgb, subsurface);
     sss_strength_out = subsurface;
@@ -89,7 +88,7 @@ void node_bsdf_principled(vec4 color, float subsurface, vec4 subsurface_color,
     clearcoat_out = clearcoat * (1.0 - transmission);
     clearcoat_gloss_out = 1.0 - clearcoat_roughness;
     anisotropy_out = clamp(anisotropy, 0.0, 1.0);
-    transmission_out = transmission;
+    transmission_out = (1.0 - transmission) * (1.0 - metallic);
     ior = IOR;
 }
 """,

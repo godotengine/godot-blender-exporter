@@ -101,7 +101,7 @@ class GodotExporter:
 
         is_bone_attachment = False
         if ("ARMATURE" in self.config['object_types'] and
-                node.parent_bone != ''):
+                node.parent and node.parent_bone != ''):
             is_bone_attachment = True
             parent_gd_node = converters.BONE_ATTACHMENT_EXPORTER(
                 self.escn_file,

@@ -214,8 +214,12 @@ def export_animation_data(escn_file, export_settings, godot_node,
         if blender_object.animation_data:
             # clear active action, isolate NLA track
             blender_object.animation_data.action = None
+            obj_use_nla_backup = blender_object.animation_data.use_nla
+            blender_object.animation_data.use_nla = True
         for stashed_track in anim_exporter.mute_nla_tracks:
             anim_exporter.export_stashed_track(escn_file, stashed_track)
+        if blender_object.animation_data:
+            blender_object.animation_data.use_nla = obj_use_nla_backup
 
     if blender_object.animation_data is not None:
         blender_object.animation_data.action = active_action
