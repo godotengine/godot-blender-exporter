@@ -240,7 +240,7 @@ class ExternalResource(FileEntry):
 class InternalResource(FileEntry):
     """ A resource stored internally to the escn file, such as the
     description of a material """
-    def __init__(self, resource_type, name):
+    def __init__(self, resource_type, name=None):
         super().__init__(
             'sub_resource',
             collections.OrderedDict((
@@ -249,9 +249,10 @@ class InternalResource(FileEntry):
                 ('type', resource_type)
             ))
         )
-        self['resource_name'] = '"{}"'.format(
-            name.replace('.', '').replace('/', '')
-        )
+        if name is not None:
+            self['resource_name'] = '"{}"'.format(
+                name.replace('.', '').replace('/', '')
+            )
 
 
 class Array(list):

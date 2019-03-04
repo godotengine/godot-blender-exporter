@@ -235,6 +235,7 @@ class GodotExporter:
         if conf_versiton >= 4:
             # godot >=3.1
             self.config["feature_bezier_track"] = True
+            self.config["feature_visual_shader"] = True
 
     def export(self):
         """Begin the export"""
@@ -271,6 +272,7 @@ class GodotExporter:
 
         # optional features
         self.config["feature_bezier_track"] = False
+        self.config["feature_visual_shader"] = False
         if self.config["use_beta_features"]:
             self.load_supported_features()
 
