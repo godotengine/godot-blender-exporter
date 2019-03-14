@@ -62,34 +62,34 @@ bones/0/parent = -1
 bones/0/rest = Transform(1.0, 0.0, 0.0, 0.0, 0.0, -1.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0)
 bones/0/pose = Transform(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0)
 bones/0/enabled = true
-bones/0/bound_children = [NodePath("BoneAttachment:")]
+bones/0/bound_children = [NodePath("BoneBoneAttachment:")]
 bones/1/name = "Bone.001"
 bones/1/parent = 0
 bones/1/rest = Transform(0.625552, 0.574117, 0.528275, -0.780182, 0.460328, 0.423572, -1.00583e-07, -0.677117, 0.735875, 0.0, 0.0, -1.0)
 bones/1/pose = Transform(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0)
 bones/1/enabled = true
-bones/1/bound_children = [NodePath("BoneAttachment001:")]
+bones/1/bound_children = [NodePath("Bone001BoneAttachment:")]
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="Armature"]
 
 root_node = NodePath("..:")
 anims/ArmatureAction = SubResource(1)
 
-[node name="BoneAttachment" type="BoneAttachment" parent="Armature"]
+[node name="BoneBoneAttachment" type="BoneAttachment" parent="Armature"]
 
 bone_name = "Bone"
 
-[node name="Cube" type="MeshInstance" parent="Armature/BoneAttachment"]
+[node name="Cube" type="MeshInstance" parent="Armature/BoneBoneAttachment"]
 
 mesh = SubResource(2)
 visible = true
 transform = Transform(0.072811, -1.86265e-09, 0.0, -9.31323e-10, 0.186109, -1.58325e-08, 0.0, -2.32831e-09, -0.673504, -3.72529e-09, -5.58794e-09, -0.483741)
 
-[node name="BoneAttachment001" type="BoneAttachment" parent="Armature"]
+[node name="Bone001BoneAttachment" type="BoneAttachment" parent="Armature"]
 
 bone_name = "Bone.001"
 
-[node name="Cube001" type="MeshInstance" parent="Armature/BoneAttachment001"]
+[node name="Cube001" type="MeshInstance" parent="Armature/Bone001BoneAttachment"]
 
 mesh = SubResource(3)
 visible = true
