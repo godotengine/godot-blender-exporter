@@ -6,7 +6,7 @@ from ..structures import NodeTemplate, NodePath, Array
 
 def export_bone_attachment(escn_file, node, parent_gd_node):
     """Export a blender object with parent_bone to a BoneAttachment"""
-    bone_attachment = NodeTemplate('BoneAttachment',
+    bone_attachment = NodeTemplate(node.parent_bone + 'BoneAttachment',
                                    'BoneAttachment', parent_gd_node)
 
     # node.parent_bone is exactly the bone name
