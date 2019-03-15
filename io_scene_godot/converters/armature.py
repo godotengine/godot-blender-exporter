@@ -39,6 +39,7 @@ def find_skeletion_node(node):
 
 class Bone:
     """A Bone has almost same attributes as Godot bones"""
+
     def __init__(self, bone_name, parent_name):
         # id assigned when add to skeleton
         self.id = None
@@ -97,6 +98,8 @@ class SkeletonNode(NodeTemplate):
 
     def __init__(self, name, parent):
         super().__init__(name, "Skeleton", parent)
+        self['bones_in_world_transform'] = True
+
         # Mapping from blender bone name to godot bone id and name
         self.bones = dict()
 
