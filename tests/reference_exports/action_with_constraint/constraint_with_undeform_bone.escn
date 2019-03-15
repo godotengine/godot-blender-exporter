@@ -43,6 +43,7 @@ surfaces/0 = {
 
 [node name="Armature" type="Skeleton" parent="."]
 
+bones_in_world_transform = true
 transform = Transform(0.999933, -0.0107949, 0.0042215, 0.0107736, 0.999929, 0.0050429, -0.00427564, -0.00499708, 0.999978, 0.017087, 0.00610369, 0.00843611)
 bones/0/name = "Bone"
 bones/0/parent = -1

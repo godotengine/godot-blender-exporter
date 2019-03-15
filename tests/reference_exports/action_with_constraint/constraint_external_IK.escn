@@ -60,6 +60,7 @@ anims/EmptyAction.001 = SubResource(1)
 
 [node name="Armature" type="Skeleton" parent="."]
 
+bones_in_world_transform = true
 transform = Transform(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0)
 bones/0/name = "Bone.001"
 bones/0/parent = -1
