@@ -44,7 +44,8 @@ def export_texture(escn_file, export_settings, image):
             src_path = bpy.path.abspath(image.filepath_raw)
         else:
             src_path = image.filepath_raw
-        copyfile(src_path, dst_path)
+        if os.path.abspath(src_path) != os.path.abspath(dst_path):
+            copyfile(src_path, dst_path)
 
     img_resource = ExternalResource(dst_path, "Texture")
     return escn_file.add_external_resource(img_resource, image)
