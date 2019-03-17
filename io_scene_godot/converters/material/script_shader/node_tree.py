@@ -319,8 +319,8 @@ def export_script_shader(escn_file, export_settings,
 
     exportable = False
     mtl_output_node = find_material_output_node(bl_node_mtl.node_tree)
-    surface_output_socket = mtl_output_node.inputs['Surface']
-    if surface_output_socket.is_linked:
+    if mtl_output_node is not None:
+        surface_output_socket = mtl_output_node.inputs['Surface']
         frag_node_list = breadth_first_search(surface_output_socket)
 
         node_to_converter_map = dict()
@@ -357,13 +357,14 @@ def export_script_shader(escn_file, export_settings,
             shader.flags.uv_or_tangent_used \
                 |= converter.flags.uv_or_tangent_used
 
-        surface_in_socket = surface_output_socket.links[0].from_socket
-        root_converter = node_to_converter_map[frag_node_list[0]]
-        if root_converter.is_valid():
-            exportable = True
-            shader.add_fragment_output(
-                root_converter.out_sockets_map[surface_in_socket]
-            )
+        if surface_output_socket.is_linked:
+            surface_in_socket = surface_output_socket.links[0].from_socket
+            root_converter = node_to_converter_map[frag_node_list[0]]
+            if root_converter.is_valid():
+                exportable = True
+                shader.add_fragment_output(
+                    root_converter.out_sockets_map[surface_in_socket]
+                )
 
     if not exportable:
         raise ValidationError(
