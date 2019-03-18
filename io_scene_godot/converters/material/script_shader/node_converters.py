@@ -78,6 +78,7 @@ class Texture:
     """A texture"""
 
     def __init__(self, bl_image, identifier, hint_normal):
+        # note that image could be None, it need to be safely handled
         self.image = bl_image
         self.hint_normal = hint_normal
         # identifier is the variable name in scripts
@@ -173,10 +174,10 @@ class NodeConverterBase:
         self.variable_count += 1
         return self._id_prefix + var_prefix + filter_id_illegal_char(hint)
 
-    def generate_tmp_texture_id(self, texture_name):
+    def generate_tmp_texture_id(self, hashable_key):
         """generate a temp variable for texture, later it would be replaced
         by uniform var"""
-        var_prefix = "tex%s_" % hash(texture_name)
+        var_prefix = "tex%s_" % hash(hashable_key)
         return self._id_prefix + filter_id_illegal_char(var_prefix)
 
     def generate_socket_assignment(self, to_socket_id, to_socket_type,
@@ -225,15 +226,16 @@ class NodeConverterBase:
             prop_b = input_b.get_property(pname)
 
             if pname == FragmentShaderLink.ALPHA:
-                # if one shader input has alpha, the other one should
+                # any shader node has no ALPHA property
                 # default to have alpha = 1.0
-                if prop_a and not prop_b:
+                if prop_a is not None and prop_b is None:
                     prop_b = '1.0'
-                elif prop_b and not prop_a:
+                elif prop_b is not None and prop_a is None:
                     prop_a = '1.0'
 
-            mix_result_id = self.generate_variable_id_str('bsdf_' + pname)
-            if prop_a and prop_b:
+            output_socket = self.bl_node.outputs[0]
+            mix_result_id = self.generate_shader_id_str(output_socket, pname)
+            if prop_a is not None and prop_b is not None:
                 ptype = FragmentShaderLink.get_property_type(pname)
                 self.local_code.append(
                     "%s = mix(%s, %s, %s)"
@@ -241,9 +243,9 @@ class NodeConverterBase:
                 )
 
                 output.set_property(pname, mix_result_id)
-            elif prop_a:
+            elif prop_a is not None:
                 output.set_property(pname, prop_a)
-            elif prop_b:
+            elif prop_b is not None:
                 output.set_property(pname, prop_b)
 
     def add_function_call(self, function, in_args, out_args):
@@ -422,6 +424,7 @@ class NodeConverterBase:
 
         for type_str, id_str in id_to_define:
             # don't define if they already in input sockets
+            assert isinstance(id_str, str) and id_str.isidentifier()
             if id_str not in self._defined_ids:
                 self._defined_ids.add(id_str)
                 self.output_definitions.append(
@@ -499,8 +502,7 @@ class BsdfNodeConverter(NodeConverterBase):
         output_shader_link = FragmentShaderLink()
         self.out_sockets_map[output_socket] = output_shader_link
 
-        if self.bl_node.bl_idname in \
-                ('ShaderNodeBsdfGlass', 'ShaderNodeBsdfPrincipled'):
+        if self.bl_node.bl_idname in ('ShaderNodeBsdfGlass',):
             self.flags.glass = True
 
         if self.bl_node.bl_idname in \
@@ -709,21 +711,24 @@ class ImageTextureNodeConverter(NodeConverterBase):
         function = find_node_function(self.bl_node)
 
         in_arguments = list()
-        tex_coord = self.in_sockets_map[self.bl_node.inputs[0]]
+        tex_coord_socket = self.bl_node.inputs[0]
+        tex_coord = self.in_sockets_map[tex_coord_socket]
+        if not tex_coord_socket.is_linked:
+            # TODO: once generated texture get supported, it should be changed
+            logging.warning(
+                "No texture coordinate input for '%s' "
+                "UV is used by default, at '%s'",
+                self.bl_node.bl_idname, self.bl_node.name)
+            self.local_code.append("%s = vec3(UV, 0.0)" % tex_coord)
 
+        tex_var = self.generate_tmp_texture_id(self.bl_node.name)
         if self.bl_node.image is not None:
-            tex_var = self.generate_tmp_texture_id(self.bl_node.image.name)
             is_normal = is_normal_texture(self.bl_node)
-            self.textures.append(
-                Texture(self.bl_node.image, tex_var, is_normal)
-            )
         else:
-            # it causes parsing error, so user can see it
-            tex_var = "NO_TEXTURE"
-            logging.error(
-                "No image selected for '%s', at'%s'",
-                self.bl_node.bl_idname, self.bl_node.name
-            )
+            is_normal = False
+        self.textures.append(
+            Texture(self.bl_node.image, tex_var, is_normal)
+        )
 
         in_arguments.append(tex_coord)
         in_arguments.append(tex_var)

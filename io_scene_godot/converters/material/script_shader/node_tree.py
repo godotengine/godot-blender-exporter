@@ -45,8 +45,9 @@ class ScriptShader:
     def add_fragment_output(self, output_shader_link):
         """link the node tree output with godot fragment output"""
         # pylint: disable-msg=too-many-branches
+        # pylint: disable-msg=too-many-statements
 
-        # hack define those two variable at the begining
+        # hack: define those two variable at the begining
         self._fragment_code_lines.insert(0, "\n")
         if self.flags.inv_view_mat_used:
             self._fragment_code_lines.insert(
@@ -126,23 +127,30 @@ class ScriptShader:
         alpha = output_shader_link.get_property(FragmentShaderLink.ALPHA)
         ior = output_shader_link.get_property(FragmentShaderLink.IOR)
         if self.flags.transparent and alpha is not None:
-            # define an unifrom var
-            refraction_offset = 'refraction_offset'
-            self._uniform_code_lines.append(
-                'uniform vec2 %s = vec2(0.2, 0.2)' % refraction_offset
-            )
             if ior is not None and self.flags.glass:
+                refraction_offset_value = (0.2, 0.2)
                 fresnel_func = find_function_by_name('refraction_fresnel')
                 self._functions.add(fresnel_func)
                 self._fragment_code_lines.append(
                     "refraction_fresnel(VERTEX, NORMAL, %s, %s)" %
                     (ior, alpha)
                 )
-            self._fragment_code_lines.append(
-                "EMISSION += textureLod(SCREEN_TEXTURE, SCREEN_UV - "
-                "NORMAL.xy * %s , ROUGHNESS).rgb * (1.0 - %s)" %
-                (refraction_offset, alpha)
-            )
+                refraction_offset = 'refraction_offset'
+                # just some magic random value, available for improvements
+                self._uniform_code_lines.append(
+                    'uniform vec2 %s = vec2(0.2, 0.2)' % refraction_offset
+                )
+                self._fragment_code_lines.append(
+                    "EMISSION += textureLod(SCREEN_TEXTURE, SCREEN_UV - "
+                    "NORMAL.xy * %s , ROUGHNESS).rgb * (1.0 - %s)" %
+                    (refraction_offset, alpha)
+                )
+            else:
+                self._fragment_code_lines.append(
+                    "EMISSION += textureLod(SCREEN_TEXTURE, SCREEN_UV, "
+                    "ROUGHNESS).rgb * (1.0 - %s)" % alpha
+                )
+
             self._fragment_code_lines.append(
                 "ALBEDO *= %s" % alpha
             )
@@ -233,12 +241,19 @@ class ScriptShader:
 
     def get_images(self):
         """return a set of all the images used in shader"""
-        return {tex.image for tex in self._textures}
+        image_set = set()
+        for tex in self._textures:
+            if tex.image is not None:
+                image_set.add(tex.image)
+        return image_set
 
     def get_image_texture_info(self):
         """return a list of tuple (image, texture uniform)"""
-        return [(tex.image, uniform)
-                for tex, uniform in self._textures.items()]
+        image_uniform_tuples = list()
+        for tex, uniform in self._textures.items():
+            if tex.image is not None:
+                image_uniform_tuples.append((tex.image, uniform))
+        return image_uniform_tuples
 
 
 def find_material_output_node(node_tree):
@@ -306,7 +321,8 @@ def export_texture(escn_file, export_settings, image):
             src_path = bpy.path.abspath(image.filepath_raw)
         else:
             src_path = image.filepath_raw
-        copyfile(src_path, dst_path)
+        if os.path.normpath(src_path) != os.path.normpath(dst_path):
+            copyfile(src_path, dst_path)
 
     img_resource = ExternalResource(dst_path, "Texture")
     return escn_file.add_external_resource(img_resource, image)
