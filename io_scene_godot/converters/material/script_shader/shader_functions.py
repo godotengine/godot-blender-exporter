@@ -128,12 +128,16 @@ void node_bsdf_principled(vec4 color, float subsurface, vec4 subsurface_color,
     BsdfShaderFunction(
         code="""
 void node_emission(vec4 emission_color, float strength,
-        out vec3 emission_out) {
+        out vec3 emission_out, out float alpha_out) {
     emission_out = emission_color.rgb * strength;
+    alpha_out = emission_color.a;
 }
 """,
         input_sockets=["Color", "Strength"],
-        output_properties=[FragmentShaderLink.EMISSION]
+        output_properties=[
+            FragmentShaderLink.EMISSION,
+            FragmentShaderLink.ALPHA,
+        ]
     ),
 
     BsdfShaderFunction(
@@ -179,7 +183,7 @@ void node_bsdf_glossy(vec4 color, float roughness, out vec3 albedo,
     BsdfShaderFunction(
         code="""
 void node_bsdf_transparent(vec4 color, out float alpha) {
-    alpha = 0.0;
+    alpha = clamp(1.0 - dot(color.rgb, vec3(0.3333334)), 0.0, 1.0);
 }
 """,
         input_sockets=['Color'],
