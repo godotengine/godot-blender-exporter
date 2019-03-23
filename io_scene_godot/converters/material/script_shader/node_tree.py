@@ -271,25 +271,38 @@ def find_material_output_node(node_tree):
     return output_node
 
 
-def breadth_first_search(begin_socket):
-    """bfs the node tree from the given socket"""
+def topology_sort(nodes):
+    """topology sort all the nodes"""
+    def find_zero_input_node(nodes_input_list):
+        for node, inputs in nodes_input_list:
+            if inputs == 0:
+                return node
+        return None
+
     sorted_node_list = list()
 
-    link_queue = list()
-    if begin_socket.is_linked:
-        link_queue.append(begin_socket.links[0])
-    while link_queue:
-        cur_link = link_queue.pop(0)
-        if not cur_link.is_valid:
-            continue
+    nodes_input_count = dict()
+    for node in nodes:
+        cnt = 0
+        for sock in node.inputs:
+            if sock.is_linked and sock.links[0].is_valid:
+                cnt += 1
+        nodes_input_count[node] = cnt
 
-        cur_node = cur_link.from_node
+    cur_node = find_zero_input_node(nodes_input_count.items())
+    while cur_node is not None:
         sorted_node_list.append(cur_node)
 
-        for in_sock in cur_node.inputs:
-            if in_sock.is_linked:
-                for link in in_sock.links:
-                    link_queue.append(link)
+        for sock in cur_node.outputs:
+            for link in sock.links:
+                if link.is_valid:
+                    nodes_input_count[link.to_node] -= 1
+
+        # made cur_node -1, so prevent it from being found
+        # as zero input
+        nodes_input_count[cur_node] = -1
+
+        cur_node = find_zero_input_node(nodes_input_count.items())
 
     return sorted_node_list
 
@@ -336,11 +349,13 @@ def export_script_shader(escn_file, export_settings,
     exportable = False
     mtl_output_node = find_material_output_node(bl_node_mtl.node_tree)
     if mtl_output_node is not None:
-        surface_output_socket = mtl_output_node.inputs['Surface']
-        frag_node_list = breadth_first_search(surface_output_socket)
+        frag_node_list = topology_sort(bl_node_mtl.node_tree.nodes)
 
         node_to_converter_map = dict()
-        for idx, node in enumerate(reversed(frag_node_list)):
+        for idx, node in enumerate(frag_node_list):
+            if node == mtl_output_node:
+                continue
+
             converter = converter_factory(idx, node)
             node_to_converter_map[node] = converter
 
@@ -373,9 +388,10 @@ def export_script_shader(escn_file, export_settings,
             shader.flags.uv_or_tangent_used \
                 |= converter.flags.uv_or_tangent_used
 
+        surface_output_socket = mtl_output_node.inputs['Surface']
         if surface_output_socket.is_linked:
             surface_in_socket = surface_output_socket.links[0].from_socket
-            root_converter = node_to_converter_map[frag_node_list[0]]
+            root_converter = node_to_converter_map[surface_in_socket.node]
             if root_converter.is_valid():
                 exportable = True
                 shader.add_fragment_output(
