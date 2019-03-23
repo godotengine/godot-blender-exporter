@@ -567,6 +567,7 @@ resource_name = "Shader Nodetree"
 code = "shader_type spatial;
 render_mode blend_mix, depth_draw_always, cull_back, diffuse_burley, specular_schlick_ggx;
 
+uniform sampler2D texture_0;
 
 
 void node_bsdf_diffuse(vec4 color, float roughness, out vec3 albedo,
@@ -576,32 +577,70 @@ void node_bsdf_diffuse(vec4 color, float roughness, out vec3 albedo,
     oren_nayar_roughness_out = roughness;
 }
 
+
+void node_tex_image(vec3 co, sampler2D ima, out vec4 color, out float alpha) {
+    color = texture(ima, co.xy);
+    alpha = color.a;
+}
+
 void vertex () {
 }
 
 void fragment () {
 	
+	// node: 'Texture Coordinate'
+	// type: 'ShaderNodeTexCoord'
+	// input sockets handling
+	// output sockets definitions
+	vec3 node0_out0_uv;
+	
+	node0_out0_uv = vec3(UV, 0.0);
+	
+	
 	// node: 'Diffuse BSDF'
 	// type: 'ShaderNodeBsdfDiffuse'
 	// input sockets handling
-	vec4 node0_in0_color = vec4(0.800000011920929, 0.800000011920929,
+	vec4 node1_in0_color = vec4(0.800000011920929, 0.800000011920929,
 		0.800000011920929, 1.0);
-	float node0_in1_roughness = float(0.0);
-	vec3 node0_in2_normal = NORMAL;
+	float node1_in1_roughness = float(0.0);
+	vec3 node1_in2_normal = NORMAL;
 	// output sockets definitions
-	vec3 node0_bsdf_out0_albedo;
-	float node0_bsdf_out1_specular;
-	float node0_bsdf_out2_oren_nayar_roughness;
+	vec3 node1_bsdf_out0_albedo;
+	float node1_bsdf_out1_specular;
+	float node1_bsdf_out2_oren_nayar_roughness;
 	
-	node_bsdf_diffuse(node0_in0_color, node0_in1_roughness, node0_bsdf_out0_albedo,
-		node0_bsdf_out1_specular, node0_bsdf_out2_oren_nayar_roughness);
+	node_bsdf_diffuse(node1_in0_color, node1_in1_roughness, node1_bsdf_out0_albedo,
+		node1_bsdf_out1_specular, node1_bsdf_out2_oren_nayar_roughness);
 	
 	
-	ALBEDO = node0_bsdf_out0_albedo;
-	SPECULAR = node0_bsdf_out1_specular;
-	NORMAL = node0_in2_normal;
+	// node: 'Image Texture'
+	// type: 'ShaderNodeTexImage'
+	// input sockets handling
+	vec3 node2_in0_vector = node0_out0_uv;
+	// output sockets definitions
+	vec4 node2_out0_color;
+	float node2_out1_alpha;
+	
+	node_tex_image(node2_in0_vector, texture_0, node2_out0_color, node2_out1_alpha);
+	
+	
+	// node: 'Displacement'
+	// type: 'ShaderNodeDisplacement'
+	// input sockets handling
+	float node3_in0_height = dot(node2_out0_color.rgb, vec3(0.2126, 0.7152, 0.0722));
+	float node3_in1_midlevel = float(0.0);
+	float node3_in2_scale = float(0.10000000149011612);
+	vec3 node3_in3_normal = NORMAL;
+	// output sockets definitions
+	
+	// Warn: node not supported
+	
+	
+	ALBEDO = node1_bsdf_out0_albedo;
+	SPECULAR = node1_bsdf_out1_specular;
+	NORMAL = node1_in2_normal;
 	// uncomment it only when you set diffuse mode to oren nayar
-	// ROUGHNESS = node0_bsdf_out2_oren_nayar_roughness;
+	// ROUGHNESS = node1_bsdf_out2_oren_nayar_roughness;
 }
 "
 
@@ -609,6 +648,7 @@ void fragment () {
 
 resource_name = ""
 shader = SubResource(13)
+shader_param/texture_0 = ExtResource(2)
 
 [sub_resource id=15 type="ArrayMesh"]
 

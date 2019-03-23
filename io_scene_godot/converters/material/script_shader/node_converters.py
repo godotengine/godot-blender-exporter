@@ -879,7 +879,8 @@ def converter_factory(idx, node):
     if node.bl_idname in NODE_CONVERTERS:
         return NODE_CONVERTERS[node.bl_idname](idx, node)
 
-    if node.outputs[0].identifier in ('Emission', 'BSDF', 'BSSRDF'):
+    if (node.outputs and
+            node.outputs[0].identifier in ('Emission', 'BSDF', 'BSSRDF')):
         # for shader node output bsdf closure
         return BsdfNodeConverter(idx, node)
 
