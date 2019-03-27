@@ -36,6 +36,7 @@ surfaces/0 = {
 resource_name = "Key002Action"
 step = 0.1
 length = 2.45833
+loop = false
 tracks/0/type = "value"
 tracks/0/path = NodePath(".:blend_shapes/Key 1")
 tracks/0/interp = 1
