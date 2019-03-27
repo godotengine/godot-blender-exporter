@@ -5,6 +5,7 @@
 resource_name = "Armature001Action"
 step = 0.1
 length = 4.125
+loop = false
 tracks/0/type = "transform"
 tracks/0/path = NodePath(".:Bone.003")
 tracks/0/interp = 1
@@ -42,6 +43,7 @@ surfaces/0 = {
 resource_name = "ArmatureAction"
 step = 0.1
 length = 4.16667
+loop = false
 tracks/0/type = "transform"
 tracks/0/path = NodePath(".:Bone.001")
 tracks/0/interp = 1

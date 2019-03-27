@@ -24,6 +24,7 @@ surfaces/0 = {
 resource_name = "SunAction001"
 step = 0.1
 length = 4.58333
+loop = false
 tracks/0/type = "value"
 tracks/0/path = NodePath(".:light_negative")
 tracks/0/interp = 0

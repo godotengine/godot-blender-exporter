@@ -489,6 +489,7 @@ class AnimationResource(InternalResource):
         super().__init__('Animation', name)
         self['step'] = 0.1
         self['length'] = 0
+        self['loop'] = name.endswith("_loop")
 
         # helper attributes, not exported to ESCN
         self.tracks = collections.OrderedDict()

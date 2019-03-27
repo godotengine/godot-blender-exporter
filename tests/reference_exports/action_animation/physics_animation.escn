@@ -34,6 +34,7 @@ points = PoolVector3Array(1.0, -1.0, -1.0, -1.0, 1.0, -1.0, 1.0, 1.0, -1.0, -1.0
 resource_name = "Cube003Action001"
 step = 0.1
 length = 1.0
+loop = false
 tracks/0/type = "transform"
 tracks/0/path = NodePath(".:")
 tracks/0/interp = 1
