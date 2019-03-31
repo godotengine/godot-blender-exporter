@@ -2,6 +2,8 @@
 AnimationPlayer as well as distribute Blender action into various
 action exporting functions"""
 
+import bpy
+import mathutils
 from .action import (
     export_camera_action,
     export_shapekey_action,
@@ -93,6 +95,7 @@ class ObjectAnimationExporter:
             ActionStrip(active_action),
             self.animation_player.active_animation
         )
+        self.clear_action_effect()
 
         if not self.need_baking:
             # here export unmuted nla_tracks into animation resource,
@@ -108,6 +111,7 @@ class ObjectAnimationExporter:
                             ActionStrip(strip),
                             self.animation_player.active_animation
                         )
+                        self.clear_action_effect()
 
     def export_active_action_from_nla(self, escn_file, export_settings):
         """Export all unmute nla_tracks into an active action.
@@ -127,6 +131,7 @@ class ObjectAnimationExporter:
                         ActionStrip(strip),
                         self.animation_player.active_animation
                     )
+                    self.clear_action_effect()
 
     def export_stashed_track(self, escn_file, export_settings, stashed_track):
         """Export a muted nla_track, track with all its contained action
@@ -158,6 +163,7 @@ class ObjectAnimationExporter:
                     ActionStrip(strip),
                     anim_resource
                 )
+                self.clear_action_effect()
 
         if self.need_baking:
             stashed_track.mute = True
@@ -173,6 +179,15 @@ class ObjectAnimationExporter:
                             ActionStrip(strip),
                             anim_resource
                         )
+                        self.clear_action_effect()
+
+    def clear_action_effect(self):
+        """Clear side effect of exporting an action"""
+        if (isinstance(self.blender_object, bpy.types.Object) and
+                self.blender_object.pose is not None):
+            for pose_bone in self.blender_object.pose.bones:
+                rest_bone = pose_bone.bone
+                pose_bone.matrix_basis = mathutils.Matrix.Identity(4)
 
 
 def export_animation_data(escn_file, export_settings, godot_node,
