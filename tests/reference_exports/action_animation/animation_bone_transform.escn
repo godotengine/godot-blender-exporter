@@ -49,13 +49,13 @@ bones/0/bound_children = []
 bones/1/name = "Bone.001"
 bones/1/parent = 0
 bones/1/rest = Transform(1.0, 0.0, 0.0, 0.0, 1.0, 3.42285e-08, 0.0, -3.42285e-08, 1.0, 0.0, 0.0, -1.0)
-bones/1/pose = Transform(0.949509, 0.207304, 0.235496, -0.189531, 0.97717, -0.096008, -0.250022, 0.0465267, 0.967122, 0.0, 0.0, 0.0)
+bones/1/pose = Transform(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0)
 bones/1/enabled = true
 bones/1/bound_children = []
 bones/2/name = "Bone.002"
 bones/2/parent = 1
 bones/2/rest = Transform(1.0, 0.0, 0.0, 0.0, 1.0, -3.55271e-15, 0.0, 3.55271e-15, 1.0, 0.0, 0.0, -1.30874)
-bones/2/pose = Transform(0.830409, 0.381597, 0.405961, -0.321902, 0.923317, -0.20944, -0.454752, 0.0432416, 0.889567, 0.0, 0.0, 0.0)
+bones/2/pose = Transform(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0)
 bones/2/enabled = true
 bones/2/bound_children = []
 
