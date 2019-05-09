@@ -13,7 +13,7 @@ from .animation import export_animation_data, AttributeConvertInfo
 
 def export_empty_node(escn_file, export_settings, node, parent_gd_node):
     """Converts an empty (or any unknown node) into a spatial"""
-    if "EMPTY" not in export_settings['object_types']:
+    if "EMPTY" not in export_settings['object_types'] or node.hide_render:
         return parent_gd_node
     empty_node = NodeTemplate(node.name, "Spatial", parent_gd_node)
     empty_node['transform'] = node.matrix_local
