@@ -53,11 +53,18 @@ class ObjectAnimationExporter:
     def check_baking_condition(self, action_type):
         """Check whether the animated object has any constraint and
         thus need to do baking, if needs, some states would be set"""
-        has_obj_cst = check_object_constraint(self.blender_object)
-        has_pose_cst = check_pose_constraint(self.blender_object)
-        self.need_baking = (
-            action_type == 'transform' and (has_obj_cst or has_pose_cst)
-        )
+        if action_type == 'transform':
+            has_obj_cst = check_object_constraint(self.blender_object)
+            has_pose_cst = check_pose_constraint(self.blender_object)
+            has_non_inherit_bone = False
+            if isinstance(self.blender_object.data, bpy.types.Armature):
+                for rbone in self.blender_object.data.bones:
+                    if (rbone.use_inherit_rotation is False or
+                            rbone.use_inherit_scale is False):
+                        has_non_inherit_bone = True
+                        break
+            self.need_baking = (
+                has_obj_cst or has_pose_cst or has_non_inherit_bone)
 
     def preprocess_nla_tracks(self, blender_object):
         """Iterative through nla tracks, separately store mute and unmuted
