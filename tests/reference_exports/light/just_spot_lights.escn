@@ -62,73 +62,79 @@ surfaces/0 = {
 [node name="Lamp007" type="SpotLight" parent="."]
 
 light_specular = 1.0
-light_energy = 5.0
 light_color = Color(0.0, 1.0, 0.901999, 1.0)
 shadow_color = Color(0.0, 0.0, 0.0, 1.0)
+light_energy = 5.0
 spot_angle = 10.0
 spot_angle_attenuation = 20.0
 spot_range = 3.0
 transform = Transform(1.0, 0.0, 0.0, 0.0, -4.37114e-08, 1.0, 0.0, -1.0, -4.37114e-08, 1.0, 2.0, -3.0)
+light_negative = false
 shadow_enabled = false
 
 [node name="Lamp006" type="SpotLight" parent="."]
 
 light_specular = 1.0
-light_energy = 5.0
 light_color = Color(0.0, 1.0, 0.901999, 1.0)
 shadow_color = Color(0.0, 0.0, 0.0, 1.0)
+light_energy = 5.0
 spot_angle = 10.0
 spot_angle_attenuation = 0.19802
 spot_range = 3.0
 transform = Transform(1.0, 0.0, 0.0, 0.0, -4.37114e-08, 1.0, 0.0, -1.0, -4.37114e-08, 2.0, 2.0, -3.0)
+light_negative = false
 shadow_enabled = false
 
 [node name="Lamp005" type="SpotLight" parent="."]
 
 light_specular = 1.0
-light_energy = 1.0
 light_color = Color(0.0, 1.0, 0.901999, 1.0)
 shadow_color = Color(0.0, 0.0, 0.0, 1.0)
+light_energy = 1.0
 spot_angle = 10.0
 spot_angle_attenuation = 0.19802
 spot_range = 3.0
 transform = Transform(1.0, 0.0, 0.0, 0.0, -4.37114e-08, 1.0, 0.0, -1.0, -4.37114e-08, 2.0, 2.0, -2.0)
+light_negative = false
 shadow_enabled = false
 
 [node name="Lamp002" type="SpotLight" parent="."]
 
 light_specular = 1.0
-light_energy = 1.0
 light_color = Color(0.0, 1.0, 0.901999, 1.0)
 shadow_color = Color(0.0, 0.0, 0.0, 1.0)
+light_energy = 1.0
 spot_angle = 10.0
 spot_angle_attenuation = 20.0
 spot_range = 3.0
 transform = Transform(1.0, 0.0, 0.0, 0.0, -4.37114e-08, 1.0, 0.0, -1.0, -4.37114e-08, 1.0, 2.0, -2.0)
+light_negative = false
 shadow_enabled = false
 
 [node name="Lamp001" type="SpotLight" parent="."]
 
 light_specular = 1.0
-light_energy = 1.0
 light_color = Color(0.0, 1.0, 0.901999, 1.0)
 shadow_color = Color(0.0, 0.0, 0.0, 1.0)
+light_energy = 1.0
 spot_angle = 60.0
 spot_angle_attenuation = 1.25
 spot_range = 3.0
 transform = Transform(1.0, 0.0, 0.0, 0.0, 0.906308, 0.422618, 0.0, -0.422618, 0.906308, 1.0, 1.0, 2.0)
+light_negative = false
 shadow_enabled = false
 
 [node name="Lamp000" type="SpotLight" parent="."]
 
 light_specular = 1.0
-light_energy = 1.0
 light_color = Color(0.122916, 1.0, 0.0, 1.0)
 shadow_color = Color(0.0, 0.0, 0.0, 1.0)
+light_energy = 1.0
 spot_angle = 10.0
 spot_angle_attenuation = 1.25
 spot_range = 5.0
 transform = Transform(1.0, 0.0, 0.0, 0.0, 0.906308, 0.422618, 0.0, -0.422618, 0.906308, -1.0, 1.0, 2.0)
+light_negative = false
 shadow_enabled = false
 
 [node name="Cube001" type="MeshInstance" parent="."]
@@ -146,25 +152,27 @@ transform = Transform(0.3, 0.0, 0.0, 0.0, 0.6, 0.0, 0.0, 0.0, 0.3, -4.0, 0.0, 0.
 [node name="Lamp004" type="SpotLight" parent="."]
 
 light_specular = 1.0
-light_energy = 1.0
 light_color = Color(0.995604, 0.0, 1.0, 1.0)
 shadow_color = Color(0.0, 0.0, 0.0, 1.0)
+light_energy = 1.0
 spot_angle = 37.5
 spot_angle_attenuation = 1.25
 spot_range = 5.0
 transform = Transform(1.0, 0.0, 0.0, 0.0, 0.906308, 0.422618, 0.0, -0.422618, 0.906308, -4.0, 1.0, 2.0)
+light_negative = false
 shadow_enabled = true
 
 [node name="Lamp003" type="SpotLight" parent="."]
 
 light_specular = 1.0
-light_energy = 1.0
 light_color = Color(0.0, 0.612489, 1.0, 1.0)
 shadow_color = Color(0.0, 0.0, 0.0, 1.0)
+light_energy = 1.0
 spot_angle = 37.5
 spot_angle_attenuation = 1.25
 spot_range = 5.0
 transform = Transform(1.0, 0.0, 0.0, 0.0, 0.906308, 0.422618, 0.0, -0.422618, 0.906308, -6.0, 1.0, 2.0)
+light_negative = false
 shadow_enabled = false
 
 [node name="Plane" type="MeshInstance" parent="."]

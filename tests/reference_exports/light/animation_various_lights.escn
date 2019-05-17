@@ -146,13 +146,14 @@ surfaces/0 = {
 [node name="SpotDistanceChange" type="SpotLight" parent="."]
 
 light_specular = 1.0
-light_energy = 1.0
 light_color = Color(1.0, 1.0, 1.0, 1.0)
 shadow_color = Color(0.0, 0.0, 0.0, 1.0)
+light_energy = 1.0
 spot_angle = 22.5
 spot_angle_attenuation = 1.25
 spot_range = 25.0
 transform = Transform(1.0, 0.0, 0.0, 0.0, -4.37114e-08, 1.0, 0.0, -1.0, -4.37114e-08, 0.223751, 3.0266, 1.21379)
+light_negative = false
 shadow_enabled = true
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="SpotDistanceChange"]
@@ -163,13 +164,14 @@ anims/Spot.003Action.001 = SubResource(1)
 [node name="SpotTransformChange" type="SpotLight" parent="."]
 
 light_specular = 1.0
-light_energy = 1.0
 light_color = Color(1.0, 1.0, 1.0, 1.0)
 shadow_color = Color(0.0, 0.0, 0.0, 1.0)
+light_energy = 1.0
 spot_angle = 22.5
 spot_angle_attenuation = 1.25
 spot_range = 25.0
 transform = Transform(0.477268, -3.84117e-08, 0.878758, -0.878758, -2.0862e-08, 0.477268, 0.0, -1.0, -4.37114e-08, -0.760565, 3.14704, 6.40839)
+light_negative = false
 shadow_enabled = true
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="SpotTransformChange"]
@@ -186,13 +188,14 @@ transform = Transform(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, -5.52819, 0.7
 [node name="ShadowColorChange" type="SpotLight" parent="."]
 
 light_specular = 1.0
-light_energy = 1.0
 light_color = Color(1.0, 1.0, 1.0, 1.0)
 shadow_color = Color(0.0, 0.0, 0.0, 1.0)
+light_energy = 1.0
 spot_angle = 22.5
 spot_angle_attenuation = 1.25
 spot_range = 25.0
 transform = Transform(0.958848, -0.28392, -2.18837e-08, 0.178546, 0.602982, 0.777518, -0.220753, -0.745521, 0.628861, -4.64127, 6.11957, 1.29809)
+light_negative = false
 shadow_enabled = true
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="ShadowColorChange"]
@@ -209,13 +212,14 @@ transform = Transform(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, -4.22111, 1.2
 [node name="SpotRangeChange" type="SpotLight" parent="."]
 
 light_specular = 1.0
-light_energy = 1.0
 light_color = Color(1.0, 1.0, 1.0, 1.0)
 shadow_color = Color(0.0, 0.0, 0.0, 1.0)
+light_energy = 1.0
 spot_angle = 22.5
 spot_angle_attenuation = 1.25
 spot_range = 25.0
 transform = Transform(1.0, 0.0, 0.0, 0.0, -4.37114e-08, 1.0, 0.0, -1.0, -4.37114e-08, 6.6415, 3.84213, -6.03583)
+light_negative = false
 shadow_enabled = true
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="SpotRangeChange"]
@@ -226,11 +230,12 @@ anims/SpotAction = SubResource(6)
 [node name="LightColorChange" type="OmniLight" parent="."]
 
 light_specular = 1.0
-light_energy = 1.0
 light_color = Color(1.0, 0.266431, 0.248791, 1.0)
 shadow_color = Color(0.0, 0.0, 0.0, 1.0)
+light_energy = 1.0
 omni_range = 1.0
 transform = Transform(-0.290865, -0.771101, 0.566393, -0.0551891, 0.604525, 0.794672, -0.955171, 0.199883, -0.218391, 5.25185, 0.215087, 5.49347)
+light_negative = false
 shadow_enabled = true
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="LightColorChange"]

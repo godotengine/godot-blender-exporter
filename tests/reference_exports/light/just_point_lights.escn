@@ -62,11 +62,12 @@ surfaces/0 = {
 [node name="Lamp003" type="OmniLight" parent="."]
 
 light_specular = 1.0
-light_energy = 1.0
 light_color = Color(0.836064, 0.0264334, 1.0, 1.0)
 shadow_color = Color(0.0, 0.0, 0.0, 1.0)
+light_energy = 1.0
 omni_range = 5.0
 transform = Transform(1.0, 0.0, 0.0, 0.0, -4.37114e-08, 1.0, 0.0, -1.0, -4.37114e-08, 0.0, 0.4, 1.0)
+light_negative = false
 shadow_enabled = true
 
 [node name="Cube001" type="MeshInstance" parent="."]
@@ -84,21 +85,23 @@ transform = Transform(0.3, 0.0, 0.0, 0.0, 0.6, 0.0, 0.0, 0.0, 0.3, -2.0, 0.0, 0.
 [node name="Lamp002" type="OmniLight" parent="."]
 
 light_specular = 1.0
-light_energy = 1.0
 light_color = Color(0.0, 1.0, 0.064745, 1.0)
 shadow_color = Color(0.0, 0.0, 0.0, 1.0)
+light_energy = 1.0
 omni_range = 5.0
 transform = Transform(1.0, 0.0, 0.0, 0.0, -4.37114e-08, 1.0, 0.0, -1.0, -4.37114e-08, -2.0, 0.4, 1.0)
+light_negative = false
 shadow_enabled = false
 
 [node name="Lamp001" type="OmniLight" parent="."]
 
 light_specular = 1.0
-light_energy = 1.0
 light_color = Color(1.0, 0.0, 0.0, 1.0)
 shadow_color = Color(0.0, 0.0, 0.0, 1.0)
+light_energy = 1.0
 omni_range = 2.0
 transform = Transform(1.0, 0.0, 0.0, 0.0, -4.37114e-08, 1.0, 0.0, -1.0, -4.37114e-08, -6.0, 1.0, 3.0)
+light_negative = false
 shadow_enabled = false
 
 [node name="Plane" type="MeshInstance" parent="."]
@@ -110,11 +113,12 @@ transform = Transform(10.0, 0.0, 0.0, 0.0, 10.0, 0.0, 0.0, 0.0, 10.0, 0.0, 0.0, 
 [node name="Lamp" type="OmniLight" parent="."]
 
 light_specular = 1.0
-light_energy = 1.0
 light_color = Color(1.0, 1.0, 1.0, 1.0)
 shadow_color = Color(0.0, 0.0, 0.0, 1.0)
+light_energy = 1.0
 omni_range = 2.0
 transform = Transform(1.0, 0.0, 0.0, 0.0, -4.37114e-08, 1.0, 0.0, -1.0, -4.37114e-08, -6.0, 1.0, 0.0)
+light_negative = false
 shadow_enabled = false
 
 [node name="Camera" type="Camera" parent="."]

@@ -91,14 +91,17 @@ class LightNode(NodeTemplate):
     _light_attr_conv = [
         AttributeConvertInfo(
             'specular_factor', 'light_specular', lambda x: x),
-        AttributeConvertInfo('energy', 'light_energy', lambda x: x),
         AttributeConvertInfo('color', 'light_color', gamma_correct),
         AttributeConvertInfo('shadow_color', 'shadow_color', gamma_correct),
     ]
     _omni_attr_conv = [
+        AttributeConvertInfo(
+            'energy', 'light_energy', lambda x: abs(x / 100.0)),
         AttributeConvertInfo('distance', 'omni_range', lambda x: x),
     ]
     _spot_attr_conv = [
+        AttributeConvertInfo(
+            'energy', 'light_energy', lambda x: abs(x / 100.0)),
         AttributeConvertInfo(
             'spot_size', 'spot_angle', lambda x: math.degrees(x/2)
         ),
@@ -106,6 +109,9 @@ class LightNode(NodeTemplate):
             'spot_blend', 'spot_angle_attenuation', lambda x: 0.2/(x + 0.01)
         ),
         AttributeConvertInfo('distance', 'spot_range', lambda x: x),
+    ]
+    _directional_attr_conv = [
+        AttributeConvertInfo('energy', 'light_energy', abs),
     ]
 
     @property
@@ -116,6 +122,8 @@ class LightNode(NodeTemplate):
             return self._light_attr_conv + self._omni_attr_conv
         if self.get_type() == 'SpotLight':
             return self._light_attr_conv + self._spot_attr_conv
+        if self.get_type() == 'DirectionalLight':
+            return self._light_attr_conv + self._directional_attr_conv
         return self._light_attr_conv
 
 
@@ -147,22 +155,9 @@ def export_light_node(escn_file, export_settings, node, parent_gd_node):
         # These cannot be set via AttributeConvertInfo as it will not handle
         # animations correctly
         light_node['transform'] = fix_directional_transform(node.matrix_local)
-        if light.use_nodes:
-            emission = find_shader_node(light.node_tree, 'ShaderNodeEmission')
-            if emission:
-                strength = node_input(emission, 'Strength') or 100
-                color = node_input(emission, 'Color') or [1, 1, 1]
-                # we don't have an easy way to get these in cycles
-                # don't set them and let godot use its defaults
-                del light_node['light_specular']
-                del light_node['shadow_color']
-                # strength=100 in cycles is roughly equivalent to energy=1
-                light_node['light_energy'] = abs(strength / 100.0)
-                light_node['light_color'] = gamma_correct(color)
-                light_node['shadow_enabled'] = light.cycles.cast_shadow
-                light_node['light_negative'] = strength < 0
-        else:
-            light_node['shadow_enabled'] = light.use_shadow
+        light_node['light_negative'] = light.energy < 0
+        light_node['shadow_enabled'] = (
+            light.use_shadow and light.cycles.cast_shadow)
 
         escn_file.add_node(light_node)
 
