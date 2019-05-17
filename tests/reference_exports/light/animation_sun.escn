@@ -46,10 +46,11 @@ transform = Transform(7.26935, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 7.57504, 0.109
 [node name="Sun" type="DirectionalLight" parent="."]
 
 light_specular = 1.0
-light_energy = 1.0
 light_color = Color(1.0, 1.0, 1.0, 1.0)
 shadow_color = Color(0.0, 0.0, 0.0, 1.0)
+light_energy = 1.0
 transform = Transform(0.883713, -0.407974, 0.229367, -0.443707, -0.574356, 0.687924, -0.148916, -0.709699, -0.688587, 0.0, 5.2651, -7.49279)
+light_negative = false
 shadow_enabled = true
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="Sun"]

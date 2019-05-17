@@ -32,11 +32,12 @@ transform = Transform(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0
 [node name="Lamp" type="OmniLight" parent="."]
 
 light_specular = 1.0
-light_energy = 1.0
 light_color = Color(1.0, 1.0, 1.0, 1.0)
 shadow_color = Color(0.0, 0.0, 0.0, 1.0)
+light_energy = 1.0
 omni_range = 30.0
 transform = Transform(-0.290865, -0.771101, 0.566393, -0.0551891, 0.604525, 0.794672, -0.955171, 0.199883, -0.218391, 4.07625, 5.90386, -1.00545)
+light_negative = false
 shadow_enabled = true
 
 [node name="Camera" type="Camera" parent="."]
