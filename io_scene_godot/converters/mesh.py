@@ -178,9 +178,7 @@ class MeshResourceExporter:
         self.object.show_only_shape_key = True
         self.object.active_shape_key_index = 0
 
-        mesh = self.object.to_mesh(bpy.context.view_layer.depsgraph,
-                                   apply_modifiers=apply_modifiers,
-                                   calc_undeformed=True)
+        mesh = self.object.to_mesh()
 
         self.object.show_only_shape_key = False
 
@@ -221,18 +219,6 @@ class MeshResourceExporter:
         bpy.data.meshes.remove(mesh)
 
     @staticmethod
-    def extract_shape_keys(blender_shape_keys):
-        """Return a list of (shape_key_index, shape_key_object) each of them
-        is a shape key needs exported"""
-        # base shape key needn't be exported
-        ret = list()
-        base_key = blender_shape_keys.reference_key
-        for index, shape_key in enumerate(blender_shape_keys.key_blocks):
-            if shape_key != base_key:
-                ret.append((index, shape_key))
-        return ret
-
-    @staticmethod
     def validate_morph_mesh_modifiers(mesh_object):
         """Check whether a mesh has modifiers not
         compatible with shape key"""
@@ -255,9 +241,15 @@ class MeshResourceExporter:
 
         return surfaces_morph_list
 
-    # pylint: disable-msg=R0914
+    # pylint: disable-msg=too-many-locals
     def export_morphs(self, export_settings, surfaces):
         """Export shape keys in mesh node and append them to surfaces"""
+        self.mesh_resource["blend_shape/names"] = Array(
+            prefix="PoolStringArray(", suffix=')'
+        )
+        self.mesh_resource["blend_shape/mode"] = 0
+
+        # toggle shapekey uncompatible modifiers to false
         modifier_config_cache = list()
         if export_settings['use_mesh_modifiers']:
             if not self.validate_morph_mesh_modifiers(
@@ -269,33 +261,25 @@ class MeshResourceExporter:
                 )
 
             for modifier in self.object.modifiers:
-                modifier_config_cache.append(modifier.show_render)
-                modifier.show_render = False
+                modifier_config_cache.append(modifier.show_viewport)
+                modifier.show_viewport = False
 
-        self.mesh_resource["blend_shape/names"] = Array(
-            prefix="PoolStringArray(", suffix=')'
-        )
-        self.mesh_resource["blend_shape/mode"] = 0
+        # turn on shape key mode
+        self.object.show_only_shape_key = True
+        blender_shape_keys = self.object.data.shape_keys
+        for index, shape_key in enumerate(blender_shape_keys.key_blocks):
+            if shape_key == blender_shape_keys.reference_key:
+                continue
 
-        shape_keys_to_export = self.extract_shape_keys(
-            self.object.data.shape_keys
-        )
-        for index, shape_key in shape_keys_to_export:
             self.mesh_resource["blend_shape/names"].append(
                 '"{}"'.format(shape_key.name)
             )
 
-            self.object.show_only_shape_key = True
             self.object.active_shape_key_index = index
-            shape_key.value = 1.0
 
-            shape_key_mesh = self.object.to_mesh(
-                bpy.context.view_layer.depsgraph,
-                apply_modifiers=True,
-                calc_undeformed=True
-            )
-
-            self.object.show_only_shape_key = False
+            bpy.context.view_layer.depsgraph.update()
+            shape_key_mesh = self.object.evaluated_get(
+                bpy.context.view_layer.depsgraph).to_mesh()
 
             triangulate_mesh(shape_key_mesh)
 
@@ -332,6 +316,9 @@ class MeshResourceExporter:
 
             bpy.data.meshes.remove(shape_key_mesh)
 
+        # turn off shape key mode
+        self.object.show_only_shape_key = False
+        # revert modifiers
         if export_settings['use_mesh_modifiers']:
             for index, modifier in enumerate(self.object.modifiers):
                 modifier.show_render = modifier_config_cache[index]
