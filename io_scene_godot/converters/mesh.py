@@ -178,7 +178,11 @@ class MeshResourceExporter:
         self.object.show_only_shape_key = True
         self.object.active_shape_key_index = 0
 
-        mesh = self.object.to_mesh()
+        if apply_modifiers:
+            mesh = self.object.evaluated_get(
+                bpy.context.view_layer.depsgraph).to_mesh()
+        else:
+            mesh = self.object.to_mesh()
 
         self.object.show_only_shape_key = False
 

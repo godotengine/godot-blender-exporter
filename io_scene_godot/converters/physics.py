@@ -121,7 +121,7 @@ def generate_convex_mesh_array(escn_file, export_settings, node):
 
     col_shape = InternalResource("ConvexPolygonShape", mesh.name)
 
-    mesh = node.to_mesh()
+    mesh = node.evaluated_get(bpy.context.view_layer.depsgraph).to_mesh()
 
     # Triangulate
     triangulated_mesh = bmesh.new()
@@ -154,7 +154,7 @@ def generate_triangle_mesh_array(escn_file, export_settings, node):
 
     col_shape = InternalResource("ConcavePolygonShape", mesh.name)
 
-    mesh = node.to_mesh()
+    mesh = node.evaluated_get(bpy.context.view_layer.depsgraph).to_mesh()
 
     # Triangulate
     triangulated_mesh = bmesh.new()
