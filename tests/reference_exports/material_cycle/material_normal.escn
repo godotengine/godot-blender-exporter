@@ -1,6 +1,6 @@
 [gd_scene load_steps=1 format=2]
-[ext_resource id=1 path="Normal_OGL.png" type="Texture"]
 
+[ext_resource id=1 path="Normal_OGL.png" type="Texture"]
 
 [ext_resource id=2 path="bump.png" type="Texture"]
 
@@ -1105,8 +1105,8 @@ surfaces/0 = {
 	],
 	"morph_arrays":[]
 }
-[node type="Spatial" name="Scene"]
 
+[node type="Spatial" name="Scene"]
 
 [node name="test_normal_tangent" type="MeshInstance" parent="."]
 
@@ -1118,8 +1118,8 @@ transform = Transform(2.17434, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 2.089, 5.56855
 
 mesh = SubResource(6)
 visible = true
-transform = Transform(1.87169, 0.0, 0.0, 0.0, 1.87169, 0.0, 0.0, 0.0, 1.87169, -7.39736, 6.91874, -7.43003)
 material/0 = SubResource(8)
+transform = Transform(1.87169, 0.0, 0.0, 0.0, 1.87169, 0.0, 0.0, 0.0, 1.87169, -7.39736, 6.91874, -7.43003)
 
 [node name="test_mapping_texture" type="MeshInstance" parent="."]
 
@@ -1131,15 +1131,15 @@ transform = Transform(1.87169, 0.0, 0.0, 0.0, 1.87169, 0.0, 0.0, 0.0, 1.87169, -
 
 mesh = SubResource(6)
 visible = true
-transform = Transform(1.87169, 0.0, 0.0, 0.0, 1.87169, 0.0, 0.0, 0.0, 1.87169, -4.71194, 9.35422, 0.926832)
 material/0 = SubResource(10)
+transform = Transform(1.87169, 0.0, 0.0, 0.0, 1.87169, 0.0, 0.0, 0.0, 1.87169, -4.71194, 9.35422, 0.926832)
 
 [node name="test_mapping_point" type="MeshInstance" parent="."]
 
 mesh = SubResource(6)
 visible = true
-transform = Transform(1.87169, 0.0, 0.0, 0.0, 1.87169, 0.0, 0.0, 0.0, 1.87169, -2.75008, 9.34185, 5.68027)
 material/0 = SubResource(12)
+transform = Transform(1.87169, 0.0, 0.0, 0.0, 1.87169, 0.0, 0.0, 0.0, 1.87169, -2.75008, 9.34185, 5.68027)
 
 [node name="Lamp" type="DirectionalLight" parent="."]
 

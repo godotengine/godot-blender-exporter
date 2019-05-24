@@ -155,8 +155,8 @@ surfaces/0 = {
 
 resource_name = "Sphere003Collision"
 radius = 0.5
-[node type="Spatial" name="Scene"]
 
+[node type="Spatial" name="Scene"]
 
 [node name="Cube002Physics" type="StaticBody" parent="."]
 
@@ -175,7 +175,7 @@ shape = SubResource(1)
 
 mesh = SubResource(2)
 visible = true
-transform = Transform(1.0, 0.0, 0.0, 0.0, 7.54979e-08, -1.0, 0.0, 1.0, 7.54979e-08, 0.0, 0.0, 0.0)
+transform = Transform(1.0, 0.0, 0.0, 0.0, -4.37114e-08, -1.0, 0.0, 1.0, -4.37114e-08, 0.0, 0.0, 0.0)
 
 [node name="Cube001Physics" type="StaticBody" parent="."]
 
@@ -211,7 +211,7 @@ shape = SubResource(4)
 
 mesh = SubResource(5)
 visible = true
-transform = Transform(1.0, 0.0, 0.0, 0.0, 7.54979e-08, -1.0, 0.0, 1.0, 7.54979e-08, 0.0, 0.0, 0.0)
+transform = Transform(1.0, 0.0, 0.0, 0.0, -4.37114e-08, -1.0, 0.0, 1.0, -4.37114e-08, 0.0, 0.0, 0.0)
 
 [node name="PlanePhysics" type="StaticBody" parent="."]
 
@@ -230,7 +230,7 @@ shape = SubResource(6)
 
 mesh = SubResource(7)
 visible = true
-transform = Transform(1.0, 0.0, 0.0, 0.0, 7.54979e-08, -1.0, 0.0, 1.0, 7.54979e-08, 0.0, 0.0, 0.0)
+transform = Transform(1.0, 0.0, 0.0, 0.0, -4.37114e-08, -1.0, 0.0, 1.0, -4.37114e-08, 0.0, 0.0, 0.0)
 
 [node name="CubePhysics" type="RigidBody" parent="."]
 
@@ -253,7 +253,7 @@ shape = SubResource(8)
 
 mesh = SubResource(9)
 visible = true
-transform = Transform(1.0, 0.0, 0.0, 0.0, 7.54979e-08, -1.0, 0.0, 1.0, 7.54979e-08, 0.0, 0.0, 0.0)
+transform = Transform(1.0, 0.0, 0.0, 0.0, -4.37114e-08, -1.0, 0.0, 1.0, -4.37114e-08, 0.0, 0.0, 0.0)
 
 [node name="SpherePhysics" type="RigidBody" parent="."]
 
@@ -276,7 +276,7 @@ shape = SubResource(10)
 
 mesh = SubResource(11)
 visible = true
-transform = Transform(1.0, 0.0, 0.0, 0.0, 7.54979e-08, -1.0, 0.0, 1.0, 7.54979e-08, 0.0, 0.0, 0.0)
+transform = Transform(1.0, 0.0, 0.0, 0.0, -4.37114e-08, -1.0, 0.0, 1.0, -4.37114e-08, 0.0, 0.0, 0.0)
 
 [node name="Sphere002Collision" type="CollisionShape" parent="SpherePhysics"]
 
@@ -287,7 +287,7 @@ shape = SubResource(12)
 
 mesh = SubResource(13)
 visible = true
-transform = Transform(1.0, 0.0, 0.0, 0.0, 7.54979e-08, -1.0, 0.0, 1.0, 7.54979e-08, 0.0, 0.0, 0.0)
+transform = Transform(1.0, 0.0, 0.0, 0.0, -4.37114e-08, -1.0, 0.0, 1.0, -4.37114e-08, 0.0, 0.0, 0.0)
 
 [node name="Sphere003Physics" type="RigidBody" parent="."]
 
@@ -310,7 +310,7 @@ shape = SubResource(14)
 
 mesh = SubResource(13)
 visible = true
-transform = Transform(1.0, 0.0, 0.0, 0.0, 7.54979e-08, -1.0, 0.0, 1.0, 7.54979e-08, 0.0, 0.0, 0.0)
+transform = Transform(1.0, 0.0, 0.0, 0.0, -4.37114e-08, -1.0, 0.0, 1.0, -4.37114e-08, 0.0, 0.0, 0.0)
 
 [node name="Lamp" type="OmniLight" parent="."]
 

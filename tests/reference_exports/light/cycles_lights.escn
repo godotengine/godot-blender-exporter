@@ -18,8 +18,8 @@ surfaces/0 = {
 	],
 	"morph_arrays":[]
 }
-[node type="Spatial" name="Scene"]
 
+[node type="Spatial" name="Scene"]
 
 [node name="MissingEmission" type="OmniLight" parent="."]
 

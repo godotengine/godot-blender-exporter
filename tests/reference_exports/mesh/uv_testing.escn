@@ -75,8 +75,8 @@ surfaces/0 = {
 	],
 	"morph_arrays":[]
 }
-[node type="Spatial" name="Scene"]
 
+[node type="Spatial" name="Scene"]
 
 [node name="Cube001" type="MeshInstance" parent="."]
 

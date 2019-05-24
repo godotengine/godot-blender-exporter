@@ -28,12 +28,11 @@ import os
 import collections
 import functools
 import logging
-import math
 import bpy
-import mathutils
 
 from . import structures
 from . import converters
+from .structures import (_AXIS_CORRECT, NodePath)
 
 logging.basicConfig(level=logging.INFO, format="[%(levelname)s]: %(message)s")
 
@@ -93,19 +92,17 @@ class GodotExporter:
         bpy.context.view_layer.objects.active = obj
 
         # Figure out what function will perform the export of this object
-        if (obj.type in converters.BLENDER_TYPE_TO_EXPORTER and
-                obj in self.exporting_objects):
+        if obj.type not in converters.BLENDER_TYPE_TO_EXPORTER:
+            logging.warning(
+                "Unknown object type. Treating as empty: %s", obj.name
+            )
+        elif obj in self.exporting_objects:
             exporter = converters.BLENDER_TYPE_TO_EXPORTER[obj.type]
         else:
-            if obj not in self.exporting_objects:
-                logging.warning(
-                    "Object is parent of exported objects. "
-                    "Treating as empty: %s", obj.name
-                )
-            else:
-                logging.warning(
-                    "Unknown object type. Treating as empty: %s", obj.name
-                )
+            logging.warning(
+                "Object is parent of exported objects. "
+                "Treating as empty: %s", obj.name
+            )
             exporter = converters.BLENDER_TYPE_TO_EXPORTER["EMPTY"]
 
         is_bone_attachment = False
@@ -124,6 +121,8 @@ class GodotExporter:
         exported_node = exporter(self.escn_file, self.config, obj,
                                  parent_gd_node)
 
+        self.bl_object_gd_node_map[obj] = exported_node
+
         if is_bone_attachment:
             for child in parent_gd_node.children:
                 child['transform'] = structures.fix_bone_attachment_transform(
@@ -136,7 +135,7 @@ class GodotExporter:
         if (exported_node.parent is not None and
                 exported_node.parent.get_type() == 'CollisionShape'):
             exported_node['transform'] = (
-                mathutils.Matrix.Rotation(math.radians(90), 4, 'X') @
+                _AXIS_CORRECT.inverted() @
                 exported_node['transform'])
 
         # if the blender node is exported and it has animation data
@@ -169,18 +168,23 @@ class GodotExporter:
         if self.config["use_export_selected"] and not obj.select_get():
             return False
 
-        self.exporting_objects.add(obj)
         return True
 
     def export_scene(self):
         """Decide what objects to export, and export them!"""
         logging.info("Exporting scene: %s", self.scene.name)
 
+        in_edit_mode = False
+        if bpy.context.object and bpy.context.object.mode == "EDIT":
+            in_edit_mode = True
+            bpy.ops.object.editmode_toggle()
+
         # Decide what objects to export
         for obj in self.scene.objects:
             if obj in self.exporting_objects:
                 continue
             if self.should_export_object(obj):
+                self.exporting_objects.add(obj)
                 # Ensure parents of current valid object is
                 # going to the exporting recursion
                 tmp = obj
@@ -203,6 +207,18 @@ class GodotExporter:
             if obj in self.valid_objects and obj.parent is None:
                 # recursive exporting on root object
                 self.export_object(obj, root_gd_node)
+
+        if "ARMATURE" in self.config['object_types']:
+            for bl_obj in self.bl_object_gd_node_map:
+                for mod in bl_obj.modifiers:
+                    if mod.type == "ARMATURE":
+                        mesh_node = self.bl_object_gd_node_map[bl_obj]
+                        skeleton_node = self.bl_object_gd_node_map[mod.object]
+                        mesh_node['skeleton'] = NodePath(
+                            mesh_node.get_path(), skeleton_node.get_path())
+
+        if in_edit_mode:
+            bpy.ops.object.editmode_toggle()
 
     def load_supported_features(self):
         """According to `project.godot`, determine all new feature supported
@@ -275,6 +291,7 @@ class GodotExporter:
             self.load_supported_features()
 
         self.escn_file = None
+        self.bl_object_gd_node_map = {}
 
     def __enter__(self):
         return self
@@ -287,6 +304,13 @@ def save(operator, context, filepath="", **kwargs):
     """Begin the export"""
     exporter_log_handler = ExporterLogHandler(operator)
     logging.getLogger().addHandler(exporter_log_handler)
+
+    object_types = kwargs["object_types"]
+    # GEOMETRY isn't an object type so replace it with all valid geometry based
+    # object types
+    if "GEOMETRY" in object_types:
+        object_types.remove("GEOMETRY")
+        object_types |= {"MESH", "CURVE", "SURFACE", "META", "FONT"}
 
     with GodotExporter(filepath, kwargs, operator) as exp:
         exp.export()
