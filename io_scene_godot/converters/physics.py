@@ -5,9 +5,7 @@ physics owns the object.
 """
 
 import logging
-import bpy
 import mathutils
-import bmesh
 from ..structures import NodeTemplate, InternalResource, Array, _AXIS_CORRECT
 
 PHYSICS_TYPES = {'KinematicBody', 'RigidBody', 'StaticBody'}
@@ -89,20 +87,19 @@ def export_collision_shape(escn_file, export_settings, node, parent_gd_node,
         col_shape['height'] = bounds.z - col_shape['radius'] * 2
         shape_id = escn_file.add_internal_resource(col_shape, rbd)
     elif rbd.collision_shape == "CONVEX_HULL":
-        col_shape, shape_id = generate_convex_mesh_array(
+        col_shape, shape_id = generate_mesh_array(
             escn_file, export_settings,
-            node
+            node, convex=True
         )
     elif rbd.collision_shape == "MESH":
-        col_shape, shape_id = generate_triangle_mesh_array(
+        col_shape, shape_id = generate_mesh_array(
             escn_file, export_settings,
-            node
+            node, convex=False
         )
     else:
         logging.warning("Unable to export physics shape for %s", node.name)
 
-    if shape_id is not None:
-
+    if shape_id is not None and col_shape is not None:
         if rbd.use_margin or rbd.collision_shape == "MESH":
             col_shape['margin'] = rbd.collision_margin
         col_node['shape'] = "SubResource({})".format(shape_id)
@@ -111,68 +108,38 @@ def export_collision_shape(escn_file, export_settings, node, parent_gd_node,
     return col_node
 
 
-def generate_convex_mesh_array(escn_file, export_settings, node):
-    """Generates godots ConvexPolygonShape from an object"""
-    mesh = node.data
-    key = (mesh, "ConvexCollisionMesh")
+def generate_mesh_array(escn_file, export_settings, node, convex=False):
+    """Generates godots PolygonShape from an object"""
+    from .mesh import (MeshConverter, MeshResourceKey)
+    mesh_converter = MeshConverter(node, export_settings)
+    if convex:
+        key = MeshResourceKey("ConvexPolygonShape", node, export_settings)
+    else:
+        key = MeshResourceKey("ConcavePolygonShape", node, export_settings)
     resource_id = escn_file.get_internal_resource(key)
     if resource_id is not None:
         return resource_id
 
-    col_shape = InternalResource("ConvexPolygonShape", mesh.name)
+    col_shape = None
+    shape_id = None
+    mesh = mesh_converter.to_mesh(calculate_tangents=False)
+    if mesh is not None and mesh.polygons:
+        vert_array = list()
+        for poly in mesh.polygons:
+            for vert_id in poly.vertices:
+                vert_array.append(list(mesh.vertices[vert_id].co))
 
-    mesh = node.to_mesh()
+        if convex:
+            col_shape = InternalResource("ConvexPolygonShape", mesh.name)
+            col_shape['points'] = Array("PoolVector3Array(", values=vert_array)
+        else:
+            col_shape = InternalResource("ConcavePolygonShape", mesh.name)
+            col_shape['data'] = Array("PoolVector3Array(", values=vert_array)
+        shape_id = escn_file.add_internal_resource(col_shape, key)
 
-    # Triangulate
-    triangulated_mesh = bmesh.new()
-    triangulated_mesh.from_mesh(mesh)
-    # For some reason, generateing the convex hull here causes Godot to crash
-    # bmesh.ops.convex_hull(triangulated_mesh, input=triangulated_mesh.verts)
-    bmesh.ops.triangulate(triangulated_mesh, faces=triangulated_mesh.faces)
-    triangulated_mesh.to_mesh(mesh)
-    triangulated_mesh.free()
+    mesh_converter.to_mesh_clear()
 
-    vert_array = list()
-    for poly in mesh.polygons:
-        for vert_id in poly.vertices:
-            vert_array.append(list(mesh.vertices[vert_id].co))
-
-    bpy.data.meshes.remove(mesh)
-
-    col_shape['points'] = Array("PoolVector3Array(", values=vert_array)
-
-    return col_shape, escn_file.add_internal_resource(col_shape, key)
-
-
-def generate_triangle_mesh_array(escn_file, export_settings, node):
-    """Generates godots ConcavePolygonShape from an object"""
-    mesh = node.data
-    key = (mesh, "TriangleCollisionMesh")
-    resource_id = escn_file.get_internal_resource(key)
-    if resource_id is not None:
-        return resource_id
-
-    col_shape = InternalResource("ConcavePolygonShape", mesh.name)
-
-    mesh = node.to_mesh()
-
-    # Triangulate
-    triangulated_mesh = bmesh.new()
-    triangulated_mesh.from_mesh(mesh)
-    bmesh.ops.triangulate(triangulated_mesh, faces=triangulated_mesh.faces)
-    triangulated_mesh.to_mesh(mesh)
-    triangulated_mesh.free()
-
-    vert_array = list()
-    for poly in mesh.polygons:
-        for vert_id in poly.vertices:
-            vert_array.append(list(mesh.vertices[vert_id].co))
-
-    bpy.data.meshes.remove(mesh)
-
-    col_shape['data'] = Array("PoolVector3Array(", values=vert_array)
-
-    return col_shape, escn_file.add_internal_resource(col_shape, key)
+    return col_shape, shape_id
 
 
 def export_physics_controller(escn_file, export_settings, node,

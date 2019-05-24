@@ -30,8 +30,8 @@ surfaces/0 = {
 		null, ; Morph Object
 	]]
 }
-[node type="Spatial" name="Scene"]
 
+[node type="Spatial" name="Scene"]
 
 [node name="Suzanne002" type="MeshInstance" parent="."]
 

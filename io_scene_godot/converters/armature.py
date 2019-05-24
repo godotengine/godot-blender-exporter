@@ -27,16 +27,6 @@ def export_bone_attachment(escn_file, node, parent_gd_node):
     return bone_attachment
 
 
-def find_skeletion_node(node):
-    """Return the cloest Skeleton from node to root,
-    if not found, return None"""
-    node_ptr = node
-    while (node_ptr is not None and
-           node_ptr.get_type() != "Skeleton"):
-        node_ptr = node_ptr.parent
-    return node_ptr
-
-
 class Bone:
     """A Bone has almost same attributes as Godot bones"""
 

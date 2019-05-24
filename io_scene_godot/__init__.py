@@ -46,11 +46,11 @@ class ExportGodot(bpy.types.Operator, ExportHelper):
     bl_options = {"PRESET"}
 
     filename_ext = ".escn"
-    filter_glob = StringProperty(default="*.escn", options={"HIDDEN"})
+    filter_glob: StringProperty(default="*.escn", options={"HIDDEN"})
 
     # List of operator properties, the attributes will be assigned
     # to the class instance from the operator settings before calling
-    object_types = EnumProperty(
+    object_types: EnumProperty(
         name="Object Types",
         options={"ENUM_FLAG"},
         items=(
@@ -58,41 +58,39 @@ class ExportGodot(bpy.types.Operator, ExportHelper):
             ("CAMERA", "Camera", ""),
             ("LIGHT", "Light", ""),
             ("ARMATURE", "Armature", ""),
-            ("MESH", "Mesh", ""),
-            # ("CURVE", "Curve", ""),
+            ("GEOMETRY", "Geometry", "")
         ),
         default={
             "EMPTY",
             "CAMERA",
             "LIGHT",
             "ARMATURE",
-            "MESH",
-            # "CURVE"
+            "GEOMETRY"
         },
     )
 
-    use_visible_objects = BoolProperty(
+    use_visible_objects: BoolProperty(
         name="Only Visible Object",
         description="Export only objects which are in the current view layer "
                     "and are visible.",
         default=True,
     )
-    use_export_selected = BoolProperty(
+    use_export_selected: BoolProperty(
         name="Only Selected Objects",
         description="Export only selected objects",
         default=False,
     )
-    use_mesh_modifiers = BoolProperty(
+    use_mesh_modifiers: BoolProperty(
         name="Apply Modifiers",
         description="Apply modifiers to mesh objects (on a copy!).",
         default=True,
     )
-    use_exclude_ctrl_bone = BoolProperty(
+    use_exclude_ctrl_bone: BoolProperty(
         name="Exclude Control Bones",
         description="Do not export control bones (bone.use_deform = false)",
         default=True,
     )
-    use_export_animation = BoolProperty(
+    use_export_animation: BoolProperty(
         name="Export Animation",
         description="Export all the animation actions (include actions "
                     "in nla_tracks), note that by default blender animation "
@@ -100,40 +98,35 @@ class ExportGodot(bpy.types.Operator, ExportHelper):
                     "own AnimationPlayer hold their actions",
         default=True,
     )
-    use_export_material = BoolProperty(
-        name="Export Materinal",
+    use_export_material: BoolProperty(
+        name="Export Material",
         description="Export all the material associated with mesh surfaces",
         default=True,
     )
-    use_export_shape_key = BoolProperty(
+    use_export_shape_key: BoolProperty(
         name="Export Shape Key",
         description="Export all the shape keys in mesh objects",
         default=True,
     )
-    use_stashed_action = BoolProperty(
+    use_stashed_action: BoolProperty(
         name="Export Stashed Actions",
         description="Export stashed actions and muted nla_strip as separate "
                     "animation and place into AnimationPlayer",
         default=True,
     )
-    use_export_material = BoolProperty(
-        name="Export Materinal",
-        description="Export all the material associated with mesh surfaces",
-        default=True,
-    )
-    use_beta_features = BoolProperty(
+    use_beta_features: BoolProperty(
         name="Use Beta Features",
         description="Export using new features coming in Godot beta versions",
         default=True,
     )
-    generate_external_material = BoolProperty(
+    generate_external_material: BoolProperty(
         name="Generate External Material",
         description="If turned on, materials in the exported scene would "
                     "generate external .material files when imported to "
                     "godot,  thus make it easy for material reusing",
         default=False,
     )
-    animation_modes = EnumProperty(
+    animation_modes: EnumProperty(
         name="Animation Modes",
         description="Configuration of how blender animation data being "
                     "exported to godot AnimationPlayer as well as the "
@@ -158,7 +151,7 @@ class ExportGodot(bpy.types.Operator, ExportHelper):
             )
         )
     )
-    material_search_paths = EnumProperty(
+    material_search_paths: EnumProperty(
         name="Material Search Paths",
         description="Search for existing godot materials with names that match"
                     "the blender material names (ie the file <matname>.tres"
@@ -243,8 +236,8 @@ def export(filename, overrides=None):
     """
 
     default_settings = dict()
-    for attr_name in ExportGodot.__dict__:
-        attr = ExportGodot.__dict__[attr_name]
+    for attr_name in ExportGodot.__annotations__:
+        attr = ExportGodot.__annotations__[attr_name]
         # This introspection is not very robust and may break in future blende
         # versions. This is becase for some reason you can't compare against
         # bpy.types.Property because. well, they end up not being subclasses

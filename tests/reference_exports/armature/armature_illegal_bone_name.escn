@@ -48,8 +48,8 @@ surfaces/0 = {
 	],
 	"morph_arrays":[]
 }
-[node type="Spatial" name="Scene"]
 
+[node type="Spatial" name="Scene"]
 
 [node name="Armature" type="Skeleton" parent="."]
 
@@ -64,7 +64,7 @@ bones/0/bound_children = []
 bones/1/name = "bone"
 bones/1/parent = 0
 bones/1/rest = Transform(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, -1.0)
-bones/1/pose = Transform(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0)
+bones/1/pose = Transform(0.99961, -0.00771234, -0.0268356, 0.00777253, 0.999968, 0.00213956, 0.0268182, -0.0023473, 0.999638, 0.0, 0.0, 0.0)
 bones/1/enabled = true
 bones/1/bound_children = []
 bones/2/name = "bone001"
@@ -91,7 +91,7 @@ transform = Transform(0.430514, 2.1646e-10, 0.0, -1.27329e-11, 0.430514, 0.0, 0.
 
 [node name="Cube" type="MeshInstance" parent="Armature"]
 
-skeleton = NodePath("..:")
 mesh = SubResource(3)
 visible = true
 transform = Transform(0.706204, 0.0, 0.0, 0.0, 2.62841, 0.0, 0.0, 0.0, 0.48724, -0.0546017, 2.43518, 0.0)
+skeleton = NodePath("..:")

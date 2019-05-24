@@ -21,13 +21,18 @@ from .physics import export_physics_properties
 from .armature import export_armature_node, export_bone_attachment
 from .animation import export_animation_data
 
-
+# TODO: What about Empties which refer to group instances? (in 2.8 Collection
+# Instances)
 BLENDER_TYPE_TO_EXPORTER = {
     "MESH": export_mesh_node,
     "ARMATURE": export_armature_node,
     "CAMERA": export_camera_node,
     "LIGHT": export_light_node,
-    "EMPTY": export_empty_node
+    "EMPTY": export_empty_node,
+    "CURVE": export_mesh_node,
+    "SURFACE": export_mesh_node,
+    "META": export_mesh_node,
+    "FONT": export_mesh_node
 }
 
 BONE_ATTACHMENT_EXPORTER = export_bone_attachment
