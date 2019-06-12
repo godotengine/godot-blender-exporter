@@ -1,0 +1,254 @@
+[gd_scene load_steps=1 format=2]
+
+[sub_resource id=1 type="Shader"]
+
+resource_name = "Shader Nodetree"
+code = "shader_type spatial;
+render_mode blend_mix, depth_draw_always, cull_back, diffuse_burley, specular_schlick_ggx;
+
+
+
+void node_bsdf_principled(vec4 color, float subsurface, vec4 subsurface_color,
+        float metallic, float specular, float roughness, float clearcoat,
+        float clearcoat_roughness, float anisotropy, float transmission,
+        float IOR, out vec3 albedo, out float sss_strength_out,
+        out float metallic_out, out float specular_out,
+        out float roughness_out, out float clearcoat_out,
+        out float clearcoat_gloss_out, out float anisotropy_out,
+        out float transmission_out, out float ior) {
+    metallic = clamp(metallic, 0.0, 1.0);
+    transmission = clamp(transmission, 0.0, 1.0);
+
+    subsurface = subsurface * (1.0 - metallic);
+
+    albedo = mix(color.rgb, subsurface_color.rgb, subsurface);
+    sss_strength_out = subsurface;
+    metallic_out = metallic;
+    specular_out = pow((IOR - 1.0)/(IOR + 1.0), 2)/0.08;
+    roughness_out = roughness;
+    clearcoat_out = clearcoat * (1.0 - transmission);
+    clearcoat_gloss_out = 1.0 - clearcoat_roughness;
+    anisotropy_out = clamp(anisotropy, 0.0, 1.0);
+    transmission_out = (1.0 - transmission) * (1.0 - metallic);
+    ior = IOR;
+}
+
+void vertex () {
+}
+
+void fragment () {
+	
+	// node: 'Principled BSDF'
+	// type: 'ShaderNodeBsdfPrincipled'
+	// input sockets handling
+	vec4 node0_in0_basecolor = vec4(0.800000011920929, 0.800000011920929,
+		0.800000011920929, 1.0);
+	float node0_in1_subsurface = float(0.0);
+	vec3 node0_in2_subsurfaceradius = vec3(1.0, 0.20000000298023224,
+		0.10000000149011612);
+	vec4 node0_in3_subsurfacecolor = vec4(0.800000011920929, 0.800000011920929,
+		0.800000011920929, 1.0);
+	float node0_in4_metallic = float(0.0);
+	float node0_in5_specular = float(0.5);
+	float node0_in6_speculartint = float(0.0);
+	float node0_in7_roughness = float(0.4000000059604645);
+	float node0_in8_anisotropic = float(0.0);
+	float node0_in9_anisotropicrotation = float(0.0);
+	float node0_in10_sheen = float(0.0);
+	float node0_in11_sheentint = float(0.5);
+	float node0_in12_clearcoat = float(0.0);
+	float node0_in13_clearcoatroughness = float(0.029999999329447746);
+	float node0_in14_ior = float(1.4500000476837158);
+	float node0_in15_transmission = float(0.0);
+	float node0_in16_transmissionroughness = float(0.0);
+	vec4 node0_in17_emission = vec4(0.0, 0.0, 0.0, 1.0);
+	float node0_in18_alpha = float(1.0);
+	vec3 node0_in19_normal = NORMAL;
+	vec3 node0_in20_clearcoatnormal = vec3(0.0, 0.0, 0.0);
+	vec3 node0_in21_tangent = TANGENT;
+	// output sockets definitions
+	vec3 node0_bsdf_out0_albedo;
+	float node0_bsdf_out1_sss_strength;
+	float node0_bsdf_out3_specular;
+	float node0_bsdf_out2_metallic;
+	float node0_bsdf_out4_roughness;
+	float node0_bsdf_out5_clearcoat;
+	float node0_bsdf_out6_clearcoat_gloss;
+	float node0_bsdf_out7_anisotropy;
+	float node0_bsdf_out8_transmission;
+	float node0_bsdf_out9_ior;
+	
+	node_bsdf_principled(node0_in0_basecolor, node0_in1_subsurface,
+		node0_in3_subsurfacecolor, node0_in4_metallic, node0_in5_specular,
+		node0_in7_roughness, node0_in12_clearcoat, node0_in13_clearcoatroughness,
+		node0_in8_anisotropic, node0_in15_transmission, node0_in14_ior,
+		node0_bsdf_out0_albedo, node0_bsdf_out1_sss_strength, node0_bsdf_out2_metallic,
+		node0_bsdf_out3_specular, node0_bsdf_out4_roughness, node0_bsdf_out5_clearcoat,
+		node0_bsdf_out6_clearcoat_gloss, node0_bsdf_out7_anisotropy,
+		node0_bsdf_out8_transmission, node0_bsdf_out9_ior);
+	
+	
+	ALBEDO = node0_bsdf_out0_albedo;
+	SSS_STRENGTH = node0_bsdf_out1_sss_strength;
+	SPECULAR = node0_bsdf_out3_specular;
+	METALLIC = node0_bsdf_out2_metallic;
+	ROUGHNESS = node0_bsdf_out4_roughness;
+	CLEARCOAT = node0_bsdf_out5_clearcoat;
+	CLEARCOAT_GLOSS = node0_bsdf_out6_clearcoat_gloss;
+	NORMAL = node0_in19_normal;
+	// uncomment it when you need it
+	// TRANSMISSION = vec3(1.0, 1.0, 1.0) * node0_bsdf_out8_transmission;
+	// uncomment it when you are modifing TANGENT
+	// TANGENT = normalize(cross(cross(node0_in21_tangent, NORMAL), NORMAL));
+	// BINORMAL = cross(TANGENT, NORMAL);
+	// uncomment it when you have tangent(UV) set
+	// ANISOTROPY = node0_bsdf_out7_anisotropy;
+}
+"
+
+[sub_resource id=2 type="ShaderMaterial"]
+
+resource_name = ""
+shader = SubResource(1)
+
+[sub_resource id=3 type="ArrayMesh"]
+
+resource_name = "Cube"
+surfaces/0 = {
+	"material":SubResource(2),
+	"primitive":4,
+	"arrays":[
+		Vector3Array(0.9, -1.0, -0.9, -0.9, -1.0, 0.9, -0.9, -1.0, -0.9, -1.0, 0.9, 0.9, -1.0, -0.9, -0.9, -1.0, -0.9, 0.9, 0.9, 0.9, 1.0, -0.9, -0.9, 1.0, 0.9, -0.9, 1.0, -0.9, 1.0, -0.9, 0.9, 1.0, 0.9, 0.9, 1.0, -0.9, 1.0, 0.9, -0.9, 1.0, -0.9, 0.9, 1.0, -0.9, -0.9, 0.9, 0.9, -1.0, 0.9, 1.0, -0.9, 1.0, 0.9, -0.9, 0.9, -1.0, -0.9, 0.9, -0.9, -1.0, 1.0, -0.9, -0.9, 1.0, 0.9, 0.9, 0.9, 1.0, 0.9, 0.9, 0.9, 1.0, 1.0, -0.9, 0.9, 0.9, -0.9, 1.0, 0.9, -1.0, 0.9, -0.9, 0.9, -1.0, -1.0, 0.9, -0.9, -0.9, 1.0, -0.9, -1.0, -0.9, -0.9, -0.9, -0.9, -1.0, -0.9, -1.0, -0.9, -1.0, 0.9, 0.9, -0.9, 0.9, 1.0, -0.9, 1.0, 0.9, -0.9, -1.0, 0.9, -0.9, -0.9, 1.0, -1.0, -0.9, 0.9, -0.9, -1.0, 0.9, -1.0, -0.9, -0.9, -0.9, -1.0, -0.9, -0.9, -1.0, -0.9, 0.9, -0.9, -1.0, 0.9, -1.0, -0.9, 1.0, -0.9, -0.9, 0.9, 0.9, -1.0, 1.0, 0.9, -0.9, -0.9, 0.9, 1.0, -1.0, -0.9, 0.9, -0.9, -0.9, 1.0, 0.9, -0.9, 1.0, 1.0, 0.9, 0.9, 0.9, 0.9, 1.0, -0.9, -0.9, -1.0, -1.0, 0.9, -0.9, -0.9, 0.9, -1.0, -0.9, 1.0, 0.9, 0.9, 0.9, 1.0, 0.9, 1.0, 0.9, 0.9, 1.0, 0.9, 1.0, 0.9, -0.9, 0.9, 1.0, -0.9, 0.9, -1.0, 0.9, -0.9, -0.9, 1.0, -0.9, -1.0, 0.9, -0.9, 1.0, -0.9, -1.0, 0.9, 0.9, -0.9, 1.0, 0.9, 0.9, 1.0, -0.9, -0.9, 0.9, -1.0, -0.9, 1.0, -0.9, 0.9, -1.0, -0.9, 1.0, -0.9, 0.9, 0.9, -1.0, 0.9, -0.9, 0.9, -1.0, 0.9, -0.9, -1.0, -0.9, -0.9, -1.0, 0.9, -1.0, 0.9, -1.0, 0.9, -0.9, -0.9, 0.9, 1.0, -0.9, 1.0, 0.9, 1.0, 0.9, 0.9, -1.0, -0.9, 0.9, -0.9, -0.9, -1.0, 0.9, -0.9, -1.0, -1.0, 0.9, 0.9, 1.0, -0.9, 0.9, -1.0, -0.9, -0.9, -0.9, 0.9, 1.0, 1.0, 0.9, 0.9, 0.9, -0.9, 1.0, -1.0, 0.9, -0.9, 0.9, 0.9, -1.0, 1.0, -0.9, -0.9, 0.9, 0.9, -1.0),
+		Vector3Array(0.0, -1.0, 0.0, 0.0, -1.0, 0.0, 0.0, -1.0, 0.0, -1.0, 0.0, 0.0, -1.0, 0.0, 0.0, -1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.57735, 0.57735, -0.57735, 0.57735, 0.57735, -0.57735, 0.57735, 0.57735, -0.57735, 0.57735, -0.57735, -0.57735, 0.57735, -0.57735, -0.57735, 0.57735, -0.57735, -0.57735, 0.57735, 0.57735, 0.57735, 0.57735, 0.57735, 0.57735, 0.57735, 0.57735, 0.57735, 0.57735, -0.57735, 0.57735, 0.57735, -0.57735, 0.57735, 0.57735, -0.57735, 0.57735, -0.57735, 0.57735, -0.57735, -0.57735, 0.57735, -0.57735, -0.57735, 0.57735, -0.57735, -0.57735, -0.57735, -0.57735, -0.57735, -0.57735, -0.57735, -0.57735, -0.57735, -0.57735, -0.57735, 0.57735, 0.57735, -0.57735, 0.57735, 0.57735, -0.57735, 0.57735, 0.57735, -0.57735, -0.57735, 0.57735, -0.57735, -0.57735, 0.57735, -0.57735, -0.57735, 0.57735, -0.707107, -0.707107, 0.0, -0.707107, -0.707107, 0.0, -0.707107, -0.707107, 0.0, 0.0, -0.707107, -0.707107, 0.0, -0.707107, -0.707107, 0.0, -0.707107, -0.707107, 0.707107, 0.0, -0.707107, 0.707107, 0.0, -0.707107, 0.707107, 0.0, -0.707107, -0.707107, 0.0, 0.707107, -0.707107, 0.0, 0.707107, -0.707107, 0.0, 0.707107, 0.707107, 0.0, 0.707107, 0.707107, 0.0, 0.707107, 0.707107, 0.0, 0.707107, -0.707107, 0.0, -0.707107, -0.707107, 0.0, -0.707107, -0.707107, 0.0, -0.707107, 0.0, 0.707107, 0.707107, 0.0, 0.707107, 0.707107, 0.0, 0.707107, 0.707107, 0.707107, 0.707107, 0.0, 0.707107, 0.707107, 0.0, 0.707107, 0.707107, 0.0, 0.0, -0.707107, 0.707107, 0.0, -0.707107, 0.707107, 0.0, -0.707107, 0.707107, -0.707107, 0.707107, 0.0, -0.707107, 0.707107, 0.0, -0.707107, 0.707107, 0.0, 0.0, 0.707107, -0.707107, 0.0, 0.707107, -0.707107, 0.0, 0.707107, -0.707107, 0.707107, -0.707107, 0.0, 0.707107, -0.707107, 0.0, 0.707107, -0.707107, 0.0, 0.0, 0.0, -1.0, 0.0, 0.0, -1.0, 0.0, 0.0, -1.0, 0.0, -1.0, 0.0, -1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0, -0.707107, -0.707107, 0.0, 0.0, -0.707107, -0.707107, 0.707107, 0.0, -0.707107, -0.707107, 0.0, 0.707107, 0.707107, 0.0, 0.707107, -0.707107, 0.0, -0.707107, 0.0, 0.707107, 0.707107, 0.707107, 0.707107, 0.0, 0.0, -0.707107, 0.707107, -0.707107, 0.707107, 0.0, 0.0, 0.707107, -0.707107, 0.707107, -0.707107, 0.0, 0.0, 0.0, -1.0),
+		FloatArray(1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.47172e-07, 1.0, 0.0, 1.0, 1.47172e-07, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, -1.0, 0.0, 0.0, 1.0, -1.0, 0.0, 0.0, 1.0, -1.0, 0.0, 0.0, 1.0, 0.0, 1.0, -1.47172e-07, 1.0, 0.0, 1.0, -1.47172e-07, 1.0, 0.0, 1.0, 0.0, 1.0, 3.35454e-06, 0.707105, 0.707108, 1.0, 3.35454e-06, 0.707105, 0.707108, 1.0, 3.35454e-06, 0.707105, 0.707108, 1.0, 0.707107, 0.707107, 0.0, 1.0, 0.707107, 0.707107, 0.0, 1.0, 0.707107, 0.707107, 0.0, 1.0, -0.707108, 0.707105, 3.35454e-06, 1.0, -0.707108, 0.707105, 3.35454e-06, 1.0, -0.707108, 0.707105, 3.35454e-06, 1.0, 0.707107, 0.707107, 0.0, 1.0, 0.707107, 0.707107, 0.0, 1.0, 0.707107, 0.707107, 0.0, 1.0, 0.0, 0.707107, 0.707107, 1.0, 0.0, 0.707107, 0.707107, 1.0, 0.0, 0.707107, 0.707107, 1.0, -0.707107, 0.707107, 0.0, 1.0, -0.707107, 0.707107, 0.0, 1.0, -0.707107, 0.707107, 0.0, 1.0, 0.707107, 0.707107, 0.0, 1.0, 0.707107, 0.707107, 0.0, 1.0, 0.707107, 0.707107, 0.0, 1.0, 0.707108, -0.707105, 3.35454e-06, 1.0, 0.707108, -0.707105, 3.35454e-06, 1.0, 0.707108, -0.707105, 3.35454e-06, 1.0, 0.707107, -0.707107, 3.20345e-06, 1.0, 0.707107, -0.707107, 1.68301e-07, 1.0, 0.707107, -0.707107, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, -1.0, 0.0, 0.0, 1.0, -1.0, 0.0, 0.0, 1.0, -1.0, 0.0, 0.0, 1.0, -0.707107, 0.707107, 8.00862e-07, 1.0, -0.707107, 0.707107, 4.20752e-08, 1.0, -0.707107, 0.707107, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, -0.707107, -0.707107, 3.30362e-09, 1.0, -0.707107, -0.707107, -8.87217e-07, 1.0, -0.707107, -0.707107, -9.36597e-07, 1.0, -1.0, 0.0, 0.0, 1.0, -1.0, 0.0, 0.0, 1.0, -1.0, 0.0, 0.0, 1.0, 0.707107, 0.707107, -1.87001e-07, 1.0, 0.707107, 0.707107, -3.55939e-06, 1.0, 0.707107, 0.707107, -3.74639e-06, 1.0, -1.47172e-07, 1.0, 0.0, 1.0, -1.47172e-07, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0, 2.94344e-07, 1.0, 0.0, 1.0, 0.0, 1.0, -1.0, 0.0, 0.0, 1.0, 0.0, 1.0, -2.94344e-07, 1.0, 0.707107, -0.707107, 3.37175e-06, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, -1.0, 0.0, 0.0, 1.0, -0.707107, 0.707107, 8.42937e-07, 1.0, 1.0, 0.0, 0.0, 1.0, -0.707107, -0.707107, 5.26835e-08, 1.0, -1.0, 0.0, 0.0, 1.0, 0.707107, 0.707107, 0.0, 1.0, -2.94344e-07, 1.0, 0.0, 1.0),
+		null, ; no Vertex Colors,
+		Vector2Array(0.6125, 0.2375, 0.3875, 0.0125, 0.3875, 0.2375, 0.6125, 0.4875, 0.3875, 0.2625, 0.3875, 0.4875, 0.6125, 0.7375, 0.3875, 0.5125, 0.3875, 0.7375, 0.6125, 0.9875, 0.3875, 0.7625, 0.3875, 0.9875, 0.3625, 0.4875, 0.1375, 0.2625, 0.1375, 0.4875, 0.8625, 0.2625, 0.875, 0.2625, 0.8625, 0.25, 0.6125, 0.2375, 0.6125, 0.25, 0.625, 0.2375, 0.3625, 0.2625, 0.375, 0.2625, 0.3625, 0.25, 0.1375, 0.2625, 0.1375, 0.25, 0.125, 0.2625, 0.8625, 0.4875, 0.8625, 0.5, 0.875, 0.4875, 0.3875, 0.2625, 0.3875, 0.25, 0.375, 0.2625, 0.6125, 0.4875, 0.6125, 0.5, 0.625, 0.4875, 0.3875, 0.0125, 0.3875, 0.0, 0.375, 0.0125, 0.3875, 0.0125, 0.375, 0.2375, 0.3875, 0.2375, 0.3875, 0.2375, 0.6125, 0.25, 0.6125, 0.2375, 0.1375, 0.4875, 0.3625, 0.5, 0.3625, 0.4875, 0.6125, 0.5125, 0.3875, 0.4875, 0.3875, 0.5125, 0.3875, 0.7375, 0.6125, 0.75, 0.6125, 0.7375, 0.6375, 0.4875, 0.8625, 0.5, 0.8625, 0.4875, 0.6125, 0.7625, 0.3875, 0.75, 0.3875, 0.7625, 0.3875, 0.7625, 0.375, 0.9875, 0.3875, 0.9875, 0.6125, 0.0125, 0.3875, 0.0, 0.3875, 0.0125, 0.6125, 0.9875, 0.625, 0.7625, 0.6125, 0.7625, 0.3875, 0.9875, 0.6125, 1.0, 0.6125, 0.9875, 0.6125, 0.2375, 0.625, 0.0125, 0.6125, 0.0125, 0.8625, 0.4875, 0.6375, 0.2625, 0.6375, 0.4875, 0.6125, 0.0125, 0.6125, 0.2625, 0.6125, 0.5125, 0.6125, 0.7625, 0.3625, 0.2625, 0.375, 0.0125, 0.3875, 0.25, 0.1375, 0.5, 0.6125, 0.4875, 0.3875, 0.75, 0.6375, 0.5, 0.6125, 0.75, 0.375, 0.7625, 0.6125, 0.0, 0.625, 0.9875, 0.3875, 1.0, 0.625, 0.2375, 0.8625, 0.2625),
+		null, ; No UV2,
+		null, ; No Bones,
+		null, ; No Weights,
+		IntArray(0, 2, 1, 3, 5, 4, 6, 8, 7, 9, 11, 10, 12, 14, 13, 15, 17, 16, 18, 20, 19, 21, 23, 22, 24, 26, 25, 27, 29, 28, 30, 32, 31, 33, 35, 34, 36, 38, 37, 39, 41, 40, 42, 44, 43, 45, 47, 46, 48, 50, 49, 51, 53, 52, 54, 56, 55, 57, 59, 58, 60, 62, 61, 63, 65, 64, 66, 68, 67, 69, 71, 70, 72, 74, 73, 75, 77, 76, 0, 1, 78, 3, 4, 79, 6, 7, 80, 9, 10, 81, 12, 13, 82, 39, 40, 83, 42, 43, 84, 45, 46, 85, 48, 49, 86, 51, 52, 87, 54, 55, 88, 57, 58, 89, 60, 61, 90, 63, 64, 91, 66, 67, 92, 69, 70, 93, 72, 73, 94, 75, 76, 95)
+	],
+	"morph_arrays":[]
+}
+
+[node type="Spatial" name="Scene"]
+
+[node name="CollectionInstance1" type="Spatial" parent="."]
+
+transform = Transform(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0)
+
+[node name="Cube" type="MeshInstance" parent="CollectionInstance1"]
+
+mesh = SubResource(3)
+visible = true
+transform = Transform(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0)
+
+[node name="Cube001" type="MeshInstance" parent="CollectionInstance1/Cube"]
+
+mesh = SubResource(3)
+visible = true
+transform = Transform(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 2.5, 0.0)
+
+[node name="Cube002" type="MeshInstance" parent="CollectionInstance1/Cube/Cube001"]
+
+mesh = SubResource(3)
+visible = true
+transform = Transform(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, -2.5, 0.0, 0.0)
+
+[node name="Cube003" type="MeshInstance" parent="CollectionInstance1/Cube/Cube001/Cube002"]
+
+mesh = SubResource(3)
+visible = true
+transform = Transform(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, -2.5, 0.0, 0.0)
+
+[node name="Cube004" type="MeshInstance" parent="CollectionInstance1/Cube/Cube001/Cube002/Cube003"]
+
+mesh = SubResource(3)
+visible = true
+transform = Transform(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 2.5)
+
+[node name="Cube005" type="MeshInstance" parent="CollectionInstance1/Cube/Cube001/Cube002/Cube003/Cube004"]
+
+mesh = SubResource(3)
+visible = true
+transform = Transform(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, -2.5, 0.0)
+
+[node name="Light" type="OmniLight" parent="CollectionInstance1/Cube/Cube001"]
+
+light_specular = 1.0
+light_color = Color(1.0, 1.0, 1.0, 1.0)
+shadow_color = Color(0.0, 0.0, 0.0, 1.0)
+light_energy = 10.0
+omni_range = 30.0
+transform = Transform(1.0, 0.0, 0.0, 0.0, -4.37114e-08, 1.0, 0.0, -1.0, -4.37114e-08, 0.0, 2.5, 0.0)
+light_negative = false
+shadow_enabled = true
+
+[node name="Camera" type="Camera" parent="CollectionInstance1"]
+
+far = 100.0
+near = 0.1
+size = 7.31429
+projection = 0
+fov = 39.5978
+transform = Transform(0.685921, -0.324014, 0.651558, -1.33424e-08, 0.895396, 0.445271, -0.727676, -0.305421, 0.61417, 0.0, 3.5, 5.0)
+
+[node name="CollectionInstance2" type="Spatial" parent="."]
+
+transform = Transform(-4.37114e-08, 0.0, -1.0, 0.0, 1.0, 0.0, 1.0, 0.0, -4.37114e-08, 10.0, 0.0, 0.0)
+
+[node name="Cube" type="MeshInstance" parent="CollectionInstance2"]
+
+mesh = SubResource(3)
+visible = true
+transform = Transform(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0)
+
+[node name="Cube001" type="MeshInstance" parent="CollectionInstance2/Cube"]
+
+mesh = SubResource(3)
+visible = true
+transform = Transform(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 2.5, 0.0)
+
+[node name="Cube002" type="MeshInstance" parent="CollectionInstance2/Cube/Cube001"]
+
+mesh = SubResource(3)
+visible = true
+transform = Transform(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, -2.5, 0.0, 0.0)
+
+[node name="Cube003" type="MeshInstance" parent="CollectionInstance2/Cube/Cube001/Cube002"]
+
+mesh = SubResource(3)
+visible = true
+transform = Transform(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, -2.5, 0.0, 0.0)
+
+[node name="Cube004" type="MeshInstance" parent="CollectionInstance2/Cube/Cube001/Cube002/Cube003"]
+
+mesh = SubResource(3)
+visible = true
+transform = Transform(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 2.5)
+
+[node name="Cube005" type="MeshInstance" parent="CollectionInstance2/Cube/Cube001/Cube002/Cube003/Cube004"]
+
+mesh = SubResource(3)
+visible = true
+transform = Transform(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, -2.5, 0.0)
+
+[node name="Light" type="OmniLight" parent="CollectionInstance2/Cube/Cube001"]
+
+light_specular = 1.0
+light_color = Color(1.0, 1.0, 1.0, 1.0)
+shadow_color = Color(0.0, 0.0, 0.0, 1.0)
+light_energy = 10.0
+omni_range = 30.0
+transform = Transform(1.0, 0.0, 0.0, 0.0, -4.37114e-08, 1.0, 0.0, -1.0, -4.37114e-08, 0.0, 2.5, 0.0)
+light_negative = false
+shadow_enabled = true
+
+[node name="Camera" type="Camera" parent="CollectionInstance2"]
+
+far = 100.0
+near = 0.1
+size = 7.31429
+projection = 0
+fov = 39.5978
+transform = Transform(0.685921, -0.324014, 0.651558, -1.33424e-08, 0.895396, 0.445271, -0.727676, -0.305421, 0.61417, 0.0, 3.5, 5.0)

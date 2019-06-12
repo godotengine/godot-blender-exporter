@@ -108,6 +108,11 @@ class ExportGodot(bpy.types.Operator, ExportHelper):
         description="Export all the shape keys in mesh objects",
         default=True,
     )
+    use_export_instancing: BoolProperty(
+        name="Export Collection Instances",
+        description="Export Collection Instances as child node hierarchies",
+        default=True,
+    )
     use_stashed_action: BoolProperty(
         name="Export Stashed Actions",
         description="Export stashed actions and muted nla_strip as separate "

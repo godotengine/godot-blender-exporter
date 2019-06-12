@@ -50,7 +50,12 @@ def export_mesh_node(escn_file, export_settings, obj, parent_gd_node):
 
     if mesh_id is not None:
         mesh_node['mesh'] = "SubResource({})".format(mesh_id)
-        mesh_node['visible'] = obj.visible_get()
+        if obj.name in bpy.context.view_layer.objects:
+            mesh_node['visible'] = obj.visible_get()
+        else:
+            # the object is always visible if we are referring to it in another
+            # view layer or scene (only relevant to collection instances)
+            mesh_node['visible'] = True
 
         mesh_resource = escn_file.internal_resources[mesh_id - 1]
         export_object_link_material(

@@ -29,6 +29,7 @@ import collections
 import functools
 import logging
 import bpy
+import mathutils
 
 from . import structures
 from . import converters
@@ -79,11 +80,11 @@ class ExporterLogHandler(logging.Handler):
 class GodotExporter:
     """Handles picking what nodes to export and kicks off the export process"""
 
-    def export_object(self, obj, parent_gd_node):
+    def export_object(self, obj, parent_gd_node, force=False):
         """Recursively export a object. It calls the export_object function on
         all of the objects children. If you have heirarchies more than 1000
         objects deep, this will fail with a recursion error"""
-        if obj not in self.valid_objects:
+        if not force and obj not in self.valid_objects:
             return
 
         logging.info("Exporting Blender Object: %s", obj.name)
@@ -96,8 +97,7 @@ class GodotExporter:
             logging.warning(
                 "Unknown object type. Treating as empty: %s", obj.name
             )
-            exporter = converters.BLENDER_TYPE_TO_EXPORTER["EMPTY"]
-        elif obj in self.exporting_objects:
+        elif force or obj in self.exporting_objects:
             exporter = converters.BLENDER_TYPE_TO_EXPORTER[obj.type]
         else:
             logging.warning(
@@ -150,9 +150,38 @@ class GodotExporter:
             )
 
         for child in obj.children:
-            self.export_object(child, exported_node)
+            self.export_object(child, exported_node, force=force)
+
+        if (self.config["use_export_instancing"] and
+                obj.instance_type == "COLLECTION" and
+                obj.instance_collection):
+            children = set(obj.instance_collection.objects)
+            for child in children:
+                # Export highest objects in hierarchy, export_object will
+                # handle all nested children in a hierarchy.
+                if child.parent in children:
+                    continue
+                child_node = self.export_object(
+                    child, exported_node, force=True)
+                # Apply the inverse of the collection's instance_offset.
+                # Note - we need to use the object's matrix_world as
+                # the object may be transformed by a parent object
+                # outside of the collection. However we also need to
+                # take into account any possible matrix or axes
+                # conversions... e.g. if we have just exported an
+                # instanced Camera node (unlikely scenario)
+                # In short - it looks messy but it handles all matrices
+                # correctly.
+                diff_mat = (child.matrix_local.inverted()
+                            @ child_node["transform"])
+                child_mat = mathutils.Matrix.Translation(
+                    -obj.instance_collection.instance_offset)
+                child_mat @= child.matrix_world @ diff_mat
+                child_node["transform"] = child_mat
 
         bpy.context.view_layer.objects.active = prev_node
+
+        return exported_node
 
     def should_export_object(self, obj):
         """Checks if a node should be exported:"""
