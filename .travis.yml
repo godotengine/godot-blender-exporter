@@ -1,7 +1,7 @@
 dist: xenial
 language: python
 python:
-    - 3.6
+    - 3.7
 
 cache:
     directories:
@@ -9,14 +9,14 @@ cache:
 
 before_install:
     - sudo apt-get update
-    - sudo apt-get install --no-install-recommends -y libsdl1.2debian libglu1 python3-pip
-    - sudo pip3 install --upgrade pip
-    - sudo pip3 install --upgrade setuptools
-    - sudo pip3 install -r requirements.txt
+    - pip install --upgrade pip
+    - pip install --upgrade setuptools
 
 install:
+    - sudo apt-get install --no-install-recommends -y libsdl1.2debian libglu1 python3-pip
+    - pip install -r requirements.txt
     - bash tests/install_blender.sh
     - source .envs
 
 script:
-    - make all BLENDER=$BLENDER_BIN PYLINT=pylint PEP8=pycodestyle
+    - make all BLENDER=$BLENDER_BIN PYLINT='python3 -m pylint'
