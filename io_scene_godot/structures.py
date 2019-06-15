@@ -93,13 +93,13 @@ class ESCNFile:
 
     def to_string(self):
         """Serializes the file ready to dump out to disk"""
-
-        return "{}{}\n{}\n{}\n".format(
+        sections = (
             self.heading.to_string(),
             '\n\n'.join(i.to_string() for i in self.external_resources),
             '\n\n'.join(e.to_string() for e in self.internal_resources),
             '\n\n'.join(n.to_string() for n in self.nodes)
         )
+        return "\n\n".join([s for s in sections if s]) + "\n"
 
 
 class FileEntry(collections.OrderedDict):
@@ -111,6 +111,7 @@ class FileEntry(collections.OrderedDict):
         self.entry_type = entry_type
         self.heading = collections.OrderedDict(heading_dict)
 
+        # NOTE: contents is unused. Remove?
         # This string is copied verbaitum, so can be used for custom writing
         self.contents = ''
 
@@ -132,21 +133,22 @@ class FileEntry(collections.OrderedDict):
     def generate_body_string(self):
         """Convert the contents of the super/internal dict into newline
         separated key=val pairs"""
-        out_str = ''
+        lines = []
         for var in self:
             val = self[var]
             val = to_string(val)
-
-            out_str += '\n{} = {}'.format(var, val)
-        return out_str
+            lines.append('{} = {}'.format(var, val))
+        return "\n".join(lines)
 
     def to_string(self):
         """Serialize this entire entry"""
-        return "{}\n{}{}".format(
-            self.generate_heading_string(),
-            self.generate_body_string(),
-            self.contents
-        )
+        heading = self.generate_heading_string()
+        body = self.generate_body_string()
+        if body and self.contents:
+            return "{}\n\n{}\n{}".format(heading, body, self.contents)
+        if body:
+            return "{}\n\n{}".format(heading, body)
+        return heading
 
 
 class NodeTemplate(FileEntry):

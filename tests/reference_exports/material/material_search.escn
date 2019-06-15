@@ -1,4 +1,5 @@
 [gd_scene load_steps=1 format=2]
+
 [ext_resource id=1 path="../../uv_tester_material.tres" type="SpatialMaterial"]
 
 [sub_resource id=1 type="ArrayMesh"]
@@ -20,8 +21,8 @@ surfaces/0 = {
 	],
 	"morph_arrays":[]
 }
-[node type="Spatial" name="Scene"]
 
+[node type="Spatial" name="Scene"]
 
 [node name="Cube" type="MeshInstance" parent="."]
 

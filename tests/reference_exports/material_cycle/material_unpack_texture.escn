@@ -1,4 +1,5 @@
 [gd_scene load_steps=1 format=2]
+
 [ext_resource id=1 path="brick_4_diff_1k.jpg" type="Texture"]
 
 [sub_resource id=1 type="Shader"]
@@ -96,8 +97,8 @@ surfaces/0 = {
 	],
 	"morph_arrays":[]
 }
-[node type="Spatial" name="Scene"]
 
+[node type="Spatial" name="Scene"]
 
 [node name="Cube" type="MeshInstance" parent="."]
 

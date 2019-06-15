@@ -66,8 +66,8 @@ tracks/1/keys = {
 	"update":0,
 	"values":[0.0, 0.119438, 0.353741, 0.611825, 0.891865, 1.0, 0.935595, 0.756443, 0.564626, 0.341587, 0.095626, 0.0]
 }
-[node type="Spatial" name="Scene"]
 
+[node type="Spatial" name="Scene"]
 
 [node name="Suzanne" type="MeshInstance" parent="."]
 

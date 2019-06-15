@@ -55,8 +55,8 @@ albedo_color = Color(0.903545, 0.169508, 0.242857, 1.0)
 
 resource_name = ""
 albedo_color = Color(0.121702, 0.903545, 0.139942, 1.0)
-[node type="Spatial" name="Scene"]
 
+[node type="Spatial" name="Scene"]
 
 [node name="Cube000" type="MeshInstance" parent="."]
 
@@ -68,6 +68,6 @@ transform = Transform(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.804941, -0.
 
 mesh = SubResource(3)
 visible = true
-transform = Transform(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, -0.0116182, 0.681681, -0.190806)
 material/1 = SubResource(4)
 material/0 = SubResource(5)
+transform = Transform(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, -0.0116182, 0.681681, -0.190806)

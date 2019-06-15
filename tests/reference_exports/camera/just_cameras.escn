@@ -1,8 +1,6 @@
 [gd_scene load_steps=1 format=2]
 
-
 [node type="Spatial" name="Scene"]
-
 
 [node name="Camera004" type="Camera" parent="."]
 
