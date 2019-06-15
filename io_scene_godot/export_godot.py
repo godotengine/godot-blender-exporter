@@ -171,6 +171,7 @@ class GodotExporter:
         return True
 
     def export_scene(self):
+        # pylint: disable-msg=too-many-branches
         """Decide what objects to export, and export them!"""
         logging.info("Exporting scene: %s", self.scene.name)
 
