@@ -230,15 +230,13 @@ class ArrayMeshResourceExporter:
         and bone id"""
         if armature_obj is None:
             return
-        export_bones = []
-        for bone in armature_obj.data.bones:
-            if armature.should_export(export_settings, armature_obj, bone):
-                export_bones.append(bone)
-        for bone_id, bone in enumerate(export_bones):
-            if armature.should_export(export_settings, armature_obj, bone):
-                group = self.object.vertex_groups.get(bone.name)
-                if group is not None:
-                    self.vgroup_to_bone_mapping[group.index] = bone_id
+
+        bones_mapping = armature.generate_bones_mapping(export_settings,
+                                                        armature_obj)
+        for bl_bone_name, gd_bone_id in bones_mapping.items():
+            group = self.object.vertex_groups.get(bl_bone_name)
+            if group is not None:
+                self.vgroup_to_bone_mapping[group.index] = gd_bone_id
 
     def export_mesh(self, escn_file, export_settings):
         """Saves a mesh into the escn file"""
@@ -544,6 +542,7 @@ class VerticesArrays:
             totalw = 0.0
             for index, weight in enumerate(weights):
                 if index >= MAX_BONE_PER_VERTEX:
+                    logging.warning("Vertex weights more than maximal")
                     break
                 totalw += weight[1]
 
