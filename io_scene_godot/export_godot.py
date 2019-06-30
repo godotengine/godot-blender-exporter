@@ -111,6 +111,7 @@ class GodotExporter:
             is_bone_attachment = True
             parent_gd_node = converters.BONE_ATTACHMENT_EXPORTER(
                 self.escn_file,
+                self.config,
                 obj,
                 parent_gd_node
             )
