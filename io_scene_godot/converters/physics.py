@@ -110,6 +110,7 @@ def export_collision_shape(escn_file, export_settings, node, parent_gd_node,
 
 def generate_mesh_array(escn_file, export_settings, node, convex=False):
     """Generates godots PolygonShape from an object"""
+    # pylint: disable-msg=cyclic-import
     from .mesh import (MeshConverter, MeshResourceKey)
     mesh_converter = MeshConverter(node, export_settings)
     if convex:

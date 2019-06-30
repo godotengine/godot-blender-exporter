@@ -111,7 +111,6 @@ class FileEntry(collections.OrderedDict):
         self.entry_type = entry_type
         self.heading = collections.OrderedDict(heading_dict)
 
-        # NOTE: contents is unused. Remove?
         # This string is copied verbaitum, so can be used for custom writing
         self.contents = ''
 
