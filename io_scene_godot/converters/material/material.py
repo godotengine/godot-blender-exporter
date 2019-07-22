@@ -36,7 +36,7 @@ def export_image(escn_file, export_settings, image):
     return image_id
 
 
-def export_material(escn_file, export_settings, material):
+def export_material(escn_file, export_settings, bl_object, material):
     """Exports blender internal/cycles material as best it can"""
     external_material = find_material(export_settings, material)
     if external_material is not None:
@@ -50,17 +50,14 @@ def export_material(escn_file, export_settings, material):
         return "ExtResource({})".format(resource_id)
 
     resource_id = generate_material_resource(
-        escn_file, export_settings, material
+        escn_file, export_settings, bl_object, material
     )
     return "SubResource({})".format(resource_id)
 
 
-def generate_material_resource(escn_file, export_settings, material):
+def generate_material_resource(escn_file, export_settings, bl_object,
+                               material):
     """Export blender material as an internal resource"""
-    resource_id = escn_file.get_internal_resource(material)
-    if resource_id is not None:
-        return resource_id
-
     engine = bpy.context.scene.render.engine
     mat = None
 
@@ -76,7 +73,7 @@ def generate_material_resource(escn_file, export_settings, material):
         mat = InternalResource("ShaderMaterial", material_rsc_name)
         try:
             export_script_shader(
-                escn_file, export_settings, material, mat
+                escn_file, export_settings, bl_object, material, mat
             )
         except ValidationError as exception:
             mat = None  # revert to SpatialMaterial
@@ -87,7 +84,10 @@ def generate_material_resource(escn_file, export_settings, material):
     if mat is None:
         mat = InternalResource("SpatialMaterial", material_rsc_name)
         mat['albedo_color'] = gamma_correct(material.diffuse_color)
-    return escn_file.add_internal_resource(mat, material)
+
+    # make material-object tuple as an identifier, as uniforms is part of
+    # material and they are binded with object
+    return escn_file.add_internal_resource(mat, (bl_object, material))
 
 
 # ------------------- Tools for finding existing materials -------------------
