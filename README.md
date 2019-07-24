@@ -23,19 +23,19 @@ This repository includes a Makefile to assist with development. Running
 `make` from the project root will:
 
 1. Export all of the blend files from the `tests/scenes` directory.  
-   If you add a feature, it is suggested that you add a new blend file to 
+   If you add a feature, it is suggested that you add a new blend file to
    the `tests/scenes` directory that uses this feature.
-2. Runs `diff` on the output files conpared to the reference exports. This acts
+2. Runs `diff` on the output files compared to the reference exports. This acts
    as a regression test.
 3. Runs [pycodestyle](http://pycodestyle.pycqa.org/en/latest/) and
    [pylint](https://www.pylint.org/) style tests. Your code must pass these to
    be elegible to merge.
 
 
-Current regression tests use the daily build of blender 2.80 from blender [official
+Current regression tests use the daily build of Blender 2.8 from Blender [official
 site](https://builder.blender.org/download/) and runs on ubuntu 16.04. If you run
-on different blender version or different platform, the output may differ slightly 
-mostly causing by different float precision.
+the tests with different Blender version or on different platforms, the output may
+slightly differ.
 
 
 ## License
