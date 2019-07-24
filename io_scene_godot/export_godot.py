@@ -52,10 +52,10 @@ def find_godot_project_dir(export_path):
         project_dir = os.path.split(project_dir)[0]
         if project_dir == "/" or project_dir == last:
             raise structures.ValidationError(
-                "Unable to find godot project file"
+                "Unable to find Godot project file"
             )
         last = project_dir
-    logging.info("Found godot project directory at %s", project_dir)
+    logging.info("Found Godot project directory at %s", project_dir)
     return project_dir
 
 
@@ -86,7 +86,7 @@ class GodotExporter:
         deep, this will fail with a recursion error"""
         if node not in self.valid_nodes:
             return
-        logging.info("Exporting Blender Object: %s", node.name)
+        logging.info("Exporting Blender object: %s", node.name)
 
         prev_node = bpy.context.scene.objects.active
         bpy.context.scene.objects.active = node
