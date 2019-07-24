@@ -31,7 +31,7 @@ bl_info = {  # pylint: disable=invalid-name
     "api": 38691,
     "location": "File > Import-Export",
     "description": ("Export Godot Scenes to a format that can be efficiently "
-                    "imported. "),
+                    "imported."),
     "warning": "",
     "wiki_url": ("https://godotengine.org"),
     "tracker_url": "https://github.com/godotengine/blender-exporter",
@@ -91,9 +91,9 @@ class ExportGodot(bpy.types.Operator, ExportHelper):
     use_export_animation = BoolProperty(
         name="Export Animation",
         description="Export all the animation actions (include actions "
-                    "in nla_tracks), note that by default blender animation "
-                    "is exported as actions, so every node would have their "
-                    "own AnimationPlayer hold their actions",
+                    "in nla_tracks), note that by default Blender animation "
+                    "is exported as actions, so every node would have its "
+                    "own AnimationPlayer holding its actions",
         default=True,
     )
     use_mesh_modifiers = BoolProperty(
@@ -113,7 +113,7 @@ class ExportGodot(bpy.types.Operator, ExportHelper):
         default=True,
     )
     use_export_material = BoolProperty(
-        name="Export Materinal",
+        name="Export Material",
         description="Export all the material associated with mesh surfaces",
         default=True,
     )
@@ -124,40 +124,40 @@ class ExportGodot(bpy.types.Operator, ExportHelper):
     )
     generate_external_material = BoolProperty(
         name="Generate External Material",
-        description="If turned on, materials in the exported scene would "
+        description="If turned on, materials in the exported scene will "
                     "generate external .material files when imported to "
-                    "godot,  thus make it easy for material reusing",
+                    "Godot, thus make it easy for material reusing",
         default=False,
     )
     animation_modes = EnumProperty(
         name="Animation Modes",
-        description="Configuration of how blender animation data being "
-                    "exported to godot AnimationPlayer as well as the "
+        description="Configuration of how Blender animation data is "
+                    "exported to Godot AnimationPlayer as well as the "
                     "placement of AnimationPlayers in the node tree.",
         default="ACTIONS",
         items=(
             (
                 "ACTIONS", "Animation as Actions",
-                "Each animated node would have their own AnimationPlayer"
+                "Each animated node will have its own AnimationPlayer"
             ),
             (
                 "SCENE_ANIMATION", "Scene Animation",
-                "All the animations of the whole scene would be placed "
+                "All the animations of the whole scene will be placed "
                 "into one AnimationPlayer at scene root"
             ),
             (
                 "SQUASHED_ACTIONS", "Animation as Actions with Squash",
                 "Animation is exported as actions of nodes, but instead "
                 "of having an individual AnimationPlayer for each node, "
-                "this configuration would squash children nodes' actions "
+                "this configuration will squash children nodes' actions "
                 "to their parents"
             )
         )
     )
     material_search_paths = EnumProperty(
         name="Material Search Paths",
-        description="Search for existing godot materials with names that match"
-                    "the blender material names (ie the file <matname>.tres"
+        description="Search for existing Godot materials with names that match "
+                    "the Blender material names (i.e. the file <matname>.tres "
                     "containing a material resource)",
         default="PROJECT_DIR",
         items=(
@@ -171,7 +171,7 @@ class ExportGodot(bpy.types.Operator, ExportHelper):
             ),
             (
                 "PROJECT_DIR", "Project Directory",
-                "Search for materials in the godot project directory"
+                "Search for materials in the Godot project directory"
             ),
         )
     )

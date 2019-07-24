@@ -23,23 +23,23 @@ This repository includes a Makefile to assist with development. Running
 `make` from the project root will:
 
 1. Export all of the blend files from the `tests/scenes` directory.  
-   If you add a feature, it is suggested that you add a new blend file to 
+   If you add a feature, it is suggested that you add a new blend file to
    the `tests/scenes` directory that uses this feature.
-2. Runs `diff` on the output files conpared to the reference exports. This acts
+2. Runs `diff` on the output files compared to the reference exports. This acts
    as a regression test.
 3. Runs [pycodestyle](http://pycodestyle.pycqa.org/en/latest/) and
    [pylint](https://www.pylint.org/) style tests. Your code must pass these to
    be elegible to merge.
 
 
-Due to differences in blender versions creating minor differences in the 
-output files (even with the same blender release number), the regression tests 
-are best run with blender 2.79 downloaded from 
-[this exact url](http://mirror.cs.umn.edu/blender.org/release/Blender2.79/), 
-which is used for the Travis builds. If you think your blender version is 
-adequate, the hash (visble in the upper right of blender's splash screen) 
-should be `5bd8ac9abfa`. The exporter itself should run on all modern versions 
-of blender, but the output may differ slightly.
+Due to differences in Blender versions creating minor differences in the
+output files (even with the same Blender release number), the regression tests
+are best run with Blender 2.79 downloaded from
+[this exact url](http://mirror.cs.umn.edu/blender.org/release/Blender2.79/),
+which is used for the Travis builds. If you think your Blender version is
+adequate, the hash (visble in the upper right of Blender's splash screen)
+should be `5bd8ac9abfa`. The exporter itself should run on all modern versions
+of Blender, but the output may differ slightly.
 
 
 ## License
