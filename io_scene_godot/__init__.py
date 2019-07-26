@@ -156,9 +156,9 @@ class ExportGodot(bpy.types.Operator, ExportHelper):
     )
     material_search_paths = EnumProperty(
         name="Material Search Paths",
-        description="Search for existing Godot materials with names that match "
-                    "the Blender material names (i.e. the file <matname>.tres "
-                    "containing a material resource)",
+        description="Search for existing Godot materials with names that "
+                    "match the Blender material names (i.e. the file "
+                    "<matname>.tres containing a material resource)",
         default="PROJECT_DIR",
         items=(
             (
