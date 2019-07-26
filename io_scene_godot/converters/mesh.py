@@ -114,6 +114,7 @@ def export_object_link_material(escn_file, export_settings, mesh_object,
                 gd_node['material/{}'.format(surface_id)] = export_material(
                     escn_file,
                     export_settings,
+                    mesh_object,
                     slot.material
                 )
 
@@ -369,6 +370,7 @@ class ArrayMeshResourceExporter:
                         surface.material = export_material(
                             escn_file,
                             export_settings,
+                            self.object,
                             mat
                         )
 

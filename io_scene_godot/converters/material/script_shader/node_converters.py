@@ -104,6 +104,7 @@ class ShadingFlags:
         self.inv_model_mat_used = False
         self.uv_or_tangent_used = False
         self.transmission_used = False
+        self.aabb_tex_coord_used = False
 
 
 class NodeConverterBase:
@@ -114,6 +115,7 @@ class NodeConverterBase:
     # please set the flag when use them!
     INV_MODEL_MAT = "INV_MODEL_MAT"
     INV_VIEW_MAT = "INV_VIEW_MAT"
+    AABB_UVW = "AABB_UVW"
 
     def __init__(self, index, bl_node):
         self.in_sockets_map = dict()
@@ -680,10 +682,9 @@ class TexCoordNodeConverter(NodeConverterBase):
         generated_socket = self.bl_node.outputs['Generated']
         if generated_socket.is_linked:
             generated_id = self.out_sockets_map[generated_socket]
-            self.local_code.append(
-                '// Generated texture coordinate not supported yet,'
-                ' here reset to UV')
-            self.local_code.append('%s = vec3(UV, 1.0)' % generated_id)
+            self.flags.aabb_tex_coord_used = True
+            self.local_code.append('%s = %s' % (generated_id, self.AABB_UVW))
+            self.out_sockets_map[ref_socket] = generated_id
 
 
 class RgbNodeConverter(NodeConverterBase):
@@ -714,12 +715,9 @@ class ImageTextureNodeConverter(NodeConverterBase):
         tex_coord_socket = self.bl_node.inputs[0]
         tex_coord = self.in_sockets_map[tex_coord_socket]
         if not tex_coord_socket.is_linked:
-            # TODO: once generated texture get supported, it should be changed
-            logging.warning(
-                "No texture coordinate input for '%s' "
-                "UV is used by default, at '%s'",
-                self.bl_node.bl_idname, self.bl_node.name)
-            self.local_code.append("%s = vec3(UV, 0.0)" % tex_coord)
+            # default to use generated texture coordinates
+            self.flags.aabb_tex_coord_used = True
+            self.local_code.append("%s = %s" % (tex_coord, self.AABB_UVW))
 
         tex_var = self.generate_tmp_texture_id(self.bl_node.name)
         if self.bl_node.image is not None:

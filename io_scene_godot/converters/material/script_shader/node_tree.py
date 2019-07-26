@@ -4,6 +4,7 @@ import logging
 import textwrap
 from shutil import copyfile
 import bpy
+import mathutils
 from .shader_links import FragmentShaderLink
 from .shader_functions import find_function_by_name
 from .node_converters import (
@@ -11,11 +12,27 @@ from .node_converters import (
 from ....structures import InternalResource, ExternalResource, ValidationError
 
 
+class ScriptShaderResource(InternalResource):
+    """Godot internal resource shader"""
+
+    def __init__(self, name, shader_instance):
+        super().__init__("Shader", name)
+        self.shader = shader_instance
+
+    def to_string(self):
+        """Serialization"""
+        self['code'] = '"{}"'.format(self.shader.generate_scripts())
+        return InternalResource.to_string(self)
+
+
 class ScriptShader:
     # pylint: disable-msg=too-many-instance-attributes
     """generator of the shader scripts"""
 
     SCRIPT_MAX_WIDTH = 80
+
+    UNI_AABB_POS = 'AABB_POS'
+    UNI_AABB_SIZE = 'AABB_SIZE'
 
     def __init__(self):
         self._render_mode = [
@@ -26,6 +43,7 @@ class ScriptShader:
             'specular_schlick_ggx',
         ]
         self._functions = set()
+        self._global_vars_def_lines = list()
         self._uniform_code_lines = list()
         self._fragment_code_lines = list()
         self._vertex_code_lines = list()
@@ -61,6 +79,23 @@ class ScriptShader:
                 0,
                 "mat4 %s = inverse(WORLD_MATRIX)"
                 % NodeConverterBase.INV_MODEL_MAT,
+            )
+
+        if self.flags.aabb_tex_coord_used:
+            self._uniform_code_lines.append(
+                "uniform vec3 %s" % self.UNI_AABB_POS)
+            self._uniform_code_lines.append(
+                "uniform vec3 %s" % self.UNI_AABB_SIZE)
+
+            self._global_vars_def_lines.append(
+                "varying smooth vec3 %s" % NodeConverterBase.AABB_UVW)
+
+            self._vertex_code_lines.insert(
+                0,
+                "%s = mat3(vec3(1, 0, 0), vec3(0, 0, 1), vec3(0, -1, 0))\
+                    * ((VERTEX - %s) * (1.0 / %s))" % (
+                        NodeConverterBase.AABB_UVW,
+                        self.UNI_AABB_POS, self.UNI_AABB_SIZE)
             )
 
         for name in (
@@ -128,22 +163,21 @@ class ScriptShader:
         ior = output_shader_link.get_property(FragmentShaderLink.IOR)
         if self.flags.transparent and alpha is not None:
             if ior is not None and self.flags.glass:
-                refraction_offset_value = (0.2, 0.2)
                 fresnel_func = find_function_by_name('refraction_fresnel')
                 self._functions.add(fresnel_func)
                 self._fragment_code_lines.append(
                     "refraction_fresnel(VERTEX, NORMAL, %s, %s)" %
                     (ior, alpha)
                 )
-                refraction_offset = 'refraction_offset'
+                refraction_offset_id = 'refraction_offset'
                 # just some magic random value, available for improvements
                 self._uniform_code_lines.append(
-                    'uniform vec2 %s = vec2(0.2, 0.2)' % refraction_offset
+                    'uniform vec2 %s = vec2(0.2, 0.2)' % refraction_offset_id
                 )
                 self._fragment_code_lines.append(
                     "EMISSION += textureLod(SCREEN_TEXTURE, SCREEN_UV - "
                     "NORMAL.xy * %s , ROUGHNESS).rgb * (1.0 - %s)" %
-                    (refraction_offset, alpha)
+                    (refraction_offset_id, alpha)
                 )
             else:
                 self._fragment_code_lines.append(
@@ -197,6 +231,10 @@ class ScriptShader:
             script += "uniform sampler2D %s%s;\n" % (
                 tex_uniform, tex.hint_str())
         script += "\n"
+
+        for line in self._global_vars_def_lines:
+            script += line
+            script += ";\n"
 
         # determine the order, make it easy to work with testcases
         for func in sorted(self._functions, key=lambda x: x.name):
@@ -307,6 +345,57 @@ def topology_sort(nodes):
     return sorted_node_list
 
 
+class AxisAlignedBoundBox:
+    """Helper class to convert vertex representation of blender
+    bounding box to AABB representation"""
+
+    def __init__(self, bl_bound_box):
+        #
+        #  2 ________ 6
+        #   |\       |\
+        #   |_\______|_\5
+        #  3\ |1    7\ |
+        #    \|_______\|
+        #     0        4
+        #
+
+        # begining cornor
+        pos_bl_space = (
+            bl_bound_box[0][0],
+            bl_bound_box[0][1],
+            bl_bound_box[0][2],
+        )
+        # size from begining cornor to end cornor
+        size_bl_space = (
+            bl_bound_box[7][0] - bl_bound_box[3][0],
+            bl_bound_box[3][1] - bl_bound_box[0][1],
+            bl_bound_box[2][2] - bl_bound_box[3][2],
+        )
+
+        # convert from yup to zup
+        self.position = mathutils.Vector(
+            (pos_bl_space[0], pos_bl_space[2], -pos_bl_space[1]))
+        # switch y-axis with z-axis
+        self.size = mathutils.Vector(
+            (size_bl_space[0], size_bl_space[2], size_bl_space[1]))
+
+    @classmethod
+    def get_from_object(cls, bl_object):
+        """Remove all the deformation from the object and evaluate
+        its bounding box"""
+        armature = bl_object.find_armature()
+        if armature is not None:
+            armature_pose_backup = armature.data.pose_position
+            armature.data.pose_position = "REST"
+
+        aabb = cls(bl_object.bound_box)
+
+        if armature is not None:
+            armature.data.pose_position = armature_pose_backup
+
+        return aabb
+
+
 def export_texture(escn_file, export_settings, image):
     """Export texture image as an external resource"""
     resource_id = escn_file.get_external_resource(image)
@@ -341,15 +430,14 @@ def export_texture(escn_file, export_settings, image):
     return escn_file.add_external_resource(img_resource, image)
 
 
-def export_script_shader(escn_file, export_settings,
-                         bl_node_mtl, gd_shader_mtl):
-    """Export cycles material to godot shader script"""
+def parse_shader_node_tree(escn_file, export_settings, shader_node_tree):
+    """Parse blender shader node tree"""
     shader = ScriptShader()
 
     exportable = False
-    mtl_output_node = find_material_output_node(bl_node_mtl.node_tree)
+    mtl_output_node = find_material_output_node(shader_node_tree)
     if mtl_output_node is not None:
-        frag_node_list = topology_sort(bl_node_mtl.node_tree.nodes)
+        frag_node_list = topology_sort(shader_node_tree.nodes)
 
         node_to_converter_map = dict()
         for idx, node in enumerate(frag_node_list):
@@ -387,6 +475,8 @@ def export_script_shader(escn_file, export_settings,
             shader.flags.transmission_used |= converter.flags.transmission_used
             shader.flags.uv_or_tangent_used \
                 |= converter.flags.uv_or_tangent_used
+            shader.flags.aabb_tex_coord_used \
+                |= converter.flags.aabb_tex_coord_used
 
         surface_output_socket = mtl_output_node.inputs['Surface']
         if surface_output_socket.is_linked:
@@ -399,22 +489,50 @@ def export_script_shader(escn_file, export_settings,
                 )
 
     if not exportable:
-        raise ValidationError(
-            "Blender material '%s' not able to export as Shader Material"
-            % bl_node_mtl.name
-        )
+        return None
 
-    shader_resource = InternalResource('Shader', bl_node_mtl.node_tree.name)
-    shader_resource['code'] = '"{}"'.format(shader.generate_scripts())
-    resource_id = escn_file.add_internal_resource(
-        shader_resource, bl_node_mtl.node_tree
-    )
-    gd_shader_mtl['shader'] = "SubResource(%d)" % resource_id
-
+    # export used textures
     for image in shader.get_images():
         export_texture(escn_file, export_settings, image)
 
+    return shader
+
+
+def export_script_shader(escn_file, export_settings, bl_object,
+                         bl_node_mtl, gd_shader_mtl):
+    """Export cycles material to godot shader script"""
+    shader_node_tree = bl_node_mtl.node_tree
+
+    shader_rsc = None
+    shader_rsc_id = escn_file.get_internal_resource(shader_node_tree)
+    if shader_rsc_id is not None:
+        shader_rsc = escn_file.internal_resources[shader_rsc_id - 1]
+        assert shader_rsc.heading["id"] == shader_rsc_id
+    else:
+        shader = parse_shader_node_tree(escn_file, export_settings,
+                                        shader_node_tree)
+        if shader is None:
+            raise ValidationError(
+                "Blender material '%s' not able to export as Shader Material"
+                % bl_node_mtl.name
+            )
+
+        shader_rsc = ScriptShaderResource(shader_node_tree.name, shader)
+        shader_rsc_id = escn_file.add_internal_resource(
+            shader_rsc, shader_node_tree
+        )
+
+    gd_shader_mtl['shader'] = "SubResource(%d)" % shader_rsc_id
+
+    shader = shader_rsc.shader
+    # set object related uniforms
+    if shader.flags.aabb_tex_coord_used:
+        aabb = AxisAlignedBoundBox(bl_object.bound_box)
+        gd_shader_mtl['shader_param/%s' % shader.UNI_AABB_POS] = aabb.position
+        gd_shader_mtl['shader_param/%s' % shader.UNI_AABB_SIZE] = aabb.size
+
+    # set texture uniforms
     for image, image_unifrom in shader.get_image_texture_info():
         shader_param_key = 'shader_param/%s' % image_unifrom
-        resource_id = escn_file.get_external_resource(image)
-        gd_shader_mtl[shader_param_key] = "ExtResource(%d)" % resource_id
+        img_rsc_id = escn_file.get_external_resource(image)
+        gd_shader_mtl[shader_param_key] = "ExtResource(%d)" % img_rsc_id
