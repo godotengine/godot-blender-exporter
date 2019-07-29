@@ -292,6 +292,10 @@ class TransformTrack(Track):
             frames = self.frames
             values = self.values
 
+        # Rotation fix for directional objects like SpotLight, camera, etc.
+        directional_rot_fix = \
+            mathutils.Euler((math.radians(-90), 0, 0)).to_quaternion()
+
         for frame, trans_frame in zip(frames, values):
             # move animation first frame to scene.frame_start
             if frame < scene_frame_start:
@@ -312,10 +316,10 @@ class TransformTrack(Track):
                 [quaternion.w, quaternion.x, quaternion.z, -quaternion.y])
             scale = mathutils.Vector([scale.x, scale.z, scale.y])
 
-            # for directional objects like SpotLight, camera, etc.
             if self.is_directional:
-                rotation = mathutils.Euler((math.radians(-90), 0, 0))
-                quaternion = quaternion @ rotation.to_quaternion()
+                quaternion = quaternion @ directional_rot_fix
+
+            quaternion.normalize()
 
             array.append((frame - scene_frame_start) * time_per_frame)
             # transition default 1.0
