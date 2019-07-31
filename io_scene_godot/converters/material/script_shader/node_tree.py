@@ -396,6 +396,21 @@ class AxisAlignedBoundBox:
         return aabb
 
 
+def export_image_name(image):
+    """Generate name according to Blender image name and format"""
+    if image.file_format in ('JPEG', 'JPEG2000'):
+        valid_extension_names = ('.jpg', '.jpeg')
+    else:
+        valid_extension_names = ('.' + image.file_format.lower(), )
+
+    if image.name.lower().endswith(valid_extension_names):
+        return image.name
+
+    # add extension information to image name, any one in the extension
+    # names list is valid, for simplity just choose the first one
+    return image.name + valid_extension_names[0]
+
+
 def export_texture(escn_file, export_settings, image):
     """Export texture image as an external resource"""
     resource_id = escn_file.get_external_resource(image)
@@ -403,19 +418,9 @@ def export_texture(escn_file, export_settings, image):
         return resource_id
 
     dst_dir_path = os.path.dirname(export_settings['path'])
-    dst_path = dst_dir_path + os.sep + image.name
+    dst_path = os.path.join(dst_dir_path, export_image_name(image))
 
     if image.packed_file is not None:
-        image_format = image.file_format
-        image_name_lower = image.name.lower()
-
-        if image_format in ('JPEG', 'JPEG2000'):
-            # jpg and jpeg are same thing
-            if not image_name_lower.endswith('.jpg') and \
-                    not image_name_lower.endswith('.jpeg'):
-                dst_path = dst_path + '.jpg'
-        elif not image_name_lower.endswith('.' + image_format.lower()):
-            dst_path = dst_path + '.' + image_format.lower()
         image.filepath_raw = dst_path
         image.save()
     else:
