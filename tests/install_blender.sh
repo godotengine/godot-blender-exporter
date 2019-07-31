@@ -5,7 +5,7 @@ set -e
 # hack, may be removed after find a stable blender2.8 build
 BLENDER_ORG_HOMEPAGE="https://builder.blender.org"
 DOWNLOAD_PAGE_HTML="`wget -qO- ${BLENDER_ORG_HOMEPAGE}/download`"
-DAILY_BUILD_REGEX_PATTERN='href="([^"]+)" title="Download Dev Linux 64 bit master"'
+DAILY_BUILD_REGEX_PATTERN='href="([^"]+)" title="Download Blender for Linux 64 bit"'
 [[ ${DOWNLOAD_PAGE_HTML} =~ ${DAILY_BUILD_REGEX_PATTERN} ]]
 BLENDER_28_LINUX_64_PATH=${BASH_REMATCH[1]}
 
