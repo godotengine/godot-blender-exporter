@@ -28,17 +28,16 @@ surfaces/0 = {
 
 resource_name = "Cube001"
 data = PoolVector3Array(-4.0, 1.33333, 0.3, -4.0, 4.0, -0.3, -4.0, 1.33333, -0.3, 1.33333, 4.0, 0.3, 4.0, 4.0, -0.3, 1.33333, 4.0, -0.3, 4.0, -1.33333, 0.3, 4.0, -4.0, -0.3, 4.0, -1.33333, -0.3, -1.33333, -4.0, 0.3, -4.0, -4.0, -0.3, -1.33333, -4.0, -0.3, 4.0, -1.33333, -0.3, 1.33333, -4.0, -0.3, 1.33333, -1.33333, -0.3, -4.0, -1.33333, 0.3, -1.33333, -4.0, 0.3, -1.33333, -1.33333, 0.3, 1.33333, -1.33333, 0.3, 4.0, -4.0, 0.3, 4.0, -1.33333, 0.3, -1.33333, -1.33333, 0.3, 1.33333, -4.0, 0.3, 1.33333, -1.33333, 0.3, 1.33333, 4.0, 0.3, 4.0, 1.33333, 0.3, 4.0, 4.0, 0.3, 1.33333, 1.33333, 0.3, 4.0, -1.33333, 0.3, 4.0, 1.33333, 0.3, -1.33333, 4.0, 0.3, 1.33333, 1.33333, 0.3, 1.33333, 4.0, 0.3, -1.33333, -1.33333, -0.3, -1.33333, 1.33333, 0.3, -1.33333, -1.33333, 0.3, -4.0, 4.0, 0.3, -1.33333, 1.33333, 0.3, -1.33333, 4.0, 0.3, -4.0, 1.33333, 0.3, -1.33333, -1.33333, 0.3, -1.33333, 1.33333, 0.3, -1.33333, -1.33333, -0.3, -4.0, -4.0, -0.3, -4.0, -1.33333, -0.3, 1.33333, -1.33333, -0.3, -1.33333, -4.0, -0.3, -1.33333, -1.33333, -0.3, -1.33333, 4.0, -0.3, -4.0, 1.33333, -0.3, -4.0, 4.0, -0.3, -1.33333, 1.33333, -0.3, -4.0, -1.33333, -0.3, -4.0, 1.33333, -0.3, 1.33333, 4.0, -0.3, -1.33333, 1.33333, -0.3, -1.33333, 4.0, -0.3, 1.33333, -1.33333, -0.3, -1.33333, -1.33333, 0.3, 1.33333, -1.33333, 0.3, 4.0, 4.0, -0.3, 1.33333, 1.33333, -0.3, 1.33333, 4.0, -0.3, 4.0, 1.33333, -0.3, 1.33333, -1.33333, -0.3, 1.33333, 1.33333, -0.3, 4.0, -4.0, 0.3, 1.33333, -4.0, -0.3, 4.0, -4.0, -0.3, 1.33333, -4.0, 0.3, -1.33333, -4.0, -0.3, 1.33333, -4.0, -0.3, 4.0, 4.0, 0.3, 4.0, 1.33333, -0.3, 4.0, 4.0, -0.3, 4.0, 1.33333, 0.3, 4.0, -1.33333, -0.3, 4.0, 1.33333, -0.3, -4.0, 4.0, 0.3, -1.33333, 4.0, -0.3, -4.0, 4.0, -0.3, -1.33333, 4.0, 0.3, 1.33333, 4.0, -0.3, -1.33333, 4.0, -0.3, -4.0, -4.0, 0.3, -4.0, -1.33333, -0.3, -4.0, -4.0, -0.3, -4.0, -1.33333, 0.3, -4.0, 1.33333, -0.3, -4.0, -1.33333, -0.3, -1.33333, 1.33333, -0.3, 1.33333, 1.33333, 0.3, -1.33333, 1.33333, 0.3, 1.33333, 1.33333, -0.3, 1.33333, -1.33333, 0.3, 1.33333, 1.33333, 0.3, -4.0, 1.33333, 0.3, -4.0, 4.0, 0.3, -4.0, 4.0, -0.3, 1.33333, 4.0, 0.3, 4.0, 4.0, 0.3, 4.0, 4.0, -0.3, 4.0, -1.33333, 0.3, 4.0, -4.0, 0.3, 4.0, -4.0, -0.3, -1.33333, -4.0, 0.3, -4.0, -4.0, 0.3, -4.0, -4.0, -0.3, 4.0, -1.33333, -0.3, 4.0, -4.0, -0.3, 1.33333, -4.0, -0.3, -4.0, -1.33333, 0.3, -4.0, -4.0, 0.3, -1.33333, -4.0, 0.3, 1.33333, -1.33333, 0.3, 1.33333, -4.0, 0.3, 4.0, -4.0, 0.3, -1.33333, -1.33333, 0.3, -1.33333, -4.0, 0.3, 1.33333, -4.0, 0.3, 1.33333, 4.0, 0.3, 1.33333, 1.33333, 0.3, 4.0, 1.33333, 0.3, 1.33333, 1.33333, 0.3, 1.33333, -1.33333, 0.3, 4.0, -1.33333, 0.3, -1.33333, 4.0, 0.3, -1.33333, 1.33333, 0.3, 1.33333, 1.33333, 0.3, -1.33333, -1.33333, -0.3, -1.33333, 1.33333, -0.3, -1.33333, 1.33333, 0.3, -4.0, 4.0, 0.3, -4.0, 1.33333, 0.3, -1.33333, 1.33333, 0.3, -4.0, 1.33333, 0.3, -4.0, -1.33333, 0.3, -1.33333, -1.33333, 0.3, -1.33333, -1.33333, -0.3, -1.33333, -4.0, -0.3, -4.0, -4.0, -0.3, 1.33333, -1.33333, -0.3, 1.33333, -4.0, -0.3, -1.33333, -4.0, -0.3, -1.33333, 4.0, -0.3, -1.33333, 1.33333, -0.3, -4.0, 1.33333, -0.3, -1.33333, 1.33333, -0.3, -1.33333, -1.33333, -0.3, -4.0, -1.33333, -0.3, 1.33333, 4.0, -0.3, 1.33333, 1.33333, -0.3, -1.33333, 1.33333, -0.3, 1.33333, -1.33333, -0.3, -1.33333, -1.33333, -0.3, -1.33333, -1.33333, 0.3, 4.0, 4.0, -0.3, 4.0, 1.33333, -0.3, 1.33333, 1.33333, -0.3, 4.0, 1.33333, -0.3, 4.0, -1.33333, -0.3, 1.33333, -1.33333, -0.3, 4.0, -4.0, 0.3, 1.33333, -4.0, 0.3, 1.33333, -4.0, -0.3, 1.33333, -4.0, 0.3, -1.33333, -4.0, 0.3, -1.33333, -4.0, -0.3, 4.0, 4.0, 0.3, 4.0, 1.33333, 0.3, 4.0, 1.33333, -0.3, 4.0, 1.33333, 0.3, 4.0, -1.33333, 0.3, 4.0, -1.33333, -0.3, -4.0, 4.0, 0.3, -1.33333, 4.0, 0.3, -1.33333, 4.0, -0.3, -1.33333, 4.0, 0.3, 1.33333, 4.0, 0.3, 1.33333, 4.0, -0.3, -4.0, -4.0, 0.3, -4.0, -1.33333, 0.3, -4.0, -1.33333, -0.3, -4.0, -1.33333, 0.3, -4.0, 1.33333, 0.3, -4.0, 1.33333, -0.3, -1.33333, 1.33333, -0.3, 1.33333, 1.33333, -0.3, 1.33333, 1.33333, 0.3, 1.33333, 1.33333, -0.3, 1.33333, -1.33333, -0.3, 1.33333, -1.33333, 0.3)
-margin = 0.04
 
 [sub_resource id=4 type="CapsuleShape"]
 
-resource_name = "Sphere001Collision"
+resource_name = "CapsuleCollision"
 radius = 0.980785
 height = 8.43843
 
 [sub_resource id=5 type="ArrayMesh"]
 
-resource_name = "Sphere001"
+resource_name = "Capsule"
 surfaces/0 = {
 	"primitive":4,
 	"arrays":[
@@ -81,7 +80,7 @@ surfaces/0 = {
 
 [sub_resource id=8 type="BoxShape"]
 
-resource_name = "CubeCollision"
+resource_name = "BoxCollision"
 extents = Vector3(1.0, 1.0, 1.0)
 
 [sub_resource id=9 type="ArrayMesh"]
@@ -156,9 +155,28 @@ surfaces/0 = {
 resource_name = "Sphere003Collision"
 radius = 0.5
 
+[sub_resource id=15 type="ArrayMesh"]
+
+resource_name = "Plane001"
+surfaces/0 = {
+	"primitive":4,
+	"arrays":[
+		Vector3Array(1.0, 0.0, 1.0, -1.0, 0.0, -1.0, -1.0, 0.0, 1.0, 1.0, 0.0, -1.0),
+		Vector3Array(0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0),
+		FloatArray(1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0),
+		null, ; no Vertex Colors,
+		Vector2Array(1.0, 1.0, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0),
+		null, ; No UV2,
+		null, ; No Bones,
+		null, ; No Weights,
+		IntArray(0, 2, 1, 0, 1, 3)
+	],
+	"morph_arrays":[]
+}
+
 [node type="Spatial" name="Scene"]
 
-[node name="Cube002Physics" type="StaticBody" parent="."]
+[node name="ConvexPhysics" type="StaticBody" parent="."]
 
 friction = 0.5
 bounce = 0.0
@@ -166,18 +184,18 @@ transform = Transform(0.96374, 0.265655, -0.0251599, -0.261302, 0.920405, -0.290
 collision_layer = 1
 collision_mask = 1
 
-[node name="Cube002Collision" type="CollisionShape" parent="Cube002Physics"]
+[node name="ConvexCollision" type="CollisionShape" parent="ConvexPhysics"]
 
 transform = Transform(1.0, 0.0, 0.0, 0.0, -4.37114e-08, 1.0, 0.0, -1.0, -4.37114e-08, 0.0, 0.0, 0.0)
 shape = SubResource(1)
 
-[node name="Cube002" type="MeshInstance" parent="Cube002Physics/Cube002Collision"]
+[node name="Convex" type="MeshInstance" parent="ConvexPhysics/ConvexCollision"]
 
 mesh = SubResource(2)
 visible = true
 transform = Transform(1.0, 0.0, 0.0, 0.0, -4.37114e-08, -1.0, 0.0, 1.0, -4.37114e-08, 0.0, 0.0, 0.0)
 
-[node name="Cube001Physics" type="StaticBody" parent="."]
+[node name="ConcavePhysics" type="StaticBody" parent="."]
 
 friction = 0.5
 bounce = 0.0
@@ -185,12 +203,12 @@ transform = Transform(0.96374, 0.265655, -0.0251599, -0.256895, 0.949182, 0.1818
 collision_layer = 1
 collision_mask = 1
 
-[node name="Cube001Collision" type="CollisionShape" parent="Cube001Physics"]
+[node name="ConcaveCollision" type="CollisionShape" parent="ConcavePhysics"]
 
 transform = Transform(1.0, 0.0, 0.0, 0.0, -4.37114e-08, 1.0, 0.0, -1.0, -4.37114e-08, 0.0, 0.0, 0.0)
 shape = SubResource(3)
 
-[node name="Sphere001Physics" type="RigidBody" parent="."]
+[node name="CapsulePhysics" type="RigidBody" parent="."]
 
 friction = 0.5
 bounce = 0.0
@@ -202,12 +220,12 @@ linear_damp = 0.04
 angular_damp = 0.1
 sleeping = false
 
-[node name="Sphere001Collision" type="CollisionShape" parent="Sphere001Physics"]
+[node name="CapsuleCollision" type="CollisionShape" parent="CapsulePhysics"]
 
 transform = Transform(1.0, 0.0, 0.0, 0.0, -4.37114e-08, 1.0, 0.0, -1.0, -4.37114e-08, 0.0, 0.0, 0.0)
 shape = SubResource(4)
 
-[node name="Sphere001" type="MeshInstance" parent="Sphere001Physics/Sphere001Collision"]
+[node name="Capsule" type="MeshInstance" parent="CapsulePhysics/CapsuleCollision"]
 
 mesh = SubResource(5)
 visible = true
@@ -232,7 +250,7 @@ mesh = SubResource(7)
 visible = true
 transform = Transform(1.0, 0.0, 0.0, 0.0, -4.37114e-08, -1.0, 0.0, 1.0, -4.37114e-08, 0.0, 0.0, 0.0)
 
-[node name="CubePhysics" type="RigidBody" parent="."]
+[node name="BoxPhysics" type="RigidBody" parent="."]
 
 friction = 0.5
 bounce = 0.0
@@ -244,12 +262,12 @@ linear_damp = 0.04
 angular_damp = 0.1
 sleeping = false
 
-[node name="CubeCollision" type="CollisionShape" parent="CubePhysics"]
+[node name="BoxCollision" type="CollisionShape" parent="BoxPhysics"]
 
 transform = Transform(1.0, 0.0, 0.0, 0.0, -4.37114e-08, 1.0, 0.0, -1.0, -4.37114e-08, 0.0, 0.0, 0.0)
 shape = SubResource(8)
 
-[node name="Cube" type="MeshInstance" parent="CubePhysics/CubeCollision"]
+[node name="Box" type="MeshInstance" parent="BoxPhysics/BoxCollision"]
 
 mesh = SubResource(9)
 visible = true
@@ -323,11 +341,21 @@ transform = Transform(-0.290865, -0.771101, 0.566393, -0.0551891, 0.604525, 0.79
 light_negative = false
 shadow_enabled = true
 
-[node name="Camera" type="Camera" parent="."]
+[node name="Shared ConvexPhysics" type="StaticBody" parent="."]
 
-far = 100.0
-near = 0.1
-size = 7.31429
-projection = 0
-fov = 49.1343
-transform = Transform(0.685921, -0.324014, 0.651558, 0.0, 0.895396, 0.445271, -0.727676, -0.305421, 0.61417, 14.4308, 10.093, 13.0585)
+friction = 0.5
+bounce = 0.0
+transform = Transform(0.919077, -0.20923, -0.333948, 0.193581, 0.977827, -0.079879, 0.343256, 0.00876901, 0.939201, 12.9707, 11.1244, 0.153062)
+collision_layer = 1
+collision_mask = 1
+
+[node name="Shared ConvexCollision" type="CollisionShape" parent="Shared ConvexPhysics"]
+
+transform = Transform(1.0, 0.0, 0.0, 0.0, -4.37114e-08, 1.0, 0.0, -1.0, -4.37114e-08, 0.0, 0.0, 0.0)
+shape = SubResource(1)
+
+[node name="planee" type="MeshInstance" parent="Shared ConvexPhysics/Shared ConvexCollision"]
+
+mesh = SubResource(15)
+visible = true
+transform = Transform(3.23961, -0.00676554, -0.16824, -0.168289, -0.0256584, -3.23952, 0.00542533, 3.24388, -0.0259749, 0.00177574, 0.221902, 0.196647)
