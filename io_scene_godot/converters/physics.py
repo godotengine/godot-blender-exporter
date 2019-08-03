@@ -69,60 +69,67 @@ def export_collision_shape(escn_file, export_settings, node, parent_gd_node,
     rbd = node.rigid_body
 
     shape_id = None
-    bounds = get_extents(node)
-
-    if rbd.collision_shape == "BOX":
-        col_shape = InternalResource("BoxShape", col_name)
-        col_shape['extents'] = mathutils.Vector(bounds/2)
-        shape_id = escn_file.add_internal_resource(col_shape, rbd)
-
-    elif rbd.collision_shape == "SPHERE":
-        col_shape = InternalResource("SphereShape", col_name)
-        col_shape['radius'] = max(list(bounds))/2
-        shape_id = escn_file.add_internal_resource(col_shape, rbd)
-
-    elif rbd.collision_shape == "CAPSULE":
-        col_shape = InternalResource("CapsuleShape", col_name)
-        col_shape['radius'] = max(bounds.x, bounds.y) / 2
-        col_shape['height'] = bounds.z - col_shape['radius'] * 2
-        shape_id = escn_file.add_internal_resource(col_shape, rbd)
-    elif rbd.collision_shape == "CONVEX_HULL":
-        col_shape, shape_id = generate_mesh_array(
+    col_shape = None
+    if rbd.collision_shape in ("CONVEX_HULL", "MESH"):
+        is_convex = rbd.collision_shape == "CONVEX_HULL"
+        shape_id = generate_shape_mesh(
             escn_file, export_settings,
-            node, convex=True
-        )
-    elif rbd.collision_shape == "MESH":
-        col_shape, shape_id = generate_mesh_array(
-            escn_file, export_settings,
-            node, convex=False
+            node, is_convex
         )
     else:
-        logging.warning("Unable to export physics shape for %s", node.name)
+        bounds = get_extents(node)
+        if rbd.collision_shape == "BOX":
+            col_shape = InternalResource("BoxShape", col_name)
+            col_shape['extents'] = mathutils.Vector(bounds / 2)
+            shape_id = escn_file.add_internal_resource(col_shape, rbd)
 
-    if shape_id is not None and col_shape is not None:
-        if rbd.use_margin or rbd.collision_shape == "MESH":
+        elif rbd.collision_shape == "SPHERE":
+            col_shape = InternalResource("SphereShape", col_name)
+            col_shape['radius'] = max(list(bounds)) / 2
+            shape_id = escn_file.add_internal_resource(col_shape, rbd)
+
+        elif rbd.collision_shape == "CAPSULE":
+            col_shape = InternalResource("CapsuleShape", col_name)
+            col_shape['radius'] = max(bounds.x, bounds.y) / 2
+            col_shape['height'] = bounds.z - col_shape['radius'] * 2
+            shape_id = escn_file.add_internal_resource(col_shape, rbd)
+        else:
+            logging.warning("Unable to export physics shape for %s", node.name)
+
+        if col_shape is not None and rbd.use_margin:
             col_shape['margin'] = rbd.collision_margin
+
+    if shape_id is not None:
         col_node['shape'] = "SubResource({})".format(shape_id)
     escn_file.add_node(col_node)
 
     return col_node
 
 
-def generate_mesh_array(escn_file, export_settings, node, convex=False):
-    """Generates godots PolygonShape from an object"""
+def generate_shape_mesh(escn_file, export_settings, node, is_convex):
+    """Generates godots PolygonShape from a blender mesh object"""
     # pylint: disable-msg=cyclic-import
     from .mesh import (MeshConverter, MeshResourceKey)
-    mesh_converter = MeshConverter(node, export_settings)
-    if convex:
-        key = MeshResourceKey("ConvexPolygonShape", node, export_settings)
-    else:
-        key = MeshResourceKey("ConcavePolygonShape", node, export_settings)
-    resource_id = escn_file.get_internal_resource(key)
-    if resource_id is not None:
-        return resource_id
 
+    margin = 0
+    if node.rigid_body.use_margin:
+        margin = node.rigid_body.collision_margin
+
+    # Build the Shape resource hash key with rigid margin and mesh data
+    if is_convex:
+        shape_rsc_type = "ConvexPolygonShape"
+    else:
+        shape_rsc_type = "ConcavePolygonShape"
+    mesh_data_key = MeshResourceKey(shape_rsc_type, node, export_settings)
+    shape_rsc_key = (margin, mesh_data_key)
+
+    shape_id = escn_file.get_internal_resource(shape_rsc_key)
+    if shape_id is not None:
+        return shape_id
+
+    # No cached Shape found, build new one
     col_shape = None
-    shape_id = None
+    mesh_converter = MeshConverter(node, export_settings)
     mesh = mesh_converter.to_mesh(calculate_tangents=False)
     if mesh is not None and mesh.polygons:
         vert_array = list()
@@ -130,17 +137,21 @@ def generate_mesh_array(escn_file, export_settings, node, convex=False):
             for vert_id in poly.vertices:
                 vert_array.append(list(mesh.vertices[vert_id].co))
 
-        if convex:
+        if is_convex:
             col_shape = InternalResource("ConvexPolygonShape", mesh.name)
             col_shape['points'] = Array("PoolVector3Array(", values=vert_array)
         else:
             col_shape = InternalResource("ConcavePolygonShape", mesh.name)
             col_shape['data'] = Array("PoolVector3Array(", values=vert_array)
-        shape_id = escn_file.add_internal_resource(col_shape, key)
+
+        if node.rigid_body.use_margin:
+            col_shape['margin'] = node.rigid_body.collision_margin
+
+        shape_id = escn_file.add_internal_resource(col_shape, shape_rsc_key)
 
     mesh_converter.to_mesh_clear()
 
-    return col_shape, shape_id
+    return shape_id
 
 
 def export_physics_controller(escn_file, export_settings, node,
