@@ -93,9 +93,9 @@ class ScriptShader:
             self._vertex_code_lines.insert(
                 0,
                 "%s = mat3(vec3(1, 0, 0), vec3(0, 0, 1), vec3(0, -1, 0))\
-                    * ((VERTEX - %s) * (1.0 / %s))" % (
-                        NodeConverterBase.AABB_UVW,
-                        self.UNI_AABB_POS, self.UNI_AABB_SIZE)
+                    * ((VERTEX - %s) * (1.0 / %s))"
+                % (NodeConverterBase.AABB_UVW,
+                   self.UNI_AABB_POS, self.UNI_AABB_SIZE)
             )
 
         for name in (
