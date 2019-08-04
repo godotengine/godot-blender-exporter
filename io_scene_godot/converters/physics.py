@@ -7,6 +7,7 @@ physics owns the object.
 import logging
 import mathutils
 from ..structures import NodeTemplate, InternalResource, Array, _AXIS_CORRECT
+from .utils import MeshConverter, MeshResourceKey
 
 PHYSICS_TYPES = {'KinematicBody', 'RigidBody', 'StaticBody'}
 
@@ -72,10 +73,17 @@ def export_collision_shape(escn_file, export_settings, node, parent_gd_node,
     col_shape = None
     if rbd.collision_shape in ("CONVEX_HULL", "MESH"):
         is_convex = rbd.collision_shape == "CONVEX_HULL"
-        shape_id = generate_shape_mesh(
-            escn_file, export_settings,
-            node, is_convex
-        )
+        if rbd.collision_shape == "CONVEX_HULL":
+            shape_id = generate_convex_shape(
+                escn_file, export_settings, node
+            )
+        else:  # "MESH"
+            shape_id = generate_concave_shape(
+                escn_file, export_settings, node
+            )
+
+        if shape_id is not None:
+            col_node['shape'] = "SubResource({})".format(shape_id)
     else:
         bounds = get_extents(node)
         if rbd.collision_shape == "BOX":
@@ -96,56 +104,95 @@ def export_collision_shape(escn_file, export_settings, node, parent_gd_node,
         else:
             logging.warning("Unable to export physics shape for %s", node.name)
 
+        col_node['shape'] = "SubResource({})".format(shape_id)
         if col_shape is not None and rbd.use_margin:
             col_shape['margin'] = rbd.collision_margin
 
-    if shape_id is not None:
-        col_node['shape'] = "SubResource({})".format(shape_id)
     escn_file.add_node(col_node)
 
     return col_node
 
 
-def generate_shape_mesh(escn_file, export_settings, node, is_convex):
-    """Generates godots PolygonShape from a blender mesh object"""
-    # pylint: disable-msg=cyclic-import
-    from .mesh import (MeshConverter, MeshResourceKey)
+class MeshCollisionShapeKey:
+    """Produces a resource key based on an mesh object's data and rigid
+    propertys"""
+    def __init__(self, shape_type, bl_object, export_settings):
+        assert shape_type in ("ConvexPolygonShape", "ConcavePolygonShape")
 
-    margin = 0
-    if node.rigid_body.use_margin:
-        margin = node.rigid_body.collision_margin
+        mesh_data_key = MeshResourceKey(shape_type, bl_object, export_settings)
+        # margin is the property that stores in CollisionShape in Godot
+        margin = 0
+        if bl_object.rigid_body.use_margin:
+            margin = bl_object.rigid_body.collision_margin
 
-    # Build the Shape resource hash key with rigid margin and mesh data
-    if is_convex:
-        shape_rsc_type = "ConvexPolygonShape"
-    else:
-        shape_rsc_type = "ConcavePolygonShape"
-    mesh_data_key = MeshResourceKey(shape_rsc_type, node, export_settings)
-    shape_rsc_key = (margin, mesh_data_key)
+        self._data = tuple((margin, mesh_data_key))
 
+    def __hash__(self):
+        return hash(self._data)
+
+    def __eq__(self, other):
+        # pylint: disable=protected-access
+        return (self.__class__ == other.__class__ and
+                self._data == other._data)
+
+
+def generate_convex_shape(escn_file, export_settings, bl_object):
+    """Generates godots ConvexCollisionShape from a blender mesh object"""
+    shape_rsc_key = MeshCollisionShapeKey(
+        "ConvexPolygonShape", bl_object, export_settings)
     shape_id = escn_file.get_internal_resource(shape_rsc_key)
     if shape_id is not None:
         return shape_id
 
     # No cached Shape found, build new one
     col_shape = None
-    mesh_converter = MeshConverter(node, export_settings)
-    mesh = mesh_converter.to_mesh(calculate_tangents=False)
+    mesh_converter = MeshConverter(bl_object, export_settings)
+    mesh = mesh_converter.to_mesh(
+        triangulate=False,
+        preserve_vertex_groups=False,
+        calculate_tangents=False
+    )
+    if mesh is not None:
+        vert_array = [vert.co for vert in mesh.vertices]
+        col_shape = InternalResource("ConvexPolygonShape", mesh.name)
+        col_shape['points'] = Array("PoolVector3Array(", values=vert_array)
+        if bl_object.rigid_body.use_margin:
+            col_shape['margin'] = bl_object.rigid_body.collision_margin
+
+        shape_id = escn_file.add_internal_resource(col_shape, shape_rsc_key)
+
+    mesh_converter.to_mesh_clear()
+
+    return shape_id
+
+
+def generate_concave_shape(escn_file, export_settings, bl_object):
+    """Generates godots ConcaveCollisionShape from a blender mesh object"""
+    shape_rsc_key = MeshCollisionShapeKey(
+        "ConcavePolygonShape", bl_object, export_settings)
+    shape_id = escn_file.get_internal_resource(shape_rsc_key)
+    if shape_id is not None:
+        return shape_id
+
+    # No cached Shape found, build new one
+    col_shape = None
+    mesh_converter = MeshConverter(bl_object, export_settings)
+    mesh = mesh_converter.to_mesh(
+        triangulate=True,
+        preserve_vertex_groups=False,
+        calculate_tangents=False
+    )
     if mesh is not None and mesh.polygons:
         vert_array = list()
         for poly in mesh.polygons:
             for vert_id in poly.vertices:
                 vert_array.append(list(mesh.vertices[vert_id].co))
 
-        if is_convex:
-            col_shape = InternalResource("ConvexPolygonShape", mesh.name)
-            col_shape['points'] = Array("PoolVector3Array(", values=vert_array)
-        else:
-            col_shape = InternalResource("ConcavePolygonShape", mesh.name)
-            col_shape['data'] = Array("PoolVector3Array(", values=vert_array)
+        col_shape = InternalResource("ConcavePolygonShape", mesh.name)
+        col_shape['data'] = Array("PoolVector3Array(", values=vert_array)
 
-        if node.rigid_body.use_margin:
-            col_shape['margin'] = node.rigid_body.collision_margin
+        if bl_object.rigid_body.use_margin:
+            col_shape['margin'] = bl_object.rigid_body.collision_margin
 
         shape_id = escn_file.add_internal_resource(col_shape, shape_rsc_key)
 
