@@ -248,6 +248,79 @@ void node_combine_rgb(float r, float g, float b, out vec4 color) {
 """),
 
     ShaderFunction(code="""
+void node_mix_rgb_mix(float fac, vec4 in_color1, vec4 in_color2,
+                      out vec4 out_color) {
+    out_color = mix(in_color1, in_color2, fac);
+    out_color.a = in_color1.a;
+}
+"""),
+
+    ShaderFunction(code="""
+void node_mix_rgb_add(float fac, vec4 in_color1, vec4 in_color2,
+                      out vec4 out_color) {
+    out_color = mix(in_color1, in_color1 + in_color2, fac);
+    out_color.a = in_color1.a;
+}
+"""),
+
+    ShaderFunction(code="""
+void node_mix_rgb_subtract(float fac, vec4 in_color1, vec4 in_color2,
+                           out vec4 out_color) {
+    out_color = mix(in_color1, in_color1 - in_color2, fac);
+    out_color.a = in_color1.a;
+}
+"""),
+
+    ShaderFunction(code="""
+void node_mix_rgb_multiply(float fac, vec4 in_color1, vec4 in_color2,
+                           out vec4 out_color) {
+    out_color = mix(in_color1, in_color1 * in_color2, fac);
+    out_color.a = in_color1.a;
+}
+"""),
+
+    ShaderFunction(code="""
+void node_mix_rgb_divide(float fac, vec4 in_color1, vec4 in_color2,
+                         out vec4 out_color) {
+    float fac_cpl = 1.0 - fac;
+    out_color = in_color1;
+    if (in_color2.r != 0.0) {
+        out_color.r = fac_cpl * in_color1.r +  fac * in_color1.r / in_color2.r;
+    }
+    if (in_color2.g != 0.0) {
+        out_color.g = fac_cpl * in_color1.g +  fac * in_color1.g / in_color2.g;
+    }
+    if (in_color2.b != 0.0) {
+        out_color.b = fac_cpl * in_color1.b +  fac * in_color1.b / in_color2.b;
+    }
+}
+"""),
+
+    ShaderFunction(code="""
+void node_mix_rgb_difference(float fac, vec4 in_color1, vec4 in_color2,
+                             out vec4 out_color) {
+    out_color = mix(in_color1, abs(in_color1 - in_color2), fac);
+    out_color.a = in_color1.a;
+}
+"""),
+
+    ShaderFunction(code="""
+void node_mix_rgb_darken(float fac, vec4 in_color1, vec4 in_color2,
+                         out vec4 out_color) {
+    out_color.rgb = min(in_color1.rgb, in_color2.rgb * fac);
+    out_color.a = in_color1.a;
+}
+"""),
+
+    ShaderFunction(code="""
+void node_mix_rgb_lighten(float fac, vec4 in_color1, vec4 in_color2,
+                          out vec4 out_color) {
+    out_color.rgb = max(in_color1.rgb, in_color2.rgb * fac);
+    out_color.a = in_color1.a;
+}
+"""),
+
+    ShaderFunction(code="""
 void node_bump(float strength, float dist, float height, vec3 normal,
                vec3 surf_pos, float invert, out vec3 out_normal) {
     if (invert != 0.0) {
@@ -710,4 +783,4 @@ def find_node_function(node):
 def find_function_by_name(function_name):
     """Given identifier of a material node,
     return its corresponding function"""
-    return FUNCTION_NAME_MAPPING[function_name]
+    return FUNCTION_NAME_MAPPING.get(function_name, None)

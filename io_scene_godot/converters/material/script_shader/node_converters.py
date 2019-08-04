@@ -408,7 +408,7 @@ class NodeConverterBase:
         # here not all the sockets are exported, because some of them
         # may not feasible to supported in godot. Here only export
         # those registed in `out_sockets_map`. Registering is done in
-        # `parse_to_fragment` or `parse_to_vertex`
+        # `parse_node_to_fragment` or `parse_node_to_vertex`
         id_to_define = list()
         for out_socket in self.bl_node.outputs:
             var = self.out_sockets_map.get(out_socket, None)
@@ -692,8 +692,52 @@ class RgbNodeConverter(NodeConverterBase):
 
     def parse_node_to_fragment(self):
         rgb_socket = self.bl_node.outputs[0]
-        self.out_sockets_map[rgb_socket] = blender_value_to_string(
-            rgb_socket.default_value)
+        rgb_id = self.generate_socket_id_str(rgb_socket)
+        rgb_value_str = blender_value_to_string(rgb_socket.default_value)
+        self.local_code.append("%s = %s" % (rgb_id, rgb_value_str))
+        self.out_sockets_map[rgb_socket] = rgb_id
+
+
+class MixRgbNodeConverter(NodeConverterBase):
+    """Converter for ShaderNodeMixRGB"""
+
+    def parse_node_to_fragment(self):
+        fac_socket = self.bl_node.inputs['Fac']
+        color1_socket = self.bl_node.inputs['Color1']
+        color2_socket = self.bl_node.inputs['Color2']
+
+        fac_id = self.in_sockets_map[fac_socket]
+        color1_id = self.in_sockets_map[color1_socket]
+        color2_id = self.in_sockets_map[color2_socket]
+
+        blend_type = self.bl_node.blend_type.lower()
+        rgb_mix_func_name = 'node_mix_rgb_' + blend_type
+
+        # clamp fac to (0, 1)
+        self.local_code.append("%s = clamp(%s, 0.0, 1.0)" % (fac_id, fac_id))
+
+        mix_func = find_function_by_name(rgb_mix_func_name)
+        if mix_func is None:
+            # TODO: supportt all the blend types
+            warning_str = 'blend type %s not supported at %s, fall back to ' \
+                'blend type MIX' % (self.bl_node.blend_type, self.bl_node.name)
+            logging.warning(warning_str)
+            # default blender type MIX
+            mix_func = find_function_by_name('node_mix_rgb_mix')
+            self.local_code.append("// " + warning_str)
+        assert mix_func is not None
+
+        out_color_socket = self.bl_node.outputs['Color']
+        out_color_id = self.generate_socket_id_str(out_color_socket)
+
+        in_args = (fac_id, color1_id, color2_id)
+        out_args = (out_color_id,)
+        self.add_function_call(mix_func, in_args, out_args)
+
+        if self.bl_node.use_clamp:
+            self.local_code.append("%s = clamp(%s, vec4(0.0), vec4(1.0))")
+
+        self.out_sockets_map[out_color_socket] = out_color_id
 
 
 class ValueNodeConverter(NodeConverterBase):
@@ -701,8 +745,9 @@ class ValueNodeConverter(NodeConverterBase):
 
     def parse_node_to_fragment(self):
         value_socket = self.bl_node.outputs['Value']
-        self.out_sockets_map[value_socket] = blender_value_to_string(
-            value_socket.default_value)
+        value_id = self.generate_socket_id_str(value_socket)
+        value_str = blender_value_to_string(value_socket.default_value)
+        self.out_sockets_map[value_socket] = "%s = %s" % (value_id, value_str)
 
 
 class ImageTextureNodeConverter(NodeConverterBase):
@@ -861,6 +906,7 @@ NODE_CONVERTERS = {
     'ShaderNodeTexImage': ImageTextureNodeConverter,
     'ShaderNodeTexCoord': TexCoordNodeConverter,
     'ShaderNodeRGB': RgbNodeConverter,
+    'ShaderNodeMixRGB': MixRgbNodeConverter,
     'ShaderNodeNormalMap': NormalMapNodeConverter,
     'ShaderNodeBump': BumpNodeConverter,
     'NodeReroute': RerouteNodeConverter,
