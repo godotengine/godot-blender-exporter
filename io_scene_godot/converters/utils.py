@@ -75,11 +75,17 @@ class MeshResourceKey:
                 # traversal it, however, we cut down it here to allow
                 # some of mesh resource not be shared because of simplicity
                 mod_info_list.append(getattr(modifier, prop))
-
+        if mod_info_list and type(mod_info_list[-1]) is set:
+            mod_info_list.pop()
         self._data = tuple([mesh_data, gd_rsc_type] + mod_info_list)
         # Precalculate the hash now for better efficiency later
-        self._hash = hash(self._data)
-
+        try:
+            self._hash = hash(self._data)
+        except TypeError:
+            print(mesh_data)
+            print(gd_rsc_type)
+            print(mod_info_list)
+            raise RuntimeError('bad unhashable data in the mod_info_list')
     def __hash__(self):
         return self._hash
 
