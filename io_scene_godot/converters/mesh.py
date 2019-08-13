@@ -278,7 +278,11 @@ class ArrayMeshResourceExporter:
                 surface.id = surface_index
                 surfaces.append(surface)
                 if mesh.materials:
-                    mat = mesh.materials[face.material_index]
+                    if face.material_index >= len(mesh.materials):
+                        print('WARN: bad face.material_index')
+                        mat = mesh.materials[-1]
+                    else:
+                        mat = mesh.materials[face.material_index]
                     if (mat is not None and
                             export_settings['use_export_material']):
                         surface.material = export_material(
