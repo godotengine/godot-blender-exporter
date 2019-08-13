@@ -121,8 +121,15 @@ class GodotExporter:
         # blender node exported as two parented node
         exported_node = exporter(self.escn_file, self.config, obj,
                                  parent_gd_node)
-
         self.bl_object_gd_node_map[obj] = exported_node
+
+        ## gdscript support ##
+        if 'gdscript' in obj.keys():
+            if obj['gdscript'] in bpy.data.texts:
+                if obj['gdscript'] not in self.gdscripts:
+                    self.gdscripts.append( obj['gdscript'] )
+                sid = self.gdscripts.index(obj['gdscript']) + 1
+                exported_node['script'] = 'ExtResource( %s )' %sid
 
         if is_bone_attachment:
             for child in parent_gd_node.children:
@@ -269,6 +276,15 @@ class GodotExporter:
         with open(self.path, 'w') as out_file:
             out_file.write(self.escn_file.to_string())
 
+        if len(self.gdscripts):
+            pth = os.path.split(self.path)[0]
+            for gdname in self.gdscripts:
+                gpth = os.path.join(pth,gdname)
+                if not gpth.endswith('.gd'):
+                    gpth += '.gd'
+                with open(self.path, 'w') as gdfile:
+                    gdfile.write(bpy.data.texts[gdname].as_string().encode('utf-8'))
+
         return True
 
     def __init__(self, path, kwargs, operator):
@@ -292,6 +308,7 @@ class GodotExporter:
         if self.config["use_beta_features"]:
             self.load_supported_features()
 
+        self.gdscripts = []
         self.escn_file = None
         self.bl_object_gd_node_map = {}
 
