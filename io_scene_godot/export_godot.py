@@ -325,12 +325,13 @@ class GodotExporter:
                         code = bpy.data.texts[gdname].as_string()
                     else:
                         code = gdname
-                    code = code.replace('"', '\\"').strip()
                     if gdi in self.vs_scripts:  ## VisualScript
                         ## clean up json style code
                         if code.startswith('{') and code.endswith('}'):
                             vscfg = self.vs_scripts[gdi]
                             #if 'gdscript' in vscfg:  ## TODO insert call to gdscript
+                            if '\n' not in code:
+                                code = '\n'.join( [ ln+',' for ln in code[:-1].split(', ') ] )
                             subres = [
                                 '[sub_resource type="VisualScript" id=%s]' % gdi,
                                 'data = {',
@@ -351,6 +352,7 @@ class GodotExporter:
                             header.extend(subres)
 
                     else:
+                        code = code.replace('"', '\\"').strip()
                         subres = [
                             '[sub_resource type="GDScript" id=%s]' % gdi,
                             'script/source = "' + code,

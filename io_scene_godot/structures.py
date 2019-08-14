@@ -103,7 +103,7 @@ class ESCNFile:
                 if type(e) is str:
                     ires.append(e)
                 if type(e) is list:
-                    ires.extend(e)
+                    ires.append('\n'.join(e))
                 else:
                     ires.append(e.to_string())
         sections = (
