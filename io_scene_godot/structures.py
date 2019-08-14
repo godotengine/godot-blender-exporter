@@ -31,9 +31,12 @@ class ESCNFile:
         self.nodes = []
         self.internal_resources = []
         self._internal_hashes = {}
-
+        self.subheading = []
         self.external_resources = []
         self._external_hashes = {}
+
+    def add_subheader(self, lst):
+        self.subheading.extend(lst)
 
     def get_external_resource(self, hashable):
         """Searches for existing external resources, and returns their
@@ -95,6 +98,7 @@ class ESCNFile:
         """Serializes the file ready to dump out to disk"""
         sections = (
             self.heading.to_string(),
+            '\n\n'.join(self.subheading),
             '\n\n'.join(i.to_string() for i in self.external_resources),
             '\n\n'.join(e.to_string() for e in self.internal_resources),
             '\n\n'.join(n.to_string() for n in self.nodes)

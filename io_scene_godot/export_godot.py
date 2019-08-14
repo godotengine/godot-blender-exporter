@@ -129,7 +129,9 @@ class GodotExporter:
                 if obj['gdscript'] not in self.gdscripts:
                     self.gdscripts.append( obj['gdscript'] )
                 sid = self.gdscripts.index(obj['gdscript']) + 1
-                exported_node['script'] = 'ExtResource( %s )' %sid
+                ## TODO option for external gd files
+                #exported_node['script'] = 'ExtResource( %s )' %sid
+                exported_node['script'] = 'SubResource( %s )' %sid
 
         if is_bone_attachment:
             for child in parent_gd_node.children:
@@ -273,17 +275,32 @@ class GodotExporter:
 
         self.export_scene()
         self.escn_file.fix_paths(self.config)
+
+        header = []
+        if len(self.gdscripts):
+            if 'external_gd' in self.config and self.config['external_gd']:
+                pth = os.path.split(self.path)[0]
+                for gdname in self.gdscripts:
+                    gpth = os.path.join(pth,gdname)
+                    if not gpth.endswith('.gd'):
+                        gpth += '.gd'
+                    with open(self.path, 'w') as gdfile:
+                        gdfile.write(bpy.data.texts[gdname].as_string().encode('utf-8'))
+            else:
+                for gdi, gdname in enumerate(self.gdscripts):
+                    code = bpy.data.texts[gdname].as_string()
+                    subres = [
+                        '[sub_resource type="Script" id=%s]' %gdi,
+                        'script/source = "',
+                        code.replace('"', '\\"'),
+                        '"',
+                    ]
+                    header.extend(subres)
+        if header:
+            self.escn_file.add_subheader( header )
+
         with open(self.path, 'w') as out_file:
             out_file.write(self.escn_file.to_string())
-
-        if len(self.gdscripts):
-            pth = os.path.split(self.path)[0]
-            for gdname in self.gdscripts:
-                gpth = os.path.join(pth,gdname)
-                if not gpth.endswith('.gd'):
-                    gpth += '.gd'
-                with open(self.path, 'w') as gdfile:
-                    gdfile.write(bpy.data.texts[gdname].as_string().encode('utf-8'))
 
         return True
 
