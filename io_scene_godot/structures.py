@@ -80,7 +80,8 @@ class ESCNFile:
         be found"""
         self.internal_resources.append(item)
         index = len(self.internal_resources)
-        item.heading['id'] = index
+        if item is not None and not type(item) is list:  ## generated at a later step
+            item.heading['id'] = index
         return index
 
     def add_node(self, item):
@@ -96,11 +97,20 @@ class ESCNFile:
 
     def to_string(self):
         """Serializes the file ready to dump out to disk"""
+        ires = []
+        for e in self.internal_resources:
+            if e is not None:
+                if type(e) is str:
+                    ires.append(e)
+                if type(e) is list:
+                    ires.extend(e)
+                else:
+                    ires.append(e.to_string())
         sections = (
             self.heading.to_string(),
             '\n'.join(self.subheading),
             '\n\n'.join(i.to_string() for i in self.external_resources),
-            '\n\n'.join(e.to_string() for e in self.internal_resources),
+            '\n\n'.join(ires),
             '\n\n'.join(n.to_string() for n in self.nodes)
         )
         return "\n\n".join([s for s in sections if s]) + "\n"

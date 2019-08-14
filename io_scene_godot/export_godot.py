@@ -124,19 +124,44 @@ class GodotExporter:
         self.bl_object_gd_node_map[obj] = exported_node
 
         ## gdscript support ##
+        gds = None
         if 'gdscript' in obj.keys():
             if obj['gdscript'] not in self.gdscripts:
                 self.gdscripts.append( obj['gdscript'] )
-            sid = self.gdscripts.index(obj['gdscript']) + 1
-            ## TODO option for external gd files
-            #exported_node['script'] = 'ExtResource( %s )' %sid
-            exported_node['script'] = 'SubResource( %s )' %sid
+                gds = self.escn_file.add_internal_resource(
+                    None, # item
+                    obj['gdscript']  # hashable
+                )
+                vsfunc = []
+                gvs = self.escn_file.add_internal_resource(
+                    vsfunc, # item can be a list
+                    'vs:' + obj['gdscript']  # hashable
+                )
+                ## the list can be modified after
+                vsfunc.extend([
+                    '[sub_resource type="VisualScriptFunction" id=%s]' %gvs,
+                    'resource_name = "_ready"',
+                    'script = SubResource( %s )' %gds,
+                ])
+
+            gds = self.escn_file.get_internal_resource( obj['gdscript'])
+            exported_node['script'] = 'SubResource( %s )' %gds
+
+
         ## godot visual scripting support ##
-        elif 'gdvs' in obj.keys():
+        if 'gdvs' in obj.keys():
             if obj['gdvs'] not in self.gdscripts:
                 self.gdscripts.append( obj['gdvs'] )
-                self.vs_scripts[ len(self.gdscripts)+1 ] = {}  ## TODO node options, signals, etc.
-            sid = self.gdscripts.index(obj['gdvs']) + 1
+                sid = self.escn_file.add_internal_resource(
+                    None, # item
+                    obj['gdvs']  # hashable
+                )
+                if gds:
+                    self.vs_scripts[ sid ] = {'gdscript':obj['gdscript'], 'gds_id':gds}
+                else:
+                    self.vs_scripts[ sid ] = {}  ## TODO node options, signals, etc.
+
+            sid = self.escn_file.get_internal_resource( obj['gdvs'])
             exported_node['script'] = 'SubResource( %s )' %sid
 
         if is_bone_attachment:
@@ -293,7 +318,9 @@ class GodotExporter:
                     with open(self.path, 'w') as gdfile:
                         gdfile.write(bpy.data.texts[gdname].as_string().encode('utf-8'))
             else:
-                for gdi, gdname in enumerate(self.gdscripts):
+                for gdname in self.gdscripts:
+                    gdi = self.escn_file.get_internal_resource(gdname)
+                    assert gdi
                     if gdname in bpy.data.texts:
                         code = bpy.data.texts[gdname].as_string()
                     else:
@@ -302,11 +329,12 @@ class GodotExporter:
                     if gdi in self.vs_scripts:  ## VisualScript
                         ## clean up json style code
                         if code.startswith('{') and code.endswith('}'):
-                            code = code[1:-1]
+                            vscfg = self.vs_scripts[gdi]
+                            #if 'gdscript' in vscfg:  ## TODO insert call to gdscript
                             subres = [
-                                '[sub_resource type="VisualScript" id=%s]' % (gdi+1),
+                                '[sub_resource type="VisualScript" id=%s]' % gdi,
                                 'data = {',
-                                code,
+                                code[1:-1],
                                 '}',
                             ]
                             header.extend(subres)
@@ -317,14 +345,14 @@ class GodotExporter:
                                 print('or begin with `data = {...`, note that the header line `[sub_resource...]` is not given')
                                 raise SyntaxError(code)
                             subres = [
-                                '[sub_resource type="VisualScript" id=%s]' % (gdi+1),
+                                '[sub_resource type="VisualScript" id=%s]' % gdi,
                                 code,
                             ]
                             header.extend(subres)
 
                     else:
                         subres = [
-                            '[sub_resource type="GDScript" id=%s]' % (gdi+1),
+                            '[sub_resource type="GDScript" id=%s]' % gdi,
                             'script/source = "' + code,
                             '"',
                         ]
