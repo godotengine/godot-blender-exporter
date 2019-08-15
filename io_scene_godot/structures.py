@@ -80,7 +80,7 @@ class ESCNFile:
         be found"""
         self.internal_resources.append(item)
         index = len(self.internal_resources)
-        if item is not None and not type(item) is list:  ## generated at a later step
+        if item is not None and not type(item) is list:
             item.heading['id'] = index
         return index
 
