@@ -126,25 +126,89 @@ class GodotExporter:
         ## gdscript support ##
         gds = None
         if 'gdscript' in obj.keys():
-            if obj['gdscript'] not in self.gdscripts:
-                self.gdscripts.append( obj['gdscript'] )
+            comp = ['']
+            gdextends = 'Spatial'
+            for keyname in obj.keys():
+                if keyname == 'gdextends':
+                    gdextends = obj[keyname]
+                elif keyname.startswith(('gdinclude', 'gdvar', 'gdconst', 'gdfunc', 'gdclass', 'gdenum', 'gdpreload')):
+                    value = obj[keyname]
+                    if keyname.startswith( ('gdinclude', 'gdfunc', 'gdclass', 'gdenum') ):
+                        if value in bpy.data.texts:
+                            value = bpy.data.texts[value].as_string()
+                        comp.append(value)
+                    else:
+                        keyname = keyname[2:]
+                        gdtype = ''
+                        if ':' in keyname:
+                            vname  = keyname.split(':')[0].strip().split()[-1]
+                            gdtype = keyname.split(':')[-1].split('.')[0].strip()
+                        else:
+                            vname = keyname.strip().split()[-1]
+                        if '.' in vname:
+                            vname = vname.replace('.', '_')
+
+                        if keyname.startswith('preload'):
+                            if gdtype:
+                                comp.append('var %s:%s = preload("%s")' %(vname, gdtype, value))
+                            else:
+                                comp.append('var %s := preload("%s")' %(vname, value))
+                        elif keyname.startswith( 'var' ):
+                            if gdtype:
+                                comp.append('var %s:%s = %s' %(vname, gdtype, value))
+                            else:
+                                comp.append('var %s := %s' %(vname, value))
+                        elif keyname.startswith( 'const' ):
+                            if gdtype:
+                                comp.append('const %s:%s = %s' %(vname, gdtype, value))
+                            else:
+                                comp.append('const %s := %s' %(vname, value))
+            if len(comp) > 1:
+                raise RuntimeError(comp)
+            if obj['gdscript'] in bpy.data.texts:
+                code = bpy.data.texts[ obj['gdscript'] ].as_string()
+            else:
+                code = obj['gdscript']
+
+            if not 'func ' in code:
+                fixed = [
+                    'func _ready():',
+                    '\n'.join( ['   ' + ln for ln in code.splitlines()] )
+                ]
+                code = '\n'.join(fixed)
+
+            if not code.startswith('extends'):
+                comp[0] = 'extends ' + gdextends
+
+            comp.append(code)
+            code = '\n'.join(comp)
+
+
+            if code not in self.gdscripts:
+                self.gdscripts.append( code )
+                gdfunc = []
                 gds = self.escn_file.add_internal_resource(
-                    None, # item
-                    obj['gdscript']  # hashable
+                    gdfunc, # item
+                    code  # hashable
                 )
+                gdfunc.extend([
+                    '[sub_resource type="GDScript" id=%s]' %gds,
+                    'script/source = "' + code,
+                    '"',
+                ])
+
                 vsfunc = []
                 gvs = self.escn_file.add_internal_resource(
                     vsfunc, # item can be a list
-                    'vs:' + obj['gdscript']  # hashable
+                    'vs:' + code  # hashable
                 )
-                ## the list can be modified after
                 vsfunc.extend([
                     '[sub_resource type="VisualScriptFunction" id=%s]' %gvs,
                     'resource_name = "_ready"',
                     'script = SubResource( %s )' %gds,
                 ])
 
-            gds = self.escn_file.get_internal_resource( obj['gdscript'])
+            gds = self.escn_file.get_internal_resource( code )
             exported_node['script'] = 'SubResource( %s )' %gds
 
 
@@ -321,90 +385,38 @@ class GodotExporter:
                 for gdname in self.gdscripts:
                     gdi = self.escn_file.get_internal_resource(gdname)
                     assert gdi
+                    if gdi not in self.vs_scripts:
+                        continue
                     if gdname in bpy.data.texts:
                         code = bpy.data.texts[gdname].as_string()
                     else:
                         code = gdname
-                    if gdi in self.vs_scripts:  ## VisualScript
-                        ## clean up json style code
-                        if code.startswith('{') and code.endswith('}'):
-                            vscfg = self.vs_scripts[gdi]
-                            #if 'gdscript' in vscfg:  ## TODO insert call to gdscript
-                            if '\n' not in code:
-                                code = '\n'.join( [ ln+',' for ln in code[:-1].split(', ') ] )
-                            subres = [
-                                '[sub_resource type="VisualScript" id=%s]' % gdi,
-                                'data = {',
-                                code[1:-1],
-                                '}',
-                            ]
-                            header.extend(subres)
-                        else:
-                            if not code.startswith('data'):
-                                print('===== invalid godot visual script format ====')
-                                print('you can either use a shorthand json style format to define the vs node,')
-                                print('or begin with `data = {...`, note that the header line `[sub_resource...]` is not given')
-                                raise SyntaxError(code)
-                            subres = [
-                                '[sub_resource type="VisualScript" id=%s]' % gdi,
-                                code,
-                            ]
-                            header.extend(subres)
-
-                    else:
-                        code = code.replace('"', '\\"').strip()
-                        if not code.startswith('extends'):
-                            fixed = ['extends Spatial']
-                            ## use custom attributes from blender text node to generate variables and consts
-                            if gdname in bpy.data.texts:
-                                tnode = bpy.data.texts[gdname]
-                                for keyname in tnode.keys():
-                                    if keyname.startswith('_'):
-                                        continue
-                                    value = tnode[keyname]
-                                    if keyname == 'extends':
-                                        fixed[0] = 'extends ' + value
-                                    else:
-                                        gdtype = ''
-                                        if ':' in keyname:
-                                            gdtype = keyname.split(':')[-1].split('.')[0].strip()
-                                        vname = keyname.strip().split()[-1]
-                                        if '.' in vname:
-                                            vname = vname.replace('.', '_')
-                                        if keyname.startswith('const'):
-                                            if gdtype:
-                                                fixed.append('const %s:%s = %s' %(vname, gdtype, value))
-                                            else:
-                                                fixed.append('const %s := %s' %(vname, value))
-                                        elif keyname.startswith('import'):
-                                            if gdtype:
-                                                fixed.append('var %s:%s = preload("%s")' %(vname, gdtype, value))
-                                            else:
-                                                fixed.append('var %s := preload("%s")' %(vname, value))
-                                        ## simple inline from another blender text node ##
-                                        elif keyname.startswith('include'):
-                                            if value in bpy.data.texts:
-                                                fixed.append(bpy.data.texts[value].as_string())
-                                            else:
-                                                print('WARN: gdinclude value not found in bpy.data.texts: ' + value)
-                                        else: # keyname.startswith('var'):
-                                            if gdtype:
-                                                fixed.append('var %s:%s = %s' %(vname, gdtype, value))
-                                            else:
-                                                fixed.append('var %s := %s' %(vname, value))
-
-                            if not 'func ' in code:
-                                fixed.extend([
-                                    'func _ready():',
-                                    '\n'.join( ['   ' + ln for ln in code.splitlines()] )
-                                ])
-                            code = '\n'.join(fixed)
+                    ## VisualScript
+                    ## clean up json style code
+                    if code.startswith('{') and code.endswith('}'):
+                        vscfg = self.vs_scripts[gdi]
+                        #if 'gdscript' in vscfg:  ## TODO insert call to gdscript
+                        if '\n' not in code:
+                            code = '\n'.join( [ ln+',' for ln in code[:-1].split(', ') ] )
                         subres = [
-                            '[sub_resource type="GDScript" id=%s]' % gdi,
-                            'script/source = "' + code,
-                            '"',
+                            '[sub_resource type="VisualScript" id=%s]' % gdi,
+                            'data = {',
+                            code[1:-1],
+                            '}',
                         ]
                         header.extend(subres)
+                    else:
+                        if not code.startswith('data'):
+                            print('===== invalid godot visual script format ====')
+                            print('you can either use a shorthand json style format to define the vs node,')
+                            print('or begin with `data = {...`, note that the header line `[sub_resource...]` is not given')
+                            raise SyntaxError(code)
+                        subres = [
+                            '[sub_resource type="VisualScript" id=%s]' % gdi,
+                            code,
+                        ]
+                        header.extend(subres)
+
         if header:
             self.escn_file.add_subheader( header )
 
@@ -464,3 +476,4 @@ def save(operator, context, filepath="", **kwargs):
     logging.getLogger().removeHandler(exporter_log_handler)
 
     return {"FINISHED"}
+
