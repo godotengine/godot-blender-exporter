@@ -50,9 +50,6 @@ def find_godot_project_dir(export_path):
     while not os.path.isfile(os.path.join(project_dir, "project.godot")):
         project_dir = os.path.split(project_dir)[0]
         if project_dir in ("/", last):
-            #raise structures.ValidationError(
-            #    "Unable to find Godot project file"
-            #)
             return None
         last = project_dir
     logging.info("Found Godot project directory at %s", project_dir)
@@ -151,19 +148,19 @@ class GodotExporter:
 
                         if keyname.startswith('preload'):
                             if gdtype:
-                                comp.append('var %s:%s = preload("%s")' %(vname, gdtype, value))
+                                comp.append('var %s:%s = preload("%s")' % (vname, gdtype, value))
                             else:
-                                comp.append('var %s := preload("%s")' %(vname, value))
+                                comp.append('var %s := preload("%s")' % (vname, value))
                         elif keyname.startswith( 'var' ):
                             if gdtype:
-                                comp.append('var %s:%s = %s' %(vname, gdtype, value))
+                                comp.append('var %s:%s = %s' % (vname, gdtype, value))
                             else:
-                                comp.append('var %s := %s' %(vname, value))
+                                comp.append('var %s := %s' % (vname, value))
                         elif keyname.startswith( 'const' ):
                             if gdtype:
-                                comp.append('const %s:%s = %s' %(vname, gdtype, value))
+                                comp.append('const %s:%s = %s' % (vname, gdtype, value))
                             else:
-                                comp.append('const %s := %s' %(vname, value))
+                                comp.append('const %s := %s' % (vname, value))
 
             if obj['gdscript'] in bpy.data.texts:
                 code = bpy.data.texts[ obj['gdscript'] ].as_string()
@@ -192,26 +189,13 @@ class GodotExporter:
                     code  # hashable
                 )
                 gdfunc.extend([
-                    '[sub_resource type="GDScript" id=%s]' %gds,
+                    '[sub_resource type="GDScript" id=%s]' % gds,
                     'script/source = "' + code,
                     '"',
                 ])
 
-                ## TODO
-                #vsfunc = []
-                #gvs = self.escn_file.add_internal_resource(
-                #    vsfunc, # item can be a list
-                #    'vs:' + code  # hashable
-                #)
-                #vsfunc.extend([
-                #    '[sub_resource type="VisualScriptFunction" id=%s]' %gvs,
-                #    'resource_name = "_ready"',
-                #    'script = SubResource( %s )' %gds,
-                #])
-
             gds = self.escn_file.get_internal_resource( code )
-            exported_node['script'] = 'SubResource( %s )' %gds
-
+            exported_node['script'] = 'SubResource( %s )' % gds
 
         ## godot visual scripting support ##
         if 'gdvs' in obj.keys():
@@ -473,4 +457,3 @@ def save(operator, context, filepath="", **kwargs):
     logging.getLogger().removeHandler(exporter_log_handler)
 
     return {"FINISHED"}
-

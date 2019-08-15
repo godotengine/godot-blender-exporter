@@ -38,17 +38,6 @@ bl_info = {  # pylint: disable=invalid-name
     "category": "Import-Export"
 }
 
-#@bpy.utils.register_class
-#class GodotSetProp(bpy.types.Operator):
-#    "godot script props"
-#    bl_idname = "godot.new"
-#    bl_label = "new var"
-#    bl_options = {'REGISTER'}
-#    script_name = bpy.props.StringProperty()
-#    script_value = bpy.props.StringProperty()
-#    def invoke(self, context, event):
-#        context.edit_text[self.script_name] = self.script_value
-
 class GodotTextProps(bpy.types.Panel):
     bl_label = "Godot"
     bl_idname = "TEXT_PT_GODOT"
@@ -62,23 +51,18 @@ class GodotTextProps(bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
         row = layout.row()
-        #op = row.operator('godot.new', text='extends')
-        #op.script_name = 'gdextends'
-        #op.script_value = 'Spatial'  ## TODO, extends Spatial is already the default
-
         ## simple viewing of text custom props, no editing yet ##
-        ## blender should support custom attribute in the editor, not sure why thats missing ##
         for keyname in context.edit_text.keys():
             if not keyname.startswith('gd'):
                 continue
             row = layout.row()
             value = context.edit_text[keyname]
             if keyname.startswith('gdinclude'):
-                row.label('%s <bpy.data.texts["%s"]>' %(keyname, value))
+                row.label('%s <bpy.data.texts["%s"]>' % (keyname, value))
             elif keyname.startswith('gdpreload'):
                 row.label('%s <%s>' %(keyname, value))
             elif keyname == 'gdextends':
-                row.label('script extends <%s>' %value)
+                row.label('script extends <%s>' % value)
             else:
                 gdtype = ''
                 if ':' in keyname:
@@ -86,7 +70,7 @@ class GodotTextProps(bpy.types.Panel):
                 vname = keyname.strip().split()[-1]
                 if '.' in vname:
                     vname = vname.replace('.', '_')
-                row.label('%s :%s= %s' %(vname, gtype, value))
+                row.label('%s :%s= %s' % (vname, gtype, value))
 
 
 class GodotObProps(bpy.types.Panel):
@@ -110,18 +94,18 @@ class GodotObProps(bpy.types.Panel):
                         row.label('gdscript: ' %value)
                 elif keyname == 'gdvs':
                     if value in bpy.data.texts:
-                        row.label('visual script: <bpy.data.texts["%s"]>' %value)
+                        row.label('visual script: <bpy.data.texts["%s"]>' % value)
                     else:
                         row.label('visual script: <inline>')
                 elif keyname.startswith('gdpreload'):
-                    row.label('%s <%s>' %(keyname, value))
+                    row.label('%s <%s>' % (keyname, value) )
                 elif keyname == 'gdextends':
-                    row.label('script extends <%s>' %value)
+                    row.label('script extends <%s>' % value)
                 elif keyname.startswith('gdinclude'):
                     if value in bpy.data.texts:
-                        row.label('include: <bpy.data.texts["%s"]>' %value)
+                        row.label('include: <bpy.data.texts["%s"]>' % value)
                     else:
-                        row.label('WARN include missing: %s' %value)
+                        row.label('WARN include missing: %s' % value)
                 else:
                     gdtype = ''
                     if ':' in keyname:
@@ -129,8 +113,7 @@ class GodotObProps(bpy.types.Panel):
                     vname = keyname.strip().split()[-1]
                     if '.' in vname:
                         vname = vname.replace('.', '_')
-                    row.label('%s :%s= %s' %(vname, gtype, value))
-
+                    row.label('%s :%s= %s' % (vname, gtype, value) )
 
 
 class ExportGodot(bpy.types.Operator, ExportHelper):
@@ -306,6 +289,7 @@ def register():
     bpy.types.TOPBAR_MT_file_export.append(menu_func)
     bpy.utils.register_class(GodotTextProps)
     bpy.utils.register_class(GodotObProps)
+
 
 def unregister():
     """Remove addon from blender"""
