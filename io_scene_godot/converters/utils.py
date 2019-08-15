@@ -85,7 +85,7 @@ class MeshResourceKey:
             print(mesh_data)
             print(gd_rsc_type)
             print(mod_info_list)
-            raise RuntimeError('bad unhashable data in the mod_info_list')
+            raise RuntimeError('unhashable data mod_info_list')
     def __hash__(self):
         return self._hash
 

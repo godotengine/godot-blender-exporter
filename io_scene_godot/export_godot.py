@@ -163,8 +163,7 @@ class GodotExporter:
                                 comp.append('const %s:%s = %s' %(vname, gdtype, value))
                             else:
                                 comp.append('const %s := %s' %(vname, value))
-            if len(comp) > 1:
-                raise RuntimeError(comp)
+
             if obj['gdscript'] in bpy.data.texts:
                 code = bpy.data.texts[ obj['gdscript'] ].as_string()
             else:
@@ -182,7 +181,7 @@ class GodotExporter:
 
             comp.append(code)
             code = '\n'.join(comp)
-
+            code = code.replace('"', '\\"').strip()
 
             if code not in self.gdscripts:
                 self.gdscripts.append( code )
@@ -197,16 +196,17 @@ class GodotExporter:
                     '"',
                 ])
 
-                vsfunc = []
-                gvs = self.escn_file.add_internal_resource(
-                    vsfunc, # item can be a list
-                    'vs:' + code  # hashable
-                )
-                vsfunc.extend([
-                    '[sub_resource type="VisualScriptFunction" id=%s]' %gvs,
-                    'resource_name = "_ready"',
-                    'script = SubResource( %s )' %gds,
-                ])
+                ## TODO
+                #vsfunc = []
+                #gvs = self.escn_file.add_internal_resource(
+                #    vsfunc, # item can be a list
+                #    'vs:' + code  # hashable
+                #)
+                #vsfunc.extend([
+                #    '[sub_resource type="VisualScriptFunction" id=%s]' %gvs,
+                #    'resource_name = "_ready"',
+                #    'script = SubResource( %s )' %gds,
+                #])
 
             gds = self.escn_file.get_internal_resource( code )
             exported_node['script'] = 'SubResource( %s )' %gds

@@ -112,22 +112,16 @@ class GodotObProps(bpy.types.Panel):
                     if value in bpy.data.texts:
                         row.label('visual script: <bpy.data.texts["%s"]>' %value)
                     else:
-                        row.label('visual script: %s' %value)
+                        row.label('visual script: <inline>')
+                elif keyname.startswith('gdpreload'):
+                    row.label('%s <%s>' %(keyname, value))
+                elif keyname == 'gdextends':
+                    row.label('script extends <%s>' %value)
                 elif keyname.startswith('gdinclude'):
                     if value in bpy.data.texts:
                         row.label('include: <bpy.data.texts["%s"]>' %value)
                     else:
                         row.label('WARN include missing: %s' %value)
-                elif keyname.startswith('gdheader'):
-                    if value in bpy.data.texts:
-                        row.label('include header: <bpy.data.texts["%s"]>' %value)
-                    else:
-                        row.label(value)
-                elif keyname.startswith('gdfooter'):
-                    if value in bpy.data.texts:
-                        row.label('include footer: <bpy.data.texts["%s"]>' %value)
-                    else:
-                        row.label(value)
                 else:
                     gdtype = ''
                     if ':' in keyname:
