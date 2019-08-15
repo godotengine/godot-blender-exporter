@@ -121,7 +121,6 @@ class GodotExporter:
                                  parent_gd_node)
         self.bl_object_gd_node_map[obj] = exported_node
 
-        ## gdscript support ##
         gds = None
         if 'gdscript' in obj.keys():
             comp = ['']
@@ -131,7 +130,7 @@ class GodotExporter:
                     gdextends = obj[keyname]
                 elif keyname.startswith(('gdinclude', 'gdvar', 'gdconst', 'gdfunc', 'gdclass', 'gdenum', 'gdpreload')):
                     value = obj[keyname]
-                    if keyname.startswith( ('gdinclude', 'gdfunc', 'gdclass', 'gdenum') ):
+                    if keyname.startswith(('gdinclude', 'gdfunc', 'gdclass', 'gdenum')):
                         if value in bpy.data.texts:
                             value = bpy.data.texts[value].as_string()
                         comp.append(value)
@@ -163,14 +162,14 @@ class GodotExporter:
                                 comp.append('const %s := %s' % (vname, value))
 
             if obj['gdscript'] in bpy.data.texts:
-                code = bpy.data.texts[ obj['gdscript'] ].as_string()
+                code = bpy.data.texts[obj['gdscript']].as_string()
             else:
                 code = obj['gdscript']
 
             if not 'func ' in code:
                 fixed = [
                     'func _ready():',
-                    '\n'.join( ['   ' + ln for ln in code.splitlines()] )
+                    '\n'.join(['   ' + ln for ln in code.splitlines()])
                 ]
                 code = '\n'.join(fixed)
 
@@ -182,7 +181,7 @@ class GodotExporter:
             code = code.replace('"', '\\"').strip()
 
             if code not in self.gdscripts:
-                self.gdscripts.append( code )
+                self.gdscripts.append(code)
                 gdfunc = []
                 gds = self.escn_file.add_internal_resource(
                     gdfunc, # item
@@ -194,24 +193,24 @@ class GodotExporter:
                     '"',
                 ])
 
-            gds = self.escn_file.get_internal_resource( code )
+            gds = self.escn_file.get_internal_resource(code)
             exported_node['script'] = 'SubResource( %s )' % gds
 
         ## godot visual scripting support ##
         if 'gdvs' in obj.keys():
             if obj['gdvs'] not in self.gdscripts:
-                self.gdscripts.append( obj['gdvs'] )
+                self.gdscripts.append(obj['gdvs'])
                 sid = self.escn_file.add_internal_resource(
-                    None, # item
-                    obj['gdvs']  # hashable
+                    None,
+                    obj['gdvs']
                 )
                 if gds:
                     self.vs_scripts[ sid ] = {'gdscript':obj['gdscript'], 'gds_id':gds}
                 else:
-                    self.vs_scripts[ sid ] = {}  ## TODO node options, signals, etc.
+                    self.vs_scripts[ sid ] = {}
 
-            sid = self.escn_file.get_internal_resource( obj['gdvs'])
-            exported_node['script'] = 'SubResource( %s )' %sid
+            sid = self.escn_file.get_internal_resource(obj['gdvs'])
+            exported_node['script'] = 'SubResource( %s )' % sid
 
         if is_bone_attachment:
             for child in parent_gd_node.children:
@@ -354,14 +353,15 @@ class GodotExporter:
 
         header = []
         if len(self.gdscripts):
-            if 'external_gd' in self.config and self.config['external_gd']:  ## TODO
+            if self.config.get('external_gd',None):
                 pth = os.path.split(self.path)[0]
                 for gdname in self.gdscripts:
                     gpth = os.path.join(pth,gdname)
                     if not gpth.endswith('.gd'):
                         gpth += '.gd'
                     with open(self.path, 'w') as gdfile:
-                        gdfile.write(bpy.data.texts[gdname].as_string().encode('utf-8'))
+                        gd = bpy.data.texts[gdname].as_string()
+                        gdfile.write(gd.encode('utf-8'))
             else:
                 for gdname in self.gdscripts:
                     gdi = self.escn_file.get_internal_resource(gdname)
@@ -376,9 +376,8 @@ class GodotExporter:
                     ## clean up json style code
                     if code.startswith('{') and code.endswith('}'):
                         vscfg = self.vs_scripts[gdi]
-                        #if 'gdscript' in vscfg:  ## TODO insert call to gdscript
                         if '\n' not in code:
-                            code = '\n'.join( [ ln+',' for ln in code[:-1].split(', ') ] )
+                            code = '\n'.join([ln+',' for ln in code[:-1].split(', ')])
                         subres = [
                             '[sub_resource type="VisualScript" id=%s]' % gdi,
                             'data = {',
@@ -388,9 +387,7 @@ class GodotExporter:
                         header.extend(subres)
                     else:
                         if not code.startswith('data'):
-                            print('===== invalid godot visual script format ====')
-                            print('you can either use a shorthand json style format to define the vs node,')
-                            print('or begin with `data = {...`, note that the header line `[sub_resource...]` is not given')
+                            print('invalid godot visual script')
                             raise SyntaxError(code)
                         subres = [
                             '[sub_resource type="VisualScript" id=%s]' % gdi,
@@ -399,7 +396,7 @@ class GodotExporter:
                         header.extend(subres)
 
         if header:
-            self.escn_file.add_subheader( header )
+            self.escn_file.add_subheader(header)
 
         with open(self.path, 'w') as out_file:
             out_file.write(self.escn_file.to_string())

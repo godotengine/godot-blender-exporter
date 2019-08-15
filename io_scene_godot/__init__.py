@@ -38,6 +38,7 @@ bl_info = {  # pylint: disable=invalid-name
     "category": "Import-Export"
 }
 
+
 class GodotTextProps(bpy.types.Panel):
     bl_label = "Godot"
     bl_idname = "TEXT_PT_GODOT"
@@ -51,7 +52,6 @@ class GodotTextProps(bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
         row = layout.row()
-        ## simple viewing of text custom props, no editing yet ##
         for keyname in context.edit_text.keys():
             if not keyname.startswith('gd'):
                 continue
@@ -60,7 +60,7 @@ class GodotTextProps(bpy.types.Panel):
             if keyname.startswith('gdinclude'):
                 row.label('%s <bpy.data.texts["%s"]>' % (keyname, value))
             elif keyname.startswith('gdpreload'):
-                row.label('%s <%s>' %(keyname, value))
+                row.label('%s <%s>' % (keyname, value))
             elif keyname == 'gdextends':
                 row.label('script extends <%s>' % value)
             else:
@@ -89,16 +89,16 @@ class GodotObProps(bpy.types.Panel):
                 row = layout.row()
                 if keyname == 'gdscript':
                     if value in bpy.data.texts:
-                        row.label('gdscript: <bpy.data.texts["%s"]>' %value)
+                        row.label('gdscript: <bpy.data.texts["%s"]>' % value)
                     else:
-                        row.label('gdscript: ' %value)
+                        row.label('gdscript: ' % value)
                 elif keyname == 'gdvs':
                     if value in bpy.data.texts:
-                        row.label('visual script: <bpy.data.texts["%s"]>' % value)
+                        row.label('vscript: <bpy.data.texts["%s"]>' % value)
                     else:
-                        row.label('visual script: <inline>')
+                        row.label('vscript: <inline>')
                 elif keyname.startswith('gdpreload'):
-                    row.label('%s <%s>' % (keyname, value) )
+                    row.label('%s <%s>' % (keyname, value))
                 elif keyname == 'gdextends':
                     row.label('script extends <%s>' % value)
                 elif keyname.startswith('gdinclude'):
@@ -113,7 +113,7 @@ class GodotObProps(bpy.types.Panel):
                     vname = keyname.strip().split()[-1]
                     if '.' in vname:
                         vname = vname.replace('.', '_')
-                    row.label('%s :%s= %s' % (vname, gtype, value) )
+                    row.label('%s :%s= %s' % (vname, gtype, value))
 
 
 class ExportGodot(bpy.types.Operator, ExportHelper):
