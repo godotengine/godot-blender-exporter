@@ -88,6 +88,8 @@ class TransformFrame:
 
         if rotation_mode == 'QUATERNION':
             xform_frame.rotation_euler = xform_matrix.to_euler()
+        elif rotation_mode == 'AXIS_ANGLE':
+            xform_frame.rotation_euler = xform_matrix.to_euler()
         else:
             xform_frame.rotation_euler = xform_matrix.to_euler(rotation_mode)
         return xform_frame

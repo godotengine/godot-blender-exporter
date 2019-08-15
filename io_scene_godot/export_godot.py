@@ -50,9 +50,10 @@ def find_godot_project_dir(export_path):
     while not os.path.isfile(os.path.join(project_dir, "project.godot")):
         project_dir = os.path.split(project_dir)[0]
         if project_dir in ("/", last):
-            raise structures.ValidationError(
-                "Unable to find Godot project file"
-            )
+            #raise structures.ValidationError(
+            #    "Unable to find Godot project file"
+            #)
+            return None
         last = project_dir
     logging.info("Found Godot project directory at %s", project_dir)
     return project_dir
@@ -330,12 +331,8 @@ class GodotExporter:
         """According to `project.godot`, determine all new feature supported
         by that godot version"""
         project_dir = ""
-        try:
+        if self.config['project_path_func']:
             project_dir = self.config["project_path_func"]()
-        except structures.ValidationError:
-            project_dir = False
-            logging.warning(
-                "Not export to Godot project dir, disable all beta features.")
 
         # minimal supported version
         conf_versiton = 3
