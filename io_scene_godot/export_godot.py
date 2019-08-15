@@ -353,6 +353,52 @@ class GodotExporter:
 
                     else:
                         code = code.replace('"', '\\"').strip()
+                        if not code.startswith('extends'):
+                            fixed = ['extends Spatial']
+                            ## use custom attributes from blender text node to generate variables and consts
+                            if gdname in bpy.data.texts:
+                                tnode = bpy.data.texts[gdname]
+                                for keyname in tnode.keys():
+                                    if keyname.startswith('_'):
+                                        continue
+                                    value = tnode[keyname]
+                                    if keyname == 'extends':
+                                        fixed[0] = 'extends ' + value
+                                    else:
+                                        gdtype = ''
+                                        if ':' in keyname:
+                                            gdtype = keyname.split(':')[-1].split('.')[0].strip()
+                                        vname = keyname.strip().split()[-1]
+                                        if '.' in vname:
+                                            vname = vname.replace('.', '_')
+                                        if keyname.startswith('const'):
+                                            if gdtype:
+                                                fixed.append('const %s:%s = %s' %(vname, gdtype, value))
+                                            else:
+                                                fixed.append('const %s := %s' %(vname, value))
+                                        elif keyname.startswith('import'):
+                                            if gdtype:
+                                                fixed.append('var %s:%s = preload("%s")' %(vname, gdtype, value))
+                                            else:
+                                                fixed.append('var %s := preload("%s")' %(vname, value))
+                                        ## simple inline from another blender text node ##
+                                        elif keyname.startswith('include'):
+                                            if value in bpy.data.texts:
+                                                fixed.append(bpy.data.texts[value].as_string())
+                                            else:
+                                                print('WARN: gdinclude value not found in bpy.data.texts: ' + value)
+                                        else: # keyname.startswith('var'):
+                                            if gdtype:
+                                                fixed.append('var %s:%s = %s' %(vname, gdtype, value))
+                                            else:
+                                                fixed.append('var %s := %s' %(vname, value))
+
+                            if not 'func ' in code:
+                                fixed.extend([
+                                    'func _ready():',
+                                    '\n'.join( ['   ' + ln for ln in code.splitlines()] )
+                                ])
+                            code = '\n'.join(fixed)
                         subres = [
                             '[sub_resource type="GDScript" id=%s]' % gdi,
                             'script/source = "' + code,
