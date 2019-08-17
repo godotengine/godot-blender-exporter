@@ -16,6 +16,7 @@ are stored in individual files.
 """
 
 from .simple_nodes import *  # pylint: disable=wildcard-import
+from .grease import export_grease_node
 from .mesh import export_mesh_node
 from .physics import export_physics_properties
 from .armature import export_armature_node, export_bone_attachment
@@ -32,7 +33,8 @@ BLENDER_TYPE_TO_EXPORTER = {
     "CURVE": export_mesh_node,
     "SURFACE": export_mesh_node,
     "META": export_mesh_node,
-    "FONT": export_mesh_node
+    "FONT": export_mesh_node,
+    "GPENCIL" : export_grease_node
 }
 
 BONE_ATTACHMENT_EXPORTER = export_bone_attachment
