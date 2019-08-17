@@ -90,8 +90,7 @@ class GodotExporter:
         bpy.context.view_layer.objects.active = obj
 
         # Figure out what function will perform the export of this object
-        if 'gdcsg' in obj.keys() and obj['gdcsg']:
-        elif obj.type not in converters.BLENDER_TYPE_TO_EXPORTER:
+        if obj.type not in converters.BLENDER_TYPE_TO_EXPORTER:
             logging.warning(
                 "Unknown object type. Treating as empty: %s", obj.name
             )

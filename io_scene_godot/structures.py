@@ -467,6 +467,8 @@ def to_string(val):
         converter = CONVERSIONS.get(type(val))
         if converter is not None:
             val = converter(val)
+        elif val is None:
+            val = 'null'
         else:
             val = str(val)
 

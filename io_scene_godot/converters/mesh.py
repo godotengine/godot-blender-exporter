@@ -13,6 +13,54 @@ from .animation import export_animation_data
 
 MAX_BONE_PER_VERTEX = 4
 
+# ------------------------------- Prim -----------------------------------
+def export_prim_node(escn_file, export_settings, obj, parent_gd_node):
+    if has_physics(obj):
+        parent_gd_node = export_physics_properties(
+            escn_file, export_settings, obj, parent_gd_node
+        )
+        # skip wire mesh which is used as collision mesh
+        if obj.display_type == "WIRE":
+            return parent_gd_node
+
+    assert 'gdprim' in obj.keys()
+    prim = obj['gdprim']
+    prim = prim[0].upper() + prim[1:]
+    if prim == 'Cone':
+        # no cone prim in godot
+        prim = 'Cylinder'
+    prim_id = escn_file.get_internal_resource( prim )
+    if prim_id is None:
+        res = []
+        prim_id = escn_file.add_internal_resource(
+            res,
+            prim
+        )
+        res.append('[sub_resource type="%sMesh" id=%s]' % (prim,prim_id))
+
+    mesh_node = NodeTemplate(obj.name, "MeshInstance", parent_gd_node)
+    mesh_node['mesh'] = "SubResource({})".format(prim_id)
+    mesh_node['visible'] = obj.visible_get()
+    mesh_node['material/0'] = None
+    # TODO material
+
+    # Transform of rigid mesh is moved up to its collision
+    # shapes.
+    if has_physics(obj):
+        trans = mathutils.Matrix.Identity(4)
+    else:
+        trans = obj.matrix_local.copy()
+
+    if 'gdprim_radius' in obj.keys() and obj['gdprim_radius']:
+        #trans *= obj['gdprim_radius']
+        pass
+
+    mesh_node['transform'] = trans
+
+    escn_file.add_node(mesh_node)
+    return mesh_node
+
+
 # ------------------------------- CSG Mesh -----------------------------------
 def export_csg_node(escn_file, export_settings, obj, parent_gd_node):
     if has_physics(obj):
@@ -76,6 +124,8 @@ def export_mesh_node(escn_file, export_settings, obj, parent_gd_node):
 
     if 'gdcsg' in obj.keys() and obj['gdcsg']:
         return export_csg_node(escn_file, export_settings, obj, parent_gd_node)
+    elif 'gdprim' in obj.keys() and obj['gdprim']:
+        return export_prim_node(escn_file, export_settings, obj, parent_gd_node)
 
     mesh_node = NodeTemplate(obj.name, "MeshInstance", parent_gd_node)
     mesh_exporter = ArrayMeshResourceExporter(obj)
