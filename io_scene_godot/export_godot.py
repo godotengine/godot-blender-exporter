@@ -90,7 +90,8 @@ class GodotExporter:
         bpy.context.view_layer.objects.active = obj
 
         # Figure out what function will perform the export of this object
-        if obj.type not in converters.BLENDER_TYPE_TO_EXPORTER:
+        if 'gdcsg' in obj.keys() and obj['gdcsg']:
+        elif obj.type not in converters.BLENDER_TYPE_TO_EXPORTER:
             logging.warning(
                 "Unknown object type. Treating as empty: %s", obj.name
             )
@@ -122,13 +123,14 @@ class GodotExporter:
         self.bl_object_gd_node_map[obj] = exported_node
 
         gds = None
+        gdprops = ('gdinclude', 'gdvar', 'gdconst', 'gdfunc', 'gdclass', 'gdenum', 'gdpreload')
         if 'gdscript' in obj.keys():
             comp = ['']
             gdextends = 'Spatial'
             for keyname in obj.keys():
                 if keyname == 'gdextends':
                     gdextends = obj[keyname]
-                elif keyname.startswith(('gdinclude', 'gdvar', 'gdconst', 'gdfunc', 'gdclass', 'gdenum', 'gdpreload')):
+                elif keyname.startswith(gdprops):
                     value = obj[keyname]
                     if keyname.startswith(('gdinclude', 'gdfunc', 'gdclass', 'gdenum')):
                         if value in bpy.data.texts:

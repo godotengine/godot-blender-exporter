@@ -13,6 +13,51 @@ from .animation import export_animation_data
 
 MAX_BONE_PER_VERTEX = 4
 
+# ------------------------------- CSG Mesh -----------------------------------
+def export_csg_node(escn_file, export_settings, obj, parent_gd_node):
+    if has_physics(obj):
+        parent_gd_node = export_physics_properties(
+            escn_file, export_settings, obj, parent_gd_node
+        )
+        # skip wire mesh which is used as collision mesh
+        if obj.display_type == "WIRE":
+            return parent_gd_node
+
+    assert 'gdcsg' in obj.keys()
+    b2csg = {
+        'sphere' : 'Sphere',
+        'box' : 'Box',
+        'cube' : 'Box',
+        'cylinder' : 'Cylinder',
+        'torus' : 'Torus',
+        # TODO CSGMesh
+    }
+    csgtype = b2csg[obj['gdcsg']]
+    csg_node = NodeTemplate(obj.name, "CSG"+csgtype, parent_gd_node)
+    b2mode = {
+        'SUBTRACT' : 2,
+        'DIFFERENCE' : 2,
+        'UNION' : 0,
+        'INTERSECT' : 1
+    }
+    csgmode = 0
+    if 'gdcsg_mode' in obj.keys() and obj['gdcsg_mode']:
+        csgmode = b2mode[obj['gdcsg_mode'].upper()]
+        if csgmode == 2:
+            csg_node['invert_faces'] = True
+
+    csg_node['operation'] = csgmode
+
+    # Transform of rigid mesh is moved up to its collision
+    # shapes.
+    if has_physics(obj):
+        csg_node['transform'] = mathutils.Matrix.Identity(4)
+    else:
+        csg_node['transform'] = obj.matrix_local
+
+    escn_file.add_node(csg_node)
+    return csg_node
+
 
 # ------------------------------- The Mesh -----------------------------------
 def export_mesh_node(escn_file, export_settings, obj, parent_gd_node):
@@ -28,6 +73,9 @@ def export_mesh_node(escn_file, export_settings, obj, parent_gd_node):
         # skip wire mesh which is used as collision mesh
         if obj.display_type == "WIRE":
             return parent_gd_node
+
+    if 'gdcsg' in obj.keys() and obj['gdcsg']:
+        return export_csg_node(escn_file, export_settings, obj, parent_gd_node)
 
     mesh_node = NodeTemplate(obj.name, "MeshInstance", parent_gd_node)
     mesh_exporter = ArrayMeshResourceExporter(obj)
