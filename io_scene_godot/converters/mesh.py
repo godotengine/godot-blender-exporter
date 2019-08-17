@@ -605,7 +605,8 @@ class Surface:
         surface_object = Map()
         if self.material is not None:
             surface_object['material'] = self.material
-        surface_object['primitive'] = 4
+        surface_object['primitive'] = 4  # triangles
+        #surface_object['primitive'] = 5  # strip
         surface_object['arrays'] = self.vertex_data
         surface_object['morph_arrays'] = self.morph_arrays
         return surface_object
@@ -614,6 +615,13 @@ class Surface:
         """Serialize"""
         return self.generate_object().to_string()
 
+# PRIMITIVE_POINTS = 0 — Render array as points (one vertex equals one point).
+# PRIMITIVE_LINES = 1 — Render array as lines (every two vertices a line is created).
+# PRIMITIVE_LINE_STRIP = 2 — Render array as line strip.
+# PRIMITIVE_LINE_LOOP = 3 — Render array as line loop (like line strip, but closed).
+# PRIMITIVE_TRIANGLES = 4 — Render array as triangles (every three vertices a triangle is created).
+# PRIMITIVE_TRIANGLE_STRIP = 5 — Render array as triangle strips.
+# PRIMITIVE_TRIANGLE_FAN = 6 — Render array as triangle fans.
 
 class Vertex:
     """Stores all the attributes for a single vertex"""
