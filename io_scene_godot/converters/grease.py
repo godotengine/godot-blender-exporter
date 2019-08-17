@@ -170,6 +170,8 @@ class ArrayGreaseResourceExporter:
                 if len(vertex_indices) > 2:  # Only triangles and above
                     surface.vertex_data.indices.append(vertex_indices)
 
+        for surface in surfaces:
+            self.mesh_resource[surface.name_str] = surface
 
 
 class VerticesArrays:
@@ -244,11 +246,12 @@ class VerticesArrays:
 
         position_vals = Array("Vector3Array(",
                               values=[v.vertex for v in self.vertices])
-        normal_vals = Array("Vector3Array(",
-                            values=[v.normal for v in self.vertices])
+        #normal_vals = Array("Vector3Array(",
+        #                    values=[v.normal for v in self.vertices])
 
         surface_lines.append(position_vals.to_string())
-        surface_lines.append(normal_vals.to_string())
+        #surface_lines.append(normal_vals.to_string())
+        surface_lines.append("null, ; No Normals")
         surface_lines.append(self.get_tangent_array().to_string())
         surface_lines.append(self.get_color_array().to_string())
 

@@ -68,7 +68,11 @@ def generate_material_resource(escn_file, export_settings, bl_object,
         # to convert material to external file
         material_rsc_name = ''
 
-    if (engine in ('CYCLES', 'BLENDER_EEVEE') and
+    if material.is_grease_pencil:
+        mat = InternalResource("ShaderMaterial", material_rsc_name)
+        mat['albedo_color'] = gamma_correct(material.grease_pencil.fill_color)
+
+    elif (engine in ('CYCLES', 'BLENDER_EEVEE') and
             material.node_tree is not None):
         mat = InternalResource("ShaderMaterial", material_rsc_name)
         try:
