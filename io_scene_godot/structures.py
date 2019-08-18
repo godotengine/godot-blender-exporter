@@ -284,7 +284,7 @@ class Array(list):
         self.suffix = suffix
         super().__init__()
         if flat_values:
-            self.add_elements_flat(flat_values)
+            self.extend(flat_values)
         else:
             self.add_elements(values)
 
@@ -295,9 +295,6 @@ class Array(list):
         list of lists)"""
         for lis in list_of_lists:
             self.extend(lis)
-
-    def add_elements_flat(self, array):
-        self.extend(array)
 
     def to_string(self):
         """Convert the array to serialized form"""
@@ -467,14 +464,14 @@ def float_to_string(num):
 def to_string(val):
     """Attempts to convert any object into a string using the conversions
     table, explicit conversion, or falling back to the str() method"""
-    if hasattr(val, "to_string"):
+    if val is None:
+        val = 'null'
+    elif hasattr(val, "to_string"):
         val = val.to_string()
     else:
         converter = CONVERSIONS.get(type(val))
         if converter is not None:
             val = converter(val)
-        elif val is None:
-            val = 'null'
         else:
             val = str(val)
 

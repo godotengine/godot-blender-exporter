@@ -6,7 +6,7 @@ import mathutils
 from .material import export_material
 from ..structures import (
     Array, NodeTemplate, InternalResource, Map, gamma_correct)
-from .utils import MeshConverter, MeshResourceKey
+from .utils import MeshConverter, MeshResourceKey, fix_vertex, gdenums
 from .physics import has_physics, export_physics_properties
 from .armature import generate_bones_mapping
 from .animation import export_animation_data
@@ -38,6 +38,10 @@ def export_prim_node(escn_file, export_settings, obj, parent_gd_node):
         )
         res.append('[sub_resource type="%sMesh" id=%s]' % (prim,prim_id))
 
+    if 'gdprim_radius' in obj.keys() and obj['gdprim_radius']:
+        #TODO *= obj['gdprim_radius']
+        pass
+
     mesh_node = NodeTemplate(obj.name, "MeshInstance", parent_gd_node)
     mesh_node['mesh'] = "SubResource({})".format(prim_id)
     mesh_node['visible'] = obj.visible_get()
@@ -49,11 +53,7 @@ def export_prim_node(escn_file, export_settings, obj, parent_gd_node):
     if has_physics(obj):
         trans = mathutils.Matrix.Identity(4)
     else:
-        trans = obj.matrix_local.copy()
-
-    if 'gdprim_radius' in obj.keys() and obj['gdprim_radius']:
-        #trans *= obj['gdprim_radius']
-        pass
+        trans = obj.matrix_local
 
     mesh_node['transform'] = trans
 
@@ -172,11 +172,6 @@ def export_mesh_node(escn_file, export_settings, obj, parent_gd_node):
             obj.data.shape_keys, 'shapekey')
 
     return mesh_node
-
-
-def fix_vertex(vtx):
-    """Changes a single position vector from y-up to z-up"""
-    return mathutils.Vector((vtx.x, vtx.z, -vtx.y))
 
 
 def get_modifier_armature(mesh_object):

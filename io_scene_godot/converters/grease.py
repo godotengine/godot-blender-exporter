@@ -6,10 +6,10 @@ import mathutils
 from .material import export_material
 from ..structures import (
     Array, NodeTemplate, InternalResource, Map, gamma_correct)
-from .utils import MeshConverter, MeshResourceKey
+from .utils import MeshConverter, MeshResourceKey, fix_vertex, gdenums
 from .physics import has_physics, export_physics_properties
+from .mesh import ArrayMeshResource
 
-MAX_BONE_PER_VERTEX = 4
 
 def export_grease_node(escn_file, export_settings, obj, parent_gd_node):
     """Exports a MeshInstance. If the mesh is not already exported, it will
@@ -21,9 +21,6 @@ def export_grease_node(escn_file, export_settings, obj, parent_gd_node):
         parent_gd_node = export_physics_properties(
             escn_file, export_settings, obj, parent_gd_node
         )
-        # skip wire mesh which is used as collision mesh
-        if obj.display_type == "WIRE":
-            return parent_gd_node
 
     mesh_node = NodeTemplate(obj.name, "MeshInstance", parent_gd_node)
     mesh_exporter = ArrayGreaseResourceExporter(obj)
@@ -47,30 +44,6 @@ def export_grease_node(escn_file, export_settings, obj, parent_gd_node):
 
     escn_file.add_node(mesh_node)
     return mesh_node
-
-
-def fix_vertex(vtx):
-    """Changes a single position vector from y-up to z-up"""
-    return mathutils.Vector((vtx.x, vtx.z, -vtx.y))
-
-
-
-
-class ArrayMeshResource(InternalResource):
-    """Godot ArrayMesh resource, containing surfaces"""
-
-    def __init__(self, name):
-        super().__init__('ArrayMesh', name)
-        self._mat_to_surf_mapping = dict()
-
-    def get_surface_id(self, material_index):
-        """Given blender material index, return the corresponding
-        surface id"""
-        return self._mat_to_surf_mapping.get(material_index, None)
-
-    def set_surface_id(self, material_index, surface_id):
-        """Set a relation between material and surface"""
-        self._mat_to_surf_mapping[material_index] = surface_id
 
 
 class ArrayGreaseResourceExporter:
@@ -158,19 +131,6 @@ class ArrayGreaseResourceExporter:
                     surface.vertex_data.vertices.append(new_vert)
                     surface.vertex_data.indices.append(vert_id)
 
-                    # Merge similar vertices
-                    #tup = new_vert.get_tup()
-                    #if tup not in surface.vertex_map:
-                    #    surface.vertex_map[tup] = len(surface.vertex_data.vertices)
-                    #    surface.vertex_data.vertices.append(new_vert)
-
-                    #vertex_index = surface.vertex_map[tup]
-                    #surface.vertex_index_map[vert_id] = vertex_index
-                    #vertex_indices.append(vertex_index)
-
-                #if len(vertex_indices) > 2:  # Only triangles and above
-                #    surface.vertex_data.indices.append(vertex_indices)
-
         for surface in surfaces:
             self.mesh_resource[surface.name_str] = surface
 
@@ -184,13 +144,6 @@ class VerticesArrays:
         self.vertices = []
         self.indices = []
         self.has_bone = False
-
-    def calc_tangent_dp(self, vert):
-        """Calculates the dot product of the tangent. I think this has
-        something to do with normal mapping"""
-        cross_product = vert.normal.cross(vert.tangent)
-        dot_product = cross_product.dot(vert.bitangent)
-        return 1.0 if dot_product > 0.0 else -1.0
 
     def get_color_array(self):
         """Generate a single array that contains the colors of all the vertices
@@ -208,36 +161,6 @@ class VerticesArrays:
 
         return color_vals
 
-    def get_tangent_array(self):
-        """Generate a single array that contains the tangents of all the
-        vertices in this surface"""
-        has_tangents = self.vertices[0].tangent is not None
-        if has_tangents:
-            tangent_vals = Array("FloatArray(")
-            for vert in self.vertices:
-                tangent_vals.extend(
-                    list(vert.tangent) + [self.calc_tangent_dp(vert)]
-                )
-        else:
-            tangent_vals = Array("null, ; No Tangents", "", "")
-        return tangent_vals
-
-    def get_uv_array(self, uv_index):
-        """Returns an array representing the specified UV index"""
-        uv_layer_count = len(self.vertices[0].uv)
-        if uv_index >= uv_layer_count:
-            # If lacking 2 UV layers, mark them as null
-            return Array("null, ; No UV%d" % (uv_index+1), "", "")
-
-        uv_vals = Array("Vector2Array(")
-        for vert in self.vertices:
-            uv_vals.extend([
-                vert.uv[uv_index].x,
-                1.0-vert.uv[uv_index].y
-            ])
-
-        return uv_vals
-
     def generate_lines(self):
         """Generates the various arrays that are part of the surface (eg
         normals, position etc.)"""
@@ -247,29 +170,19 @@ class VerticesArrays:
 
         position_vals = Array("Vector3Array(",
                               values=[v.vertex for v in self.vertices])
-        #normal_vals = Array("Vector3Array(",
-        #                    values=[v.normal for v in self.vertices])
 
         surface_lines.append(position_vals.to_string())
-        #surface_lines.append(normal_vals.to_string())
         surface_lines.append("null, ; No Normals")
-        surface_lines.append(self.get_tangent_array().to_string())
-        surface_lines.append(self.get_color_array().to_string())
-
-        surface_lines.append(self.get_uv_array(0).to_string())
-        surface_lines.append(self.get_uv_array(1).to_string())
-
+        surface_lines.append("null, ; No Tangents")
+        surface_lines.append("null, ; No Colors")
+        surface_lines.append("null, ; No UV1")
+        surface_lines.append("null, ; No UV2")
         surface_lines.append("null, ; No Bones")
         surface_lines.append("null, ; No Bone Weights")
 
-
-        # Indices- each face is made of 3 verts, and these are the indices
-        # in the vertex arrays. The backface is computed from the winding
-        # order, hence v[2] before v[1]
         if self.indices:
             face_indices = Array(
                 "IntArray(",
-                #values=[[v[0], v[2], v[1]] for v in self.indices]
                 flat_values = self.indices
             )
         else:
@@ -313,9 +226,7 @@ class Surface:
         surface_object = Map()
         if self.material is not None:
             surface_object['material'] = self.material
-        #surface_object['primitive'] = 5  # triangle strip, sucks with complex shapes
-        #surface_object['primitive'] = 6  # triangle fan, looks better than strip
-        surface_object['primitive'] = 3  # simpler to debug
+        surface_object['primitive'] = gdenums['PRIMITIVE_LINE_LOOP']
         surface_object['arrays'] = self.vertex_data
         surface_object['morph_arrays'] = self.morph_arrays
         return surface_object
@@ -324,13 +235,6 @@ class Surface:
         """Serialize"""
         return self.generate_object().to_string()
 
-# PRIMITIVE_POINTS = 0 — Render array as points (one vertex equals one point).
-# PRIMITIVE_LINES = 1 — Render array as lines (every two vertices a line is created).
-# PRIMITIVE_LINE_STRIP = 2 — Render array as line strip.
-# PRIMITIVE_LINE_LOOP = 3 — Render array as line loop (like line strip, but closed).
-# PRIMITIVE_TRIANGLES = 4 — Render array as triangles (every three vertices a triangle is created).
-# PRIMITIVE_TRIANGLE_STRIP = 5 — Render array as triangle strips.
-# PRIMITIVE_TRIANGLE_FAN = 6 — Render array as triangle fans.
 
 class Vertex:
     """Stores all the attributes for a single vertex"""
