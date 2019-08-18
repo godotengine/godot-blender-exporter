@@ -278,12 +278,15 @@ class Array(list):
     Note that the constructor values parameter flattens the list using the
     add_elements method
     """
-    def __init__(self, prefix, seperator=', ', suffix=')', values=()):
+    def __init__(self, prefix, seperator=', ', suffix=')', values=(), flat_values=()):
         self.prefix = prefix
         self.seperator = seperator
         self.suffix = suffix
         super().__init__()
-        self.add_elements(values)
+        if flat_values:
+            self.add_elements_flat(flat_values)
+        else:
+            self.add_elements(values)
 
         self.__str__ = self.to_string
 
@@ -292,6 +295,9 @@ class Array(list):
         list of lists)"""
         for lis in list_of_lists:
             self.extend(lis)
+
+    def add_elements_flat(self, array):
+        self.extend(array)
 
     def to_string(self):
         """Convert the array to serialized form"""

@@ -155,20 +155,21 @@ class ArrayGreaseResourceExporter:
                 for vert_id in range(len(stroke.points)):
                     vert = stroke.points[vert_id]
                     new_vert = Vertex( vert )
+                    surface.vertex_data.vertices.append(new_vert)
+                    surface.vertex_data.indices.append(vert_id)
 
                     # Merge similar vertices
-                    tup = new_vert.get_tup()
-                    if tup not in surface.vertex_map:
-                        surface.vertex_map[tup] = len(surface.vertex_data.vertices)
-                        surface.vertex_data.vertices.append(new_vert)
+                    #tup = new_vert.get_tup()
+                    #if tup not in surface.vertex_map:
+                    #    surface.vertex_map[tup] = len(surface.vertex_data.vertices)
+                    #    surface.vertex_data.vertices.append(new_vert)
 
-                    vertex_index = surface.vertex_map[tup]
-                    surface.vertex_index_map[vert_id] = vertex_index
+                    #vertex_index = surface.vertex_map[tup]
+                    #surface.vertex_index_map[vert_id] = vertex_index
+                    #vertex_indices.append(vertex_index)
 
-                    vertex_indices.append(vertex_index)
-
-                if len(vertex_indices) > 2:  # Only triangles and above
-                    surface.vertex_data.indices.append(vertex_indices)
+                #if len(vertex_indices) > 2:  # Only triangles and above
+                #    surface.vertex_data.indices.append(vertex_indices)
 
         for surface in surfaces:
             self.mesh_resource[surface.name_str] = surface
@@ -268,7 +269,8 @@ class VerticesArrays:
         if self.indices:
             face_indices = Array(
                 "IntArray(",
-                values=[[v[0], v[2], v[1]] for v in self.indices]
+                #values=[[v[0], v[2], v[1]] for v in self.indices]
+                flat_values = self.indices
             )
         else:
             # in morph, it has no indices
@@ -311,7 +313,9 @@ class Surface:
         surface_object = Map()
         if self.material is not None:
             surface_object['material'] = self.material
-        surface_object['primitive'] = 5  # triangle strip
+        #surface_object['primitive'] = 5  # triangle strip, sucks with complex shapes
+        #surface_object['primitive'] = 6  # triangle fan, looks better than strip
+        surface_object['primitive'] = 3  # simpler to debug
         surface_object['arrays'] = self.vertex_data
         surface_object['morph_arrays'] = self.morph_arrays
         return surface_object
