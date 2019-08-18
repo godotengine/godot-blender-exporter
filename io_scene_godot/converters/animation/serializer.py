@@ -86,7 +86,7 @@ class TransformFrame:
         # FIXME: lose negative scale
         xform_frame.scale = xform_matrix.to_scale()
 
-        if rotation_mode == 'QUATERNION':
+        if rotation_mode in ('QUATERNION', 'AXIS_ANGLE'):
             xform_frame.rotation_euler = xform_matrix.to_euler()
         else:
             xform_frame.rotation_euler = xform_matrix.to_euler(rotation_mode)
