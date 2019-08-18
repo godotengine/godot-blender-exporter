@@ -606,7 +606,6 @@ class Surface:
         if self.material is not None:
             surface_object['material'] = self.material
         surface_object['primitive'] = 4  # triangles
-        #surface_object['primitive'] = 5  # strip
         surface_object['arrays'] = self.vertex_data
         surface_object['morph_arrays'] = self.morph_arrays
         return surface_object

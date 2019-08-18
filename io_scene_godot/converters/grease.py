@@ -258,6 +258,9 @@ class VerticesArrays:
         surface_lines.append(self.get_uv_array(0).to_string())
         surface_lines.append(self.get_uv_array(1).to_string())
 
+        surface_lines.append("null, ; No Bones")
+        surface_lines.append("null, ; No Bone Weights")
+
 
         # Indices- each face is made of 3 verts, and these are the indices
         # in the vertex arrays. The backface is computed from the winding
@@ -290,6 +293,7 @@ class Surface:
         # map from a Vertex.tup() to surface.vertex_data.indices
         self.vertex_map = dict()
         self.vertex_data = VerticesArrays()
+        self.morph_arrays = Array(prefix="[", seperator=",\n", suffix="]")
         # map from mesh.loop_index to surface.vertex_data.indices
         self.vertex_index_map = dict()
         self.id = None
@@ -307,9 +311,9 @@ class Surface:
         surface_object = Map()
         if self.material is not None:
             surface_object['material'] = self.material
-        #surface_object['primitive'] = 4  # triangles
-        surface_object['primitive'] = 5  # strip
+        surface_object['primitive'] = 5  # triangle strip
         surface_object['arrays'] = self.vertex_data
+        surface_object['morph_arrays'] = self.morph_arrays
         return surface_object
 
     def to_string(self):
