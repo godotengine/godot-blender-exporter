@@ -245,20 +245,25 @@ def export_physics_controller(escn_file, export_settings, node,
 def export_physics_properties(escn_file, export_settings, node,
                               parent_gd_node):
     """Creates the necessary nodes for the physics"""
-    parent_rbd = get_physics_root(node)
-
-    if parent_rbd is None:
-        parent_gd_node = export_physics_controller(
-            escn_file, export_settings, node, parent_gd_node
+    if 'gdcollide' in node.keys() and node['gdcollide']:
+        return export_collision_shape(
+            escn_file, export_settings, node, physics_gd_node
         )
+    else:
+        parent_rbd = get_physics_root(node)
 
-    # trace the path towards root, find the cloest physics node
-    gd_node_ptr = parent_gd_node
-    while gd_node_ptr.get_type() not in PHYSICS_TYPES:
-        gd_node_ptr = gd_node_ptr.parent
-    physics_gd_node = gd_node_ptr
+        if parent_rbd is None:
+            parent_gd_node = export_physics_controller(
+                escn_file, export_settings, node, parent_gd_node
+            )
 
-    return export_collision_shape(
-        escn_file, export_settings, node, physics_gd_node,
-        parent_override=parent_rbd
-    )
+        # trace the path towards root, find the cloest physics node
+        gd_node_ptr = parent_gd_node
+        while gd_node_ptr.get_type() not in PHYSICS_TYPES:
+            gd_node_ptr = gd_node_ptr.parent
+        physics_gd_node = gd_node_ptr
+
+        return export_collision_shape(
+            escn_file, export_settings, node, physics_gd_node,
+            parent_override=parent_rbd
+        )
