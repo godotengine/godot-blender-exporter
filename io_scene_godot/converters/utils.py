@@ -51,7 +51,7 @@ class MeshResourceKey:
         mesh_data = obj.data
 
         # Resource type included because same blender mesh may be used as
-        # MeshResource or CollisionShape, but they are different resource
+        # MeshResource or CollisionShape, but they are different resources
         gd_rsc_type = rsc_type
 
         # Here collect info of all the modifiers applied on the mesh.
@@ -59,25 +59,40 @@ class MeshResourceKey:
         # the evaluated mesh.
         mod_info_list = list()
         for modifier in get_applicable_modifiers(obj, export_settings):
-            # Modifier name indicates its type, its an identifier
+            # Modifier name indicates its type, it's an identifier
             mod_info_list.append(modifier.name)
 
             # First property is always 'rna_type', skip it
-            for prop in modifier.bl_rna.properties.keys()[1:]:
-                # Note that Property may be `BoolProperty`,
-                # `CollectionProperty`, `EnumProperty`, `FloatProperty`,
-                # `IntProperty`, `PointerProperty`, `StringProperty`"
-                # Most of them are primary type when accessed with `getattr`,
-                # so they are fine to be hashed.
-                # For `PointerProperty`, it is mostly an bpy.types.ID, hash it
-                # would get its python object identifier, which is also good.
-                # For `CollectionProperty`, it would make more sense to
-                # traversal it, however, we cut down it here to allow
-                # some of mesh resource not be shared because of simplicity
-                mod_info_list.append(getattr(modifier, prop))
+            for prop_key in modifier.bl_rna.properties.keys()[1:]:
+                prop = modifier.bl_rna.properties[prop_key]
+                prop_val = getattr(modifier, prop_key)
 
-        self._data = tuple([mesh_data, gd_rsc_type] + mod_info_list)
+                if prop.type == 'COLLECTION':
+                    # For `CollectionProperty`, it would make more sense to
+                    # traversal it, however, we cut down here just for
+                    # simplicity allowing some of mesh resources not being
+                    # shared.
+                    mod_info_list.append(id(prop_val))
+                elif prop.type == 'POINTER':
+                    # For `PointerProperty`, it points to a bpy.types.ID, its
+                    # hash value is the python object id, which is good as an
+                    # identifier.
+                    mod_info_list.append(prop_val)
+                else:
+                    # Here Property may be `BoolProperty`, `EnumProperty`,
+                    # `FloatProperty`, `IntProperty`, `StringProperty`
+                    # they are primitive types and all good to be hashed.
+                    assert prop.type in \
+                        ('BOOLEAN', 'ENUM', 'INT', 'STRING', 'FLOAT')
+                    if isinstance(prop_val, (int, float, str, bool)) or \
+                            prop_val is None:
+                        mod_info_list.append(prop_val)
+                    else:
+                        # iterable properties
+                        mod_info_list.append(tuple(prop_val))
+
         # Precalculate the hash now for better efficiency later
+        self._data = tuple([mesh_data, gd_rsc_type] + mod_info_list)
         self._hash = hash(self._data)
 
     def __hash__(self):
