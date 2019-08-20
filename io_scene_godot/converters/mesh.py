@@ -38,22 +38,36 @@ def export_prim_node(escn_file, export_settings, obj, parent_gd_node):
         )
         res.append('[sub_resource type="%sMesh" id=%s]' % (prim,prim_id))
 
+    trans_node = rad_node = None
     if 'gdprim_radius' in obj.keys() and obj['gdprim_radius']:
-        #TODO *= obj['gdprim_radius']
-        pass
+        trans_node = NodeTemplate(obj.name, "Spatial", parent_gd_node)
+        escn_file.add_node(trans_node)
+        if has_physics(obj):
+            trans_node['transform'] = mathutils.Matrix.Identity(4)
+        else:
+            trans_node['transform'] = obj.matrix_local
 
-    mesh_node = NodeTemplate(obj.name, "MeshInstance", parent_gd_node)
+        rad_node = NodeTemplate(obj.name+'_radius', "Spatial", trans_node)
+        rad_node['transform'] = mathutils.Matrix.Scale(obj['gdprim_radius'], 4)
+        escn_file.add_node(rad_node)
+
+    if trans_node:
+        mesh_node = NodeTemplate(obj.name+'_prim', "MeshInstance", rad_node)
+    else:
+        mesh_node = NodeTemplate(obj.name, "MeshInstance", parent_gd_node)
+
     mesh_node['mesh'] = "SubResource({})".format(prim_id)
     mesh_node['visible'] = obj.visible_get()
     mesh_node['material/0'] = None
     # TODO material
 
-    # Transform of rigid mesh is moved up to its collision
-    # shapes.
-    if has_physics(obj):
-        trans = mathutils.Matrix.Identity(4)
+    if trans_node is None:
+        if has_physics(obj):
+            trans = mathutils.Matrix.Identity(4)
+        else:
+            trans = obj.matrix_local
     else:
-        trans = obj.matrix_local
+        trans = mathutils.Matrix.Identity(4)
 
     mesh_node['transform'] = trans
 
