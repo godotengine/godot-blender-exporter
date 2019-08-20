@@ -761,8 +761,9 @@ class ImageTextureNodeConverter(NodeConverterBase):
         tex_coord = self.in_sockets_map[tex_coord_socket]
         if not tex_coord_socket.is_linked:
             # default to use generated texture coordinates
-            self.flags.aabb_tex_coord_used = True
-            self.local_code.append("%s = %s" % (tex_coord, self.AABB_UVW))
+            #self.flags.aabb_tex_coord_used = True
+            #self.local_code.append("%s = %s" % (tex_coord, self.AABB_UVW))
+            self.local_code.append("%s = vec3（UV, 0.0）" % tex_coord)
 
         tex_var = self.generate_tmp_texture_id(self.bl_node.name)
         if self.bl_node.image is not None:
