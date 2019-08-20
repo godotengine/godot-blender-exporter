@@ -12,6 +12,10 @@ from .armature import generate_bones_mapping
 from .animation import export_animation_data
 
 MAX_BONE_PER_VERTEX = 4
+PrimMaterialCache = {}
+
+def reset_material_cache():
+    PrimMaterialCache.clear()
 
 # ------------------------------- Prim -----------------------------------
 def export_prim_node(escn_file, export_settings, obj, parent_gd_node):
@@ -58,8 +62,21 @@ def export_prim_node(escn_file, export_settings, obj, parent_gd_node):
 
     mesh_node['mesh'] = "SubResource({})".format(prim_id)
     mesh_node['visible'] = obj.visible_get()
-    mesh_node['material/0'] = None
-    # TODO material
+    gdmat = None
+    if len(obj.data.materials) and obj.data.materials[0]:
+        mat = obj.data.materials[0]
+        if mat in PrimMaterialCache:
+            gdmat = PrimMaterialCache[mat]
+        elif (mat is not None and export_settings['use_export_material']):
+            gdmat = export_material(
+                escn_file,
+                export_settings,
+                obj,
+                mat
+            )
+            PrimMaterialCache[mat] = gdmat
+
+    mesh_node['material/0'] = gdmat
 
     if trans_node is None:
         if has_physics(obj):

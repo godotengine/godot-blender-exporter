@@ -341,6 +341,7 @@ class GodotExporter:
 
     def export(self):
         """Begin the export"""
+        converters.mesh.reset_material_cache()
         self.escn_file = structures.ESCNFile(structures.FileEntry(
             "gd_scene",
             collections.OrderedDict((
