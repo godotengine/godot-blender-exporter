@@ -1,5 +1,11 @@
 import bpy
 
+LAST_EXPORT = {}
+
+def set_export_config(path, options):
+    LAST_EXPORT['filepath'] = path
+    LAST_EXPORT.update(options)
+
 class GodotTextProps(bpy.types.Panel):
     bl_label = "Godot"
     bl_idname = "TEXT_PT_GODOT"
@@ -75,3 +81,20 @@ class GodotObProps(bpy.types.Panel):
                     if '.' in vname:
                         vname = vname.replace('.', '_')
                     row.label(text='%s :%s= %s' % (vname, gtype, value))
+
+
+class ReExportGodot(bpy.types.Operator):
+    bl_idname = "export_godot.reexport"
+    bl_label = "ReExport"
+    def execute(self, context):
+        print(LAST_EXPORT)
+        from . import export_godot
+        return export_godot.save(self, context, **LAST_EXPORT)
+
+class GodotTopBar(bpy.types.Header):
+    bl_space_type = 'TOPBAR'
+    bl_idname = "GODOT_HT_TOOLS"
+
+    def draw(self, context):
+        if LAST_EXPORT:
+            op = self.layout.operator("export_godot.reexport", text='escn')

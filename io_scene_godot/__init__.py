@@ -23,7 +23,7 @@ import bpy
 from bpy.props import StringProperty, BoolProperty, FloatProperty, EnumProperty
 from bpy_extras.io_utils import ExportHelper
 from .structures import ValidationError
-from .ui_components import GodotTextProps, GodotObProps
+from .ui_components import GodotTextProps, GodotObProps, GodotTopBar, ReExportGodot, set_export_config
 
 bl_info = {  # pylint: disable=invalid-name
     "name": "Godot Engine Exporter",
@@ -196,7 +196,7 @@ class ExportGodot(bpy.types.Operator, ExportHelper):
                 "filter_glob",
                 "xna_validate",
             ))
-
+            set_export_config(self.filepath, keywords)
             from . import export_godot
             return export_godot.save(self, context, **keywords)
         except ValidationError as error:
@@ -215,7 +215,8 @@ def register():
     bpy.types.TOPBAR_MT_file_export.append(menu_func)
     bpy.utils.register_class(GodotTextProps)
     bpy.utils.register_class(GodotObProps)
-
+    bpy.utils.register_class(GodotTopBar)
+    bpy.utils.register_class(ReExportGodot)
 
 def unregister():
     """Remove addon from blender"""
@@ -223,6 +224,8 @@ def unregister():
     bpy.types.TOPBAR_MT_file_export.remove(menu_func)
     bpy.utils.unregister_class(GodotTextProps)
     bpy.utils.unregister_class(GodotObProps)
+    bpy.utils.unregister_class(GodotTopBar)
+    bpy.utils.unregister_class(ReExportGodot)
 
 
 def export(filename, overrides=None):
