@@ -760,7 +760,7 @@ class ImageTextureNodeConverter(NodeConverterBase):
         tex_coord_socket = self.bl_node.inputs[0]
         tex_coord = self.in_sockets_map[tex_coord_socket]
         if not tex_coord_socket.is_linked:
-            self.local_code.append("%s = vec3（UV, 0.0）" % tex_coord)
+            self.local_code.append("%s = vec3(UV, 0.0)" % tex_coord)
 
         tex_var = self.generate_tmp_texture_id(self.bl_node.name)
         if self.bl_node.image is not None:
