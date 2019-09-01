@@ -55,6 +55,13 @@ def export_material(escn_file, export_settings, bl_object, material):
     return "SubResource({})".format(resource_id)
 
 
+def export_as_spatial_material(material_rsc_name, material):
+    """Export a Blender Material as Godot Spatial Material"""
+    mat = InternalResource("SpatialMaterial", material_rsc_name)
+    mat['albedo_color'] = gamma_correct(material.diffuse_color)
+    return mat
+
+
 def generate_material_resource(escn_file, export_settings, bl_object,
                                material):
     """Export blender material as an internal resource"""
@@ -68,7 +75,8 @@ def generate_material_resource(escn_file, export_settings, bl_object,
         # to convert material to external file
         material_rsc_name = ''
 
-    if (engine in ('CYCLES', 'BLENDER_EEVEE') and
+    if (export_settings['material_mode'] == 'SCRIPT_SHADER' and
+            engine in ('CYCLES', 'BLENDER_EEVEE') and
             material.node_tree is not None):
         mat = InternalResource("ShaderMaterial", material_rsc_name)
         try:
@@ -76,14 +84,16 @@ def generate_material_resource(escn_file, export_settings, bl_object,
                 escn_file, export_settings, bl_object, material, mat
             )
         except ValidationError as exception:
-            mat = None  # revert to SpatialMaterial
+            # fallback to SpatialMaterial
+            mat = export_as_spatial_material(material_rsc_name, material)
             logging.error(
                 "%s, in material '%s'", str(exception), material.name
             )
 
-    if mat is None:
-        mat = InternalResource("SpatialMaterial", material_rsc_name)
-        mat['albedo_color'] = gamma_correct(material.diffuse_color)
+    elif export_settings['material_mode'] == 'SPATIAL':
+        mat = export_as_spatial_material(material_rsc_name, material)
+
+    assert mat is not None
 
     # make material-object tuple as an identifier, as uniforms is part of
     # material and they are binded with object
