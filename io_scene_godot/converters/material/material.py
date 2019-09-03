@@ -89,11 +89,8 @@ def generate_material_resource(escn_file, export_settings, bl_object,
             logging.error(
                 "%s, in material '%s'", str(exception), material.name
             )
-
-    elif export_settings['material_mode'] == 'SPATIAL':
+    else:  # Spatial Material
         mat = export_as_spatial_material(material_rsc_name, material)
-
-    assert mat is not None
 
     # make material-object tuple as an identifier, as uniforms is part of
     # material and they are binded with object
