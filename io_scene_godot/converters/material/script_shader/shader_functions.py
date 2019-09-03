@@ -414,7 +414,7 @@ void node_mapping(vec3 vec, mat4 mat, vec3 minvec, vec3 maxvec, float domin,
 """),
 
     ShaderFunction(code="""
-void node_math_no_clamp(float value1, float value2, out float result) {
+void node_math_add_no_clamp(float value1, float value2, out float result) {
     result = value1 +  value2;
 }
 """),
@@ -443,13 +443,13 @@ void node_math_divide_no_clamp(float value1, float value2, out float result) {
 """),
 
     ShaderFunction(code="""
-void node_math_power_clamp(float val1, float val2, out float outval) {
-    pow(val1, val2);
+void node_math_power_no_clamp(float val1, float val2, out float outval) {
+    outval = pow(val1, val2);
 }
 """),
 
     ShaderFunction(code="""
-void node_math_logarithm_lamp(float val1, float val2, out float outval) {
+void node_math_logarithm_no_clamp(float val1, float val2, out float outval) {
     if (val1 > 0.0  && val2 > 0.0)
         outval = log2(val1) / log2(val2);
     else
@@ -458,44 +458,116 @@ void node_math_logarithm_lamp(float val1, float val2, out float outval) {
 """),
 
     ShaderFunction(code="""
-void node_math_sine_no_clamp(float value, out float result) {
-    result = sin(value);
+void node_math_sqrt_no_clamp(float value1, float value2, out float result) {
+    result = sqrt(value1);
 }
 """),
 
     ShaderFunction(code="""
-void node_math_cosine_no_clamp(float value, out float result) {
-    result = cos(value);
+void node_math_absolute_no_clamp(float value1, float value2, out float result) {
+    result = abs(value1);
 }
 """),
 
     ShaderFunction(code="""
-void node_math_tangent_no_clamp(float value, out float result) {
-    result = tan(value);
+void node_math_minimum_no_clamp(float value1, float value2, out float result) {
+    result = min(value1, value2);
 }
 """),
 
     ShaderFunction(code="""
-void node_math_arc_sine_no_clamp(float value, out float result) {
-    if (value < 0.0 || value > 1.0)
+void node_math_maximum_no_clamp(float value1, float value2, out float result) {
+    result = max(value1, value2);
+}
+"""),
+
+    ShaderFunction(code="""
+void node_math_less_than_no_clamp(float value1, float value2, out float result) {
+    result = float(value1 < value2);
+}
+"""),
+
+    ShaderFunction(code="""
+void node_math_greater_than_no_clamp(float value1, float value2, out float result) {
+    result = float(value1 > value2);
+}
+"""),
+
+    ShaderFunction(code="""
+void node_math_round_no_clamp(float value1, float value2, out float result) {
+    result = round(value1);
+}
+"""),
+
+    ShaderFunction(code="""
+void node_math_floor_no_clamp(float value1, float value2, out float result) {
+    result = floor(value1);
+}
+"""),
+
+    ShaderFunction(code="""
+void node_math_ceil_no_clamp(float value1, float value2, out float result) {
+    result = ceil(value1);
+}
+"""),
+
+    ShaderFunction(code="""
+void node_math_fract_no_clamp(float value1, float value2, out float result) {
+    result = fract(value1);
+}
+"""),
+
+    ShaderFunction(code="""
+void node_math_modulo_no_clamp(float value1, float value2, out float result) {
+    result = mod(value1, value2);
+}
+"""),
+
+    ShaderFunction(code="""
+void node_math_sine_no_clamp(float value1, float value2, out float result) {
+    result = sin(value1);
+}
+"""),
+
+    ShaderFunction(code="""
+void node_math_cosine_no_clamp(float value1, float value2, out float result) {
+    result = cos(value1);
+}
+"""),
+
+    ShaderFunction(code="""
+void node_math_tangent_no_clamp(float value1, float value2, out float result) {
+    result = tan(value1);
+}
+"""),
+
+    ShaderFunction(code="""
+void node_math_arcsine_no_clamp(float value1, float value2, out float result) {
+    if (value1 < 0.0 || value1 > 1.0)
         result = 0.0;
     else
-        result = asin(value);
+        result = asin(value1);
 }
 """),
 
     ShaderFunction(code="""
-void node_math_arccosine_no_clamp(float value, out float result) {
-    if (value < 0.0 || value > 1.0)
+void node_math_arccosine_no_clamp(float value1, float value2, out float result) {
+    if (value1 < 0.0 || value1 > 1.0)
         result = 0.0;
     else
-        result = acos(value);
+        result = acos(value1);
 }
 """),
 
     ShaderFunction(code="""
-void node_math_arctangent_no_clamp(float value, out float result) {
-    result = atan(value);
+void node_math_arctangent_no_clamp(float value1, float value2, out float result) {
+    result = atan(value1);
+}
+"""),
+
+    ShaderFunction(code="""
+void node_math_arctan2_no_clamp(float value1, float value2, out float result) {
+    result = atan(value1, value2);
 }
 """),
 
@@ -527,48 +599,6 @@ void node_math_divide_clamp(float value1, float value2, out float result) {
 """),
 
     ShaderFunction(code="""
-void node_math_sine_clamp(float value, out float result) {
-    result = clamp(sin(value), 0.0, 1.0);
-}
-"""),
-
-    ShaderFunction(code="""
-void node_math_cosine_clamp(float value, out float result) {
-    result = clamp(cos(value), 0.0, 1.0);
-}
-"""),
-
-    ShaderFunction(code="""
-void node_math_tangent_clamp(float value, out float result) {
-    result = clamp(tan(value), 0.0, 1.0);
-}
-"""),
-
-    ShaderFunction(code="""
-void node_math_arcsine_clamp(float value, out float result) {
-    if (value < 0.0 || value > 1.0)
-        result = 0.0;
-    else
-        result = clamp(asin(value), 0.0, 1.0);
-}
-"""),
-
-    ShaderFunction(code="""
-void node_math_arccosine_clamp(float value, out float result) {
-    if (value < 0.0 || value > 1.0)
-        result = 0.0;
-    else
-        result = clamp(acos(value), 0.0, 1.0);
-}
-"""),
-
-    ShaderFunction(code="""
-void node_math_arctangent_clamp(float value, out float result) {
-    result = clamp(atan(value), 0.0, 1.0);
-}
-"""),
-
-    ShaderFunction(code="""
 void node_math_power_clamp(float val1, float val2, out float outval) {
     outval = clamp(pow(val1, val2), 0.0, 1.0);
 }
@@ -580,6 +610,120 @@ void node_math_logarithm_clamp(float val1, float val2, out float outval) {
         outval = clamp(log2(val1) / log2(val2), 0.0, 1.0);
     else
         outval = 0.0;
+}
+"""),
+
+    ShaderFunction(code="""
+void node_math_sqrt_clamp(float value1, float value2, out float result) {
+    result = clamp(sqrt(value1), 0.0, 1.0);
+}
+"""),
+
+    ShaderFunction(code="""
+void node_math_absolute_clamp(float value1, float value2, out float result) {
+    result = clamp(abs(value1), 0.0, 1.0);
+}
+"""),
+
+    ShaderFunction(code="""
+void node_math_minimum_clamp(float value1, float value2, out float result) {
+    result = clamp(min(value1, value2), 0.0, 1.0);
+}
+"""),
+
+    ShaderFunction(code="""
+void node_math_maximum_clamp(float value1, float value2, out float result) {
+    result = clamp(max(value1, value2), 0.0, 1.0);
+}
+"""),
+
+    ShaderFunction(code="""
+void node_math_less_than_clamp(float value1, float value2, out float result) {
+    result = clamp(float(value1 < value2), 0.0, 1.0);
+}
+"""),
+
+    ShaderFunction(code="""
+void node_math_greater_than_clamp(float value1, float value2, out float result) {
+    result = clamp(float(value1 > value2), 0.0, 1.0);
+}
+"""),
+
+    ShaderFunction(code="""
+void node_math_round_clamp(float value1, float value2, out float result) {
+    result = clamp(round(value1), 0.0, 1.0);
+}
+"""),
+
+    ShaderFunction(code="""
+void node_math_floor_clamp(float value1, float value2, out float result) {
+    result = clamp(floor(value1), 0.0, 1.0);
+}
+"""),
+
+    ShaderFunction(code="""
+void node_math_ceil_clamp(float value1, float value2, out float result) {
+    result = clamp(ceil(value1), 0.0, 1.0);
+}
+"""),
+
+    ShaderFunction(code="""
+void node_math_fract_clamp(float value1, float value2, out float result) {
+    result = clamp(fract(value1), 0.0, 1.0);
+}
+"""),
+
+    ShaderFunction(code="""
+void node_math_modulo_clamp(float value1, float value2, out float result) {
+    result = clamp(mod(value1, value2), 0.0, 1.0);
+}
+"""),
+
+    ShaderFunction(code="""
+void node_math_sine_clamp(float value1, float value2, out float result) {
+    result = clamp(sin(value1), 0.0, 1.0);
+}
+"""),
+
+    ShaderFunction(code="""
+void node_math_cosine_clamp(float value1, float value2, out float result) {
+    result = clamp(cos(value1), 0.0, 1.0);
+}
+"""),
+
+    ShaderFunction(code="""
+void node_math_tangent_clamp(float value1, float value2, out float result) {
+    result = clamp(tan(value1), 0.0, 1.0);
+}
+"""),
+
+    ShaderFunction(code="""
+void node_math_arcsine_clamp(float value1, float value2, out float result) {
+    if (value1 < 0.0 || value1 > 1.0)
+        result = 0.0;
+    else
+        result = clamp(asin(value1), 0.0, 1.0);
+}
+"""),
+
+    ShaderFunction(code="""
+void node_math_arccosine_clamp(float value1, float value2, out float result) {
+    if (value1 < 0.0 || value1 > 1.0)
+        result = 0.0;
+    else
+        result = clamp(acos(value1), 0.0, 1.0);
+}
+"""),
+
+    ShaderFunction(code="""
+void node_math_arctangent_clamp(float value1, float value2, out float result) {
+    result = clamp(atan(value1), 0.0, 1.0);
+}
+"""),
+
+    ShaderFunction(code="""
+void node_math_arctan2_clamp(float value1, float value2, out float result) {
+    result = clamp(atan(value1, value2), 0.0, 1.0);
 }
 """),
 
