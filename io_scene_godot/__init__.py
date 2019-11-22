@@ -23,6 +23,7 @@ import bpy
 from bpy.props import StringProperty, BoolProperty, FloatProperty, EnumProperty
 from bpy_extras.io_utils import ExportHelper
 from .structures import ValidationError
+from . import export_godot
 
 bl_info = {  # pylint: disable=invalid-name
     "name": "Godot Engine Exporter",
@@ -211,7 +212,6 @@ class ExportGodot(bpy.types.Operator, ExportHelper):
                 "xna_validate",
             ))
 
-            from . import export_godot
             return export_godot.save(self, context, **keywords)
         except ValidationError as error:
             self.report({'ERROR'}, str(error))
@@ -269,7 +269,6 @@ def export(filename, overrides=None):
         def __init__(self):
             self.report = print
 
-    from . import export_godot
     export_godot.save(FakeOp(), bpy.context, filename, **default_settings)
 
 
