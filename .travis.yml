@@ -7,6 +7,13 @@ cache:
     directories:
         - $HOME/.blender-cache
 
+matrix:
+    include:
+        - name: Blender 2.80
+          env: BLENDER_VERSION=2.80
+        - name: Blender 2.81
+          env: BLENDER_VERSION=2.81
+
 before_install:
     - sudo apt-get update
     - pip install --upgrade pip
@@ -15,7 +22,7 @@ before_install:
 install:
     - sudo apt-get install --no-install-recommends -y libsdl1.2debian libglu1 python3-pip
     - pip install -r requirements.txt
-    - bash tests/install_blender.sh
+    - bash tests/install_blender.sh ${BLENDER_VERSION}
     - source .envs
 
 script:
