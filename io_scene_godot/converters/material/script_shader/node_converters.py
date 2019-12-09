@@ -735,7 +735,8 @@ class MixRgbNodeConverter(NodeConverterBase):
         self.add_function_call(mix_func, in_args, out_args)
 
         if self.bl_node.use_clamp:
-            self.local_code.append("%s = clamp(%s, vec4(0.0), vec4(1.0))" % (out_color_id, out_color_id))
+            self.local_code.append("%s = clamp(%s, vec4(0.0), vec4(1.0))"
+                                   % (out_color_id, out_color_id))
 
         self.out_sockets_map[out_color_socket] = out_color_id
 
