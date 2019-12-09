@@ -2,7 +2,7 @@
 
 [sub_resource id=1 type="Animation"]
 
-resource_name = "Spot003Action001"
+resource_name = "Spot003Action"
 step = 0.1
 length = 1.66667
 loop = false
@@ -13,7 +13,7 @@ tracks/0/keys = {
 	"times":PoolRealArray(0.0, 0.0416667, 0.0833333, 0.125, 0.166667, 0.208333, 0.25, 0.291667, 0.333333, 0.375, 0.416667, 0.458333, 0.5, 0.541667, 0.583333, 0.625, 0.666667, 0.708333, 0.75, 0.791667, 0.833333, 0.875, 0.916667, 0.958333, 1.0, 1.04167, 1.08333, 1.125, 1.16667, 1.20833, 1.25, 1.29167, 1.33333, 1.375, 1.41667, 1.45833, 1.5, 1.54167, 1.58333, 1.625, 1.66667),
 	"transitions":PoolRealArray(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1),
 	"update":0,
-	"values":[25.0, 24.8412, 24.3532, 23.5364, 22.4256, 21.098, 19.6663, 18.2536, 16.9643, 15.8683, 15.0, 14.2845, 13.6415, 13.0734, 12.5754, 12.134, 11.7273, 11.33, 10.9193, 10.479, 10.0, 9.49162, 8.96772, 8.43198, 7.89091, 7.3536, 6.83017, 6.32935, 5.85661, 5.41379, 5.0, 4.58864, 4.15977, 3.7253, 3.30289, 2.91438, 2.58141, 2.32004, 2.13754, 2.03297, 2.0]
+	"values":[10.0, 10.145, 10.56, 11.215, 12.08, 13.125, 14.32, 15.635, 17.04, 18.505, 20.0, 21.495, 22.96, 24.365, 25.68, 26.875, 27.92, 28.785, 29.44, 29.855, 30.0, 29.855, 29.44, 28.785, 27.92, 26.875, 25.68, 24.365, 22.96, 21.495, 20.0, 18.505, 17.04, 15.635, 14.32, 13.125, 12.08, 11.215, 10.56, 10.145, 10.0]
 }
 
 [sub_resource id=2 type="Animation"]
@@ -151,7 +151,7 @@ shadow_color = Color(0.0, 0.0, 0.0, 1.0)
 light_energy = 1.0
 spot_angle = 22.5
 spot_angle_attenuation = 1.25
-spot_range = 25.0
+spot_range = 10.0
 transform = Transform(1.0, 0.0, 0.0, 0.0, -4.37114e-08, 1.0, 0.0, -1.0, -4.37114e-08, 0.223751, 3.0266, 1.21379)
 light_negative = false
 shadow_enabled = true
@@ -159,7 +159,7 @@ shadow_enabled = true
 [node name="AnimationPlayer" type="AnimationPlayer" parent="SpotDistanceChange"]
 
 root_node = NodePath("..:")
-anims/Spot.003Action.001 = SubResource(1)
+anims/Spot.003Action = SubResource(1)
 
 [node name="SpotTransformChange" type="SpotLight" parent="."]
 
@@ -169,8 +169,8 @@ shadow_color = Color(0.0, 0.0, 0.0, 1.0)
 light_energy = 1.0
 spot_angle = 22.5
 spot_angle_attenuation = 1.25
-spot_range = 25.0
-transform = Transform(0.477268, -3.84117e-08, 0.878758, -0.878758, -2.0862e-08, 0.477268, 0.0, -1.0, -4.37114e-08, -0.760565, 3.14704, 6.40839)
+spot_range = 40.0
+transform = Transform(0.409882, -0.759268, -0.50548, -0.727592, -0.606369, 0.320823, -0.550097, 0.236284, -0.800976, -9.39579, 3.14704, 1.68615)
 light_negative = false
 shadow_enabled = true
 
@@ -189,11 +189,11 @@ transform = Transform(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, -5.52819, 0.7
 
 light_specular = 1.0
 light_color = Color(1.0, 1.0, 1.0, 1.0)
-shadow_color = Color(0.0, 0.0, 0.0, 1.0)
+shadow_color = Color(0.208633, 0.238395, 0.571464, 1.0)
 light_energy = 1.0
 spot_angle = 22.5
 spot_angle_attenuation = 1.25
-spot_range = 25.0
+spot_range = 40.0
 transform = Transform(0.958848, -0.28392, -2.18837e-08, 0.178546, 0.602982, 0.777518, -0.220753, -0.745521, 0.628861, -4.64127, 6.11957, 1.29809)
 light_negative = false
 shadow_enabled = true
@@ -215,9 +215,9 @@ light_specular = 1.0
 light_color = Color(1.0, 1.0, 1.0, 1.0)
 shadow_color = Color(0.0, 0.0, 0.0, 1.0)
 light_energy = 1.0
-spot_angle = 22.5
+spot_angle = 35.0
 spot_angle_attenuation = 1.25
-spot_range = 25.0
+spot_range = 40.0
 transform = Transform(1.0, 0.0, 0.0, 0.0, -4.37114e-08, 1.0, 0.0, -1.0, -4.37114e-08, 6.6415, 3.84213, -6.03583)
 light_negative = false
 shadow_enabled = true
@@ -230,10 +230,10 @@ anims/SpotAction = SubResource(6)
 [node name="LightColorChange" type="OmniLight" parent="."]
 
 light_specular = 1.0
-light_color = Color(1.0, 0.266431, 0.248791, 1.0)
+light_color = Color(0.592445, 1.0, 0.278861, 1.0)
 shadow_color = Color(0.0, 0.0, 0.0, 1.0)
 light_energy = 1.0
-omni_range = 1.0
+omni_range = 30.002
 transform = Transform(-0.290865, -0.771101, 0.566393, -0.0551891, 0.604525, 0.794672, -0.955171, 0.199883, -0.218391, 5.25185, 0.215087, 5.49347)
 light_negative = false
 shadow_enabled = true
