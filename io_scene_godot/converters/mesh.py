@@ -42,8 +42,9 @@ def export_mesh_node(escn_file, export_settings, node, parent_gd_node):
                 armature_data is not None):
             skeleton_node = armature.find_skeletion_node(parent_gd_node)
             mesh_exporter.init_mesh_bones_data(skeleton_node)
-            mesh_node['skeleton'] = NodePath(
-                mesh_node.get_path(), skeleton_node.get_path())
+            if mesh_node is not None and skeleton_node is not None:
+                mesh_node['skeleton'] = NodePath(
+                    mesh_node.get_path(), skeleton_node.get_path())
 
         mesh_id = mesh_exporter.export_mesh(escn_file, export_settings)
 
@@ -146,6 +147,8 @@ class MeshResourceExporter:
     def init_mesh_bones_data(self, skeleton_node):
         """Find the mapping relation between vertex groups
         and bone id"""
+        if skeleton_node is None:
+            return
         for bone_name, bone_info in skeleton_node.bones.items():
             group = self.object.vertex_groups.get(bone_name)
             if group is not None:
