@@ -718,7 +718,7 @@ class MixRgbNodeConverter(NodeConverterBase):
 
         mix_func = find_function_by_name(rgb_mix_func_name)
         if mix_func is None:
-            # TODO: supportt all the blend types
+            # TODO: support all the blend types
             warning_str = 'blend type %s not supported at %s, fall back to ' \
                 'blend type MIX' % (self.bl_node.blend_type, self.bl_node.name)
             logging.warning(warning_str)
@@ -735,7 +735,8 @@ class MixRgbNodeConverter(NodeConverterBase):
         self.add_function_call(mix_func, in_args, out_args)
 
         if self.bl_node.use_clamp:
-            self.local_code.append("%s = clamp(%s, vec4(0.0), vec4(1.0))")
+            self.local_code.append("%s = clamp(%s, vec4(0.0), vec4(1.0))"
+                                   % (out_color_id, out_color_id))
 
         self.out_sockets_map[out_color_socket] = out_color_id
 
@@ -760,9 +761,7 @@ class ImageTextureNodeConverter(NodeConverterBase):
         tex_coord_socket = self.bl_node.inputs[0]
         tex_coord = self.in_sockets_map[tex_coord_socket]
         if not tex_coord_socket.is_linked:
-            # default to use generated texture coordinates
-            self.flags.aabb_tex_coord_used = True
-            self.local_code.append("%s = %s" % (tex_coord, self.AABB_UVW))
+            self.local_code.append("%s = vec3(UV, 0.0)" % tex_coord)
 
         tex_var = self.generate_tmp_texture_id(self.bl_node.name)
         if self.bl_node.image is not None:

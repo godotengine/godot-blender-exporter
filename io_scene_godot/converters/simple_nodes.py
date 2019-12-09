@@ -97,7 +97,7 @@ class LightNode(NodeTemplate):
     _omni_attr_conv = [
         AttributeConvertInfo(
             'energy', 'light_energy', lambda x: abs(x / 100.0)),
-        AttributeConvertInfo('distance', 'omni_range', lambda x: x),
+        AttributeConvertInfo('cutoff_distance', 'omni_range', lambda x: x),
     ]
     _spot_attr_conv = [
         AttributeConvertInfo(
@@ -108,7 +108,7 @@ class LightNode(NodeTemplate):
         AttributeConvertInfo(
             'spot_blend', 'spot_angle_attenuation', lambda x: 0.2/(x + 0.01)
         ),
-        AttributeConvertInfo('distance', 'spot_range', lambda x: x),
+        AttributeConvertInfo('cutoff_distance', 'spot_range', lambda x: x),
     ]
     _directional_attr_conv = [
         AttributeConvertInfo('energy', 'light_energy', abs),

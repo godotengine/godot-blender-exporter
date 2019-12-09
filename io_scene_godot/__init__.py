@@ -23,6 +23,7 @@ import bpy
 from bpy.props import StringProperty, BoolProperty, FloatProperty, EnumProperty
 from bpy_extras.io_utils import ExportHelper
 from .structures import ValidationError
+from . import export_godot
 
 bl_info = {  # pylint: disable=invalid-name
     "name": "Godot Engine Exporter",
@@ -98,11 +99,6 @@ class ExportGodot(bpy.types.Operator, ExportHelper):
                     "own AnimationPlayer holding its actions",
         default=True,
     )
-    use_export_material: BoolProperty(
-        name="Export Material",
-        description="Export all the material associated with mesh surfaces",
-        default=True,
-    )
     use_export_shape_key: BoolProperty(
         name="Export Shape Key",
         description="Export all the shape keys in mesh objects",
@@ -151,6 +147,28 @@ class ExportGodot(bpy.types.Operator, ExportHelper):
             )
         )
     )
+    material_mode: EnumProperty(
+        name="Material Mode",
+        description="Configuration of how mesh surface Material being "
+                    "exported.",
+        default="SCRIPT_SHADER",
+        items=(
+            (
+                "NONE", "None",
+                "Do not export any materials"
+            ),
+            (
+                "SPATIAL", "Spatial Material",
+                "Export all eligible materials as Spatial Material"
+            ),
+            (
+                "SCRIPT_SHADER", "Script Shader Material",
+                "Export all eligible materials as Shader Material "
+                "with Script Shader"
+            )
+        )
+
+    )
     material_search_paths: EnumProperty(
         name="Material Search Paths",
         description="Search for existing Godot materials with names that "
@@ -194,7 +212,6 @@ class ExportGodot(bpy.types.Operator, ExportHelper):
                 "xna_validate",
             ))
 
-            from . import export_godot
             return export_godot.save(self, context, **keywords)
         except ValidationError as error:
             self.report({'ERROR'}, str(error))
@@ -252,7 +269,6 @@ def export(filename, overrides=None):
         def __init__(self):
             self.report = print
 
-    from . import export_godot
     export_godot.save(FakeOp(), bpy.context, filename, **default_settings)
 
 
