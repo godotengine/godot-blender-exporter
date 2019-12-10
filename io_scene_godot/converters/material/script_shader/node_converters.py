@@ -882,20 +882,18 @@ class UvmapNodeConverter(NodeConverterBase):
 class GeometryNodeConverter(NodeConverterBase):
     """Converter for ShaderNodeValue"""
 
-    SOCKET_MAP = {
-        'Position': 'VERTEX',
-        'Normal': 'NORMAL',
-        'Tangent': 'TANGENT',
-    }
+    def _convert(self, bl_name, gd_name, is_direction):
+        socket = self.bl_node.outputs[bl_name]
+        socket_id = self.generate_socket_id_str(socket)
+        self.out_sockets_map[socket] = socket_id
+        self.local_code.append("%s = %s" % (socket_id, gd_name))
+        self.view_to_world(socket_id, is_direction=is_direction)
+        self.yup_to_zup(socket_id)
 
     def parse_node_to_fragment(self):
-        for name, val in self.SOCKET_MAP.items():
-            socket = self.bl_node.outputs[name]
-            socket_id = self.generate_socket_id_str(socket)
-            self.out_sockets_map[socket] = socket_id
-            self.local_code.append("%s = %s" % (socket_id, val))
-            self.view_to_world(socket_id, is_direction=False)
-            self.yup_to_zup(socket_id)
+        self._convert('Position', 'VERTEX', False)
+        self._convert('Normal', 'NORMAL', True)
+        self._convert('Tangent', 'TANGENT', True)
 
 
 class GeneralNodeConverter(NodeConverterBase):
