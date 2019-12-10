@@ -468,7 +468,7 @@ void node_math_absolute_no_clamp(float value1, float value2,
         out float result) {
     result = abs(value1);
 }
-"""),
+"""),  # nopep8
 
     ShaderFunction(code="""
 void node_math_minimum_no_clamp(float value1, float value2,
@@ -488,14 +488,14 @@ void node_math_less_than_no_clamp(float value1, float value2,
         out float result) {
     result = float(value1 < value2);
 }
-"""),
+"""),  # nopep8
 
     ShaderFunction(code="""
 void node_math_greater_than_no_clamp(float value1, float value2,
         out float result) {
     result = float(value1 > value2);
 }
-"""),
+"""),  # nopep8
 
     ShaderFunction(code="""
 void node_math_round_no_clamp(float value1, float value2, out float result) {
@@ -562,14 +562,14 @@ void node_math_arccosine_no_clamp(float value1, float value2,
     else
         result = acos(value1);
 }
-"""),
+"""),  # nopep8
 
     ShaderFunction(code="""
 void node_math_arctangent_no_clamp(float value1, float value2,
         out float result) {
     result = atan(value1);
 }
-"""),
+"""),  # nopep8
 
     ShaderFunction(code="""
 void node_math_arctan2_no_clamp(float value1, float value2, out float result) {
@@ -654,7 +654,7 @@ void node_math_greater_than_clamp(float value1, float value2,
         out float result) {
     result = clamp(float(value1 > value2), 0.0, 1.0);
 }
-"""),
+"""),  # nopep8
 
     ShaderFunction(code="""
 void node_math_round_clamp(float value1, float value2, out float result) {
