@@ -836,6 +836,39 @@ void dir_space_convert_world_to_view(inout vec3 dir, in mat4 view_mat) {
 """),
 
     ShaderFunction(code="""
+void location_to_mat4(in vec3 loc, out mat4 loc_mat) {
+    loc_mat = mat4(vec4(1.0, 0.0, 0.0, 0),
+                   vec4(0.0, 1.0, 0.0, 0),
+                   vec4(0.0, 0.0, 1.0, 0),
+                   vec4(loc, 1.0));
+}
+"""),
+
+    ShaderFunction(code="""
+void euler_angle_XYZ_to_mat4(in vec3 rot, out mat4 rot_mat) {
+    mat3 rx = mat3(vec3(1, 0, 0),
+                   vec3(0, cos(rot.x), sin(rot.x)),
+                   vec3(0, -sin(rot.x), cos(rot.x)));
+    mat3 ry = mat3(vec3(cos(rot.y), 0, -sin(rot.y)),
+                   vec3(0, 1, 0),
+                   vec3(sin(rot.y), 0, cos(rot.y)));
+    mat3 rz = mat3(vec3(cos(rot.z), sin(rot.z), 0),
+                   vec3(-sin(rot.z), cos(rot.z), 0),
+                   vec3(0, 0, 1));
+    rot_mat = mat4(rz * ry * rx);
+}
+"""),
+
+    ShaderFunction(code="""
+void scale_to_mat4(in vec3 scale, out mat4 scale_mat) {
+    scale_mat = mat4(vec4(scale.x, 0.0, 0.0, 0.0),
+                     vec4(0.0, scale.y, 0.0, 0.0),
+                     vec4(0.0, 0.0, scale.z, 0.0),
+                     vec4(0.0, 0.0, 0.0, 1.0));
+}
+"""),
+
+    ShaderFunction(code="""
 void point_space_convert_world_to_view(inout vec3 pos, in mat4 view_mat) {
     pos = (view_mat * vec4(dir, 1.0)).xyz;
 }
