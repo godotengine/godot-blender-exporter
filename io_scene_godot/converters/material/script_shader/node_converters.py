@@ -834,7 +834,7 @@ class MappingNodeConverter(NodeConverterBase):
         # However, starting from Blender2.81, all these inputs are sockets
         # (which means they can be variables), so the computation has to be
         # done at shader runtime.
-        if bpy.app.version <= (2, 80, 0):
+        if bpy.app.version < (2, 81, 0):
             loc_mat = mathutils.Matrix.Translation(self.bl_node.translation)
             rot_mat = self.bl_node.rotation.to_matrix().to_4x4()
             sca_mat = mathutils.Matrix((
@@ -851,9 +851,10 @@ class MappingNodeConverter(NodeConverterBase):
                 transform_mat = loc_mat @ rot_mat @ sca_mat
             elif self.bl_node.vector_type == "NORMAL":
                 # inverse transpose
-                transform_mat = (rot_mat @ sca_mat).inverted_safe().T
+                transform_mat = (
+                    rot_mat @ sca_mat).inverted_safe().transposed()
             else:  # "VECTOR"
-                # no translatio
+                # no translation
                 transform_mat = rot_mat @ sca_mat
             transform_mat = blender_value_to_string(transform_mat)
 
