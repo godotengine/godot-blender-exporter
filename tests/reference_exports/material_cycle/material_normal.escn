@@ -162,6 +162,28 @@ void dir_space_convert_view_to_model(inout vec3 dir,
 }
 
 
+void euler_angle_XYZ_to_mat4(in vec3 rot, out mat4 rot_mat) {
+    mat3 rx = mat3(vec3(1, 0, 0),
+                   vec3(0, cos(rot.x), sin(rot.x)),
+                   vec3(0, -sin(rot.x), cos(rot.x)));
+    mat3 ry = mat3(vec3(cos(rot.y), 0, -sin(rot.y)),
+                   vec3(0, 1, 0),
+                   vec3(sin(rot.y), 0, cos(rot.y)));
+    mat3 rz = mat3(vec3(cos(rot.z), sin(rot.z), 0),
+                   vec3(-sin(rot.z), cos(rot.z), 0),
+                   vec3(0, 0, 1));
+    rot_mat = mat4(rz * ry * rx);
+}
+
+
+void location_to_mat4(in vec3 loc, out mat4 loc_mat) {
+    loc_mat = mat4(vec4(1.0, 0.0, 0.0, 0),
+                   vec4(0.0, 1.0, 0.0, 0),
+                   vec4(0.0, 0.0, 1.0, 0),
+                   vec4(loc, 1.0));
+}
+
+
 void node_bsdf_diffuse(vec4 color, float roughness, out vec3 albedo,
         out float specular_out, out float oren_nayar_roughness_out) {
     albedo = color.rgb;
@@ -170,15 +192,11 @@ void node_bsdf_diffuse(vec4 color, float roughness, out vec3 albedo,
 }
 
 
-void node_mapping(vec3 vec, mat4 mat, vec3 minvec, vec3 maxvec, float domin,
-        float domax, out vec3 outvec) {
-    outvec = (mat * vec4(vec, 1.0)).xyz;
-    if (domin == 1.0) {
-        outvec = max(outvec, minvec);
-    }
-    if (domax == 1.0) {
-        outvec = min(outvec, maxvec);
-    }
+void scale_to_mat4(in vec3 scale, out mat4 scale_mat) {
+    scale_mat = mat4(vec4(scale.x, 0.0, 0.0, 0.0),
+                     vec4(0.0, scale.y, 0.0, 0.0),
+                     vec4(0.0, 0.0, scale.z, 0.0),
+                     vec4(0.0, 0.0, 0.0, 1.0));
 }
 
 
@@ -208,15 +226,23 @@ void fragment () {
 	// type: 'ShaderNodeMapping'
 	// input sockets handling
 	vec3 node1_in0_vector = node0_out0_normal;
+	vec3 node1_in1_location = vec3(6.999999523162842, 0.0, 0.0);
+	vec3 node1_in2_rotation = vec3(0.13613566756248474, -0.16057027876377106,
+		0.14311698079109192);
+	vec3 node1_in3_scale = vec3(1.0, 4.800000190734863, 7.399999618530273);
 	// output sockets definitions
 	vec3 node1_out0_vector;
 	
-	node_mapping(node1_in0_vector, mat4(vec4(0.9770439267158508,
-		-0.033913709223270416, -0.01857101544737816, -0.0), vec4(0.14079418778419495,
-		0.2036508023738861, -0.021205507218837738, 0.0), vec4(0.15988115966320038,
-		0.027910366654396057, 0.13216260075569153, -0.0), vec4(-6.83930778503418,
-		0.23739595711231232, 0.1299971044063568, 1.0)), vec3(0.0, 0.0, 0.0), vec3(1.0,
-		1.0, 1.0), 0.0, 0.0, node1_out0_vector);
+	// Mapping type: TEXTURE
+	mat4 node1_var0_location;
+	location_to_mat4(node1_in1_location, node1_var0_location);
+	mat4 node1_var1_rotation;
+	euler_angle_XYZ_to_mat4(node1_in2_rotation, node1_var1_rotation);
+	mat4 node1_var2_scale;
+	scale_to_mat4(node1_in3_scale, node1_var2_scale);
+	mat4 node1_var3_xform_mat = inverse(node1_var0_location * node1_var1_rotation *
+		node1_var2_scale);
+	node1_out0_vector = (node1_var3_xform_mat * vec4(node1_in0_vector, 1.0)).xyz;
 	
 	
 	// node: 'Diffuse BSDF'
@@ -281,6 +307,28 @@ void dir_space_convert_view_to_model(inout vec3 dir,
 }
 
 
+void euler_angle_XYZ_to_mat4(in vec3 rot, out mat4 rot_mat) {
+    mat3 rx = mat3(vec3(1, 0, 0),
+                   vec3(0, cos(rot.x), sin(rot.x)),
+                   vec3(0, -sin(rot.x), cos(rot.x)));
+    mat3 ry = mat3(vec3(cos(rot.y), 0, -sin(rot.y)),
+                   vec3(0, 1, 0),
+                   vec3(sin(rot.y), 0, cos(rot.y)));
+    mat3 rz = mat3(vec3(cos(rot.z), sin(rot.z), 0),
+                   vec3(-sin(rot.z), cos(rot.z), 0),
+                   vec3(0, 0, 1));
+    rot_mat = mat4(rz * ry * rx);
+}
+
+
+void location_to_mat4(in vec3 loc, out mat4 loc_mat) {
+    loc_mat = mat4(vec4(1.0, 0.0, 0.0, 0),
+                   vec4(0.0, 1.0, 0.0, 0),
+                   vec4(0.0, 0.0, 1.0, 0),
+                   vec4(loc, 1.0));
+}
+
+
 void node_bsdf_diffuse(vec4 color, float roughness, out vec3 albedo,
         out float specular_out, out float oren_nayar_roughness_out) {
     albedo = color.rgb;
@@ -289,15 +337,11 @@ void node_bsdf_diffuse(vec4 color, float roughness, out vec3 albedo,
 }
 
 
-void node_mapping(vec3 vec, mat4 mat, vec3 minvec, vec3 maxvec, float domin,
-        float domax, out vec3 outvec) {
-    outvec = (mat * vec4(vec, 1.0)).xyz;
-    if (domin == 1.0) {
-        outvec = max(outvec, minvec);
-    }
-    if (domax == 1.0) {
-        outvec = min(outvec, maxvec);
-    }
+void scale_to_mat4(in vec3 scale, out mat4 scale_mat) {
+    scale_mat = mat4(vec4(scale.x, 0.0, 0.0, 0.0),
+                     vec4(0.0, scale.y, 0.0, 0.0),
+                     vec4(0.0, 0.0, scale.z, 0.0),
+                     vec4(0.0, 0.0, 0.0, 1.0));
 }
 
 
@@ -327,14 +371,21 @@ void fragment () {
 	// type: 'ShaderNodeMapping'
 	// input sockets handling
 	vec3 node1_in0_vector = node0_out0_normal;
+	vec3 node1_in1_location = vec3(0.0, -7.399999141693115, 0.0);
+	vec3 node1_in2_rotation = vec3(0.23038344085216522, 0.14311698079109192, 0.0);
+	vec3 node1_in3_scale = vec3(16.599998474121094, 3.999999761581421, 1.0);
 	// output sockets definitions
 	vec3 node1_out0_vector;
 	
-	node_mapping(node1_in0_vector, mat4(vec4(16.43028450012207, 0.0,
-		-2.3676400184631348, 0.0), vec4(0.13027772307395935, 3.894315481185913,
-		0.9040648937225342, 0.0), vec4(0.13886050879955292, -0.22835084795951843,
-		0.9636252522468567, 0.0), vec4(0.0, 0.0, 0.0, 1.0)), vec3(0.0, 0.0, 0.0),
-		vec3(1.0, 1.0, 1.0), 0.0, 0.0, node1_out0_vector);
+	// Mapping type: VECTOR
+	mat4 node1_var0_location;
+	location_to_mat4(node1_in1_location, node1_var0_location);
+	mat4 node1_var1_rotation;
+	euler_angle_XYZ_to_mat4(node1_in2_rotation, node1_var1_rotation);
+	mat4 node1_var2_scale;
+	scale_to_mat4(node1_in3_scale, node1_var2_scale);
+	mat4 node1_var3_xform_mat = node1_var1_rotation * node1_var2_scale;
+	node1_out0_vector = (node1_var3_xform_mat * vec4(node1_in0_vector, 1.0)).xyz;
 	
 	
 	// node: 'Diffuse BSDF'
@@ -379,6 +430,28 @@ void dir_space_convert_view_to_model(inout vec3 dir,
 }
 
 
+void euler_angle_XYZ_to_mat4(in vec3 rot, out mat4 rot_mat) {
+    mat3 rx = mat3(vec3(1, 0, 0),
+                   vec3(0, cos(rot.x), sin(rot.x)),
+                   vec3(0, -sin(rot.x), cos(rot.x)));
+    mat3 ry = mat3(vec3(cos(rot.y), 0, -sin(rot.y)),
+                   vec3(0, 1, 0),
+                   vec3(sin(rot.y), 0, cos(rot.y)));
+    mat3 rz = mat3(vec3(cos(rot.z), sin(rot.z), 0),
+                   vec3(-sin(rot.z), cos(rot.z), 0),
+                   vec3(0, 0, 1));
+    rot_mat = mat4(rz * ry * rx);
+}
+
+
+void location_to_mat4(in vec3 loc, out mat4 loc_mat) {
+    loc_mat = mat4(vec4(1.0, 0.0, 0.0, 0),
+                   vec4(0.0, 1.0, 0.0, 0),
+                   vec4(0.0, 0.0, 1.0, 0),
+                   vec4(loc, 1.0));
+}
+
+
 void node_bsdf_diffuse(vec4 color, float roughness, out vec3 albedo,
         out float specular_out, out float oren_nayar_roughness_out) {
     albedo = color.rgb;
@@ -387,15 +460,11 @@ void node_bsdf_diffuse(vec4 color, float roughness, out vec3 albedo,
 }
 
 
-void node_mapping(vec3 vec, mat4 mat, vec3 minvec, vec3 maxvec, float domin,
-        float domax, out vec3 outvec) {
-    outvec = (mat * vec4(vec, 1.0)).xyz;
-    if (domin == 1.0) {
-        outvec = max(outvec, minvec);
-    }
-    if (domax == 1.0) {
-        outvec = min(outvec, maxvec);
-    }
+void scale_to_mat4(in vec3 scale, out mat4 scale_mat) {
+    scale_mat = mat4(vec4(scale.x, 0.0, 0.0, 0.0),
+                     vec4(0.0, scale.y, 0.0, 0.0),
+                     vec4(0.0, 0.0, scale.z, 0.0),
+                     vec4(0.0, 0.0, 0.0, 1.0));
 }
 
 
@@ -425,13 +494,23 @@ void fragment () {
 	// type: 'ShaderNodeMapping'
 	// input sockets handling
 	vec3 node1_in0_vector = node0_out0_normal;
+	vec3 node1_in1_location = vec3(0.0, 0.0, 0.0);
+	vec3 node1_in2_rotation = vec3(1.5707963705062866, 0.0, 0.0);
+	vec3 node1_in3_scale = vec3(1.0, 1.0, 1.0);
 	// output sockets definitions
 	vec3 node1_out0_vector;
 	
-	node_mapping(node1_in0_vector, mat4(vec4(1.0, 0.0, 0.0, 0.0), vec4(0.0,
-		-4.371138828673793e-08, 1.0, 0.0), vec4(0.0, -1.0, -4.371138828673793e-08, 0.0),
-		vec4(0.0, 0.0, 0.0, 1.0)), vec3(0.0, 0.0, 0.0), vec3(1.0, 1.0, 1.0), 0.0, 0.0,
-		node1_out0_vector);
+	// Mapping type: NORMAL
+	mat4 node1_var0_location;
+	location_to_mat4(node1_in1_location, node1_var0_location);
+	mat4 node1_var1_rotation;
+	euler_angle_XYZ_to_mat4(node1_in2_rotation, node1_var1_rotation);
+	mat4 node1_var2_scale;
+	scale_to_mat4(node1_in3_scale, node1_var2_scale);
+	mat4 node1_var3_xform_mat = transpose(inverse(node1_var1_rotation *
+		node1_var2_scale));
+	node1_out0_vector = (node1_var3_xform_mat * vec4(node1_in0_vector, 1.0)).xyz;
+	// Normalization for NORMAL mapping
 	node1_out0_vector = normalize(node1_out0_vector);
 	
 	
@@ -471,6 +550,28 @@ render_mode blend_mix, depth_draw_always, cull_back, diffuse_burley, specular_sc
 
 
 
+void euler_angle_XYZ_to_mat4(in vec3 rot, out mat4 rot_mat) {
+    mat3 rx = mat3(vec3(1, 0, 0),
+                   vec3(0, cos(rot.x), sin(rot.x)),
+                   vec3(0, -sin(rot.x), cos(rot.x)));
+    mat3 ry = mat3(vec3(cos(rot.y), 0, -sin(rot.y)),
+                   vec3(0, 1, 0),
+                   vec3(sin(rot.y), 0, cos(rot.y)));
+    mat3 rz = mat3(vec3(cos(rot.z), sin(rot.z), 0),
+                   vec3(-sin(rot.z), cos(rot.z), 0),
+                   vec3(0, 0, 1));
+    rot_mat = mat4(rz * ry * rx);
+}
+
+
+void location_to_mat4(in vec3 loc, out mat4 loc_mat) {
+    loc_mat = mat4(vec4(1.0, 0.0, 0.0, 0),
+                   vec4(0.0, 1.0, 0.0, 0),
+                   vec4(0.0, 0.0, 1.0, 0),
+                   vec4(loc, 1.0));
+}
+
+
 void node_bsdf_diffuse(vec4 color, float roughness, out vec3 albedo,
         out float specular_out, out float oren_nayar_roughness_out) {
     albedo = color.rgb;
@@ -479,21 +580,17 @@ void node_bsdf_diffuse(vec4 color, float roughness, out vec3 albedo,
 }
 
 
-void node_mapping(vec3 vec, mat4 mat, vec3 minvec, vec3 maxvec, float domin,
-        float domax, out vec3 outvec) {
-    outvec = (mat * vec4(vec, 1.0)).xyz;
-    if (domin == 1.0) {
-        outvec = max(outvec, minvec);
-    }
-    if (domax == 1.0) {
-        outvec = min(outvec, maxvec);
-    }
-}
-
-
 void point_space_convert_view_to_model(inout vec3 pos,
         in mat4 inv_model_mat, in mat4 inv_view_mat) {
     pos = (inv_model_mat * (inv_view_mat * vec4(pos, 1.0))).xyz;
+}
+
+
+void scale_to_mat4(in vec3 scale, out mat4 scale_mat) {
+    scale_mat = mat4(vec4(scale.x, 0.0, 0.0, 0.0),
+                     vec4(0.0, scale.y, 0.0, 0.0),
+                     vec4(0.0, 0.0, scale.z, 0.0),
+                     vec4(0.0, 0.0, 0.0, 1.0));
 }
 
 
@@ -524,13 +621,22 @@ void fragment () {
 	// type: 'ShaderNodeMapping'
 	// input sockets handling
 	vec3 node1_in0_vector = node0_out0_object;
+	vec3 node1_in1_location = vec3(8.80000114440918, -3.999999761581421, 0.0);
+	vec3 node1_in2_rotation = vec3(1.5707963705062866, 0.0, 0.0);
+	vec3 node1_in3_scale = vec3(14.399999618530273, 1.0, 1.0);
 	// output sockets definitions
 	vec3 node1_out0_vector;
 	
-	node_mapping(node1_in0_vector, mat4(vec4(14.399999618530273, 0.0, 0.0, 0.0),
-		vec4(0.0, -4.371138828673793e-08, 1.0, 0.0), vec4(0.0, -1.0,
-		-4.371138828673793e-08, 0.0), vec4(8.80000114440918, -3.999999761581421, 0.0,
-		1.0)), vec3(0.0, 0.0, 0.0), vec3(1.0, 1.0, 1.0), 0.0, 0.0, node1_out0_vector);
+	// Mapping type: POINT
+	mat4 node1_var0_location;
+	location_to_mat4(node1_in1_location, node1_var0_location);
+	mat4 node1_var1_rotation;
+	euler_angle_XYZ_to_mat4(node1_in2_rotation, node1_var1_rotation);
+	mat4 node1_var2_scale;
+	scale_to_mat4(node1_in3_scale, node1_var2_scale);
+	mat4 node1_var3_xform_mat = node1_var0_location * node1_var1_rotation *
+		node1_var2_scale;
+	node1_out0_vector = (node1_var3_xform_mat * vec4(node1_in0_vector, 1.0)).xyz;
 	
 	
 	// node: 'Diffuse BSDF'
@@ -1044,12 +1150,14 @@ void fragment () {
 	float node2_in0_strength = float(1.0);
 	float node2_in1_distance = float(0.10000000149011612);
 	float node2_in2_height = dot(node1_out0_color.rgb, vec3(0.2126, 0.7152, 0.0722));
-	vec3 node2_in3_normal = NORMAL;
+	float node2_in3_height_dx = float(1.0);
+	float node2_in4_height_dy = float(1.0);
+	vec3 node2_in5_normal = NORMAL;
 	// output sockets definitions
 	vec3 node2_out0_normal;
 	
 	node_bump(node2_in0_strength, node2_in1_distance, node2_in2_height,
-		node2_in3_normal, VERTEX, 0.0, node2_out0_normal);
+		node2_in5_normal, VERTEX, 0.0, node2_out0_normal);
 	dir_space_convert_view_to_world(node2_out0_normal, INV_VIEW_MAT);
 	space_convert_yup_to_zup(node2_out0_normal);
 	

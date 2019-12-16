@@ -1,3 +1,4 @@
+# pylint: disable-msg=too-many-lines
 """a set of shader node converters responsible for generate"""
 import logging
 from collections import deque
@@ -18,6 +19,9 @@ def blender_value_to_string(blender_value):
             tmp.append(str(val))
 
         return "vec%d(%s)" % (len(tmp), ", ".join(tmp))
+
+    if isinstance(blender_value, mathutils.Euler):
+        return "vec3(%s)" % ', '.join([str(d) for d in blender_value])
 
     if isinstance(blender_value, mathutils.Matrix):
         # godot mat is column major order
@@ -109,6 +113,7 @@ class ShadingFlags:
 
 class NodeConverterBase:
     # pylint: disable-msg=too-many-instance-attributes
+    # pylint: disable-msg=too-many-public-methods
     """helper class which wraps a blender shader node and
     able to generate fragment/vertex script from the node"""
 
@@ -322,6 +327,30 @@ class NodeConverterBase:
             function = find_function_by_name(
                 "point_space_convert_world_to_view")
         self.add_function_call(function, [var, 'INV_CAMERA_MATRIX'], [])
+
+    def location_to_mat(self, loc_vec):
+        """Convert a vec3 location to homogeneous space mat4 representation"""
+        loc_mat = self.generate_variable_id_str("location")
+        self.local_code.append("mat4 %s" % loc_mat)
+        function = find_function_by_name("location_to_mat4")
+        self.add_function_call(function, [loc_vec], [loc_mat])
+        return loc_mat
+
+    def rotation_to_mat(self, rot_vec):
+        """Convert a euler angle XYZ rotation to mat4 representation"""
+        rot_mat = self.generate_variable_id_str("rotation")
+        self.local_code.append("mat4 %s" % rot_mat)
+        function = find_function_by_name("euler_angle_XYZ_to_mat4")
+        self.add_function_call(function, [rot_vec], [rot_mat])
+        return rot_mat
+
+    def scale_to_mat(self, scale_vec):
+        """Convert a vec3 scale to mat4"""
+        sca_mat = self.generate_variable_id_str("scale")
+        self.local_code.append("mat4 %s" % sca_mat)
+        function = find_function_by_name("scale_to_mat4")
+        self.add_function_call(function, [scale_vec], [sca_mat])
+        return sca_mat
 
     def _initialize_value_in_socket(self, socket, blnode_to_converter_map):
         type_str = socket_to_type_string(socket)
@@ -571,6 +600,8 @@ class BumpNodeConverter(NodeConverterBase):
         in_arguments = list()
         for socket in self.bl_node.inputs:
             socket_var = self.in_sockets_map[socket]
+            if socket.name in ('Height_dx', 'Height_dy'):
+                continue
             if socket.name == 'Normal' and socket.is_linked:
                 self.zup_to_yup(socket_var)
                 self.world_to_view(socket_var)
@@ -788,50 +819,95 @@ class ImageTextureNodeConverter(NodeConverterBase):
 class MappingNodeConverter(NodeConverterBase):
     """Converter for ShaderNodeMapping"""
 
+    # pylint: disable-msg=too-many-statements
     def parse_node_to_fragment(self):
-        function = find_node_function(self.bl_node)
-
-        rot_mat = self.bl_node.rotation.to_matrix().to_4x4()
-        loc_mat = mathutils.Matrix.Translation(self.bl_node.translation)
-        sca_mat = mathutils.Matrix((
-            (self.bl_node.scale[0], 0, 0),
-            (0, self.bl_node.scale[1], 0),
-            (0, 0, self.bl_node.scale[2]),
-        )).to_4x4()
-
         in_vec = self.in_sockets_map[self.bl_node.inputs[0]]
-
-        if self.bl_node.vector_type == "TEXTURE":
-            # Texture: Transform a texture by inverse
-            # mapping the texture coordinate
-            transform_mat = (loc_mat @ rot_mat @ sca_mat).inverted_safe()
-        elif self.bl_node.vector_type == "POINT":
-            transform_mat = loc_mat @ rot_mat @ sca_mat
-        else:  # node.vector_type in ("VECTOR", "NORMAL")
-            # no translation for vectors
-            transform_mat = rot_mat @ sca_mat
-
-        mat = blender_value_to_string(transform_mat)
-        clamp_min = blender_value_to_string(self.bl_node.min)
-        clamp_max = blender_value_to_string(self.bl_node.max)
-        use_min = 1.0 if self.bl_node.use_min else 0.0
-        use_max = 1.0 if self.bl_node.use_max else 0.0
-
-        in_arguments = list()
-        in_arguments.append(in_vec)
-        in_arguments.append(mat)
-        in_arguments.append(clamp_min)
-        in_arguments.append(clamp_max)
-        in_arguments.append(use_min)
-        in_arguments.append(use_max)
-
         output_socket = self.bl_node.outputs[0]
         out_vec = self.generate_socket_id_str(output_socket)
+
+        self.local_code.append("// Mapping type: %s" %
+                               self.bl_node.vector_type)
+
+        # In Blender2.80 and before, input location, rotation and scale are
+        # constants. Therefore, the final transform matrix can be compute in
+        # parsing step.
+        # However, starting from Blender2.81, all these inputs are sockets
+        # (which means they can be variables), so the computation has to be
+        # done at shader runtime.
+        if bpy.app.version <= (2, 80, 0):
+            loc_mat = mathutils.Matrix.Translation(self.bl_node.translation)
+            rot_mat = self.bl_node.rotation.to_matrix().to_4x4()
+            sca_mat = mathutils.Matrix((
+                (self.bl_node.scale[0], 0, 0),
+                (0, self.bl_node.scale[1], 0),
+                (0, 0, self.bl_node.scale[2]),
+            )).to_4x4()
+
+            function = find_node_function(self.bl_node)
+            if self.bl_node.vector_type == "TEXTURE":
+                # texture inverse mapping
+                transform_mat = (loc_mat @ rot_mat @ sca_mat).inverted_safe()
+            elif self.bl_node.vector_type == "POINT":
+                transform_mat = loc_mat @ rot_mat @ sca_mat
+            elif self.bl_node.vector_type == "NORMAL":
+                # inverse transpose
+                transform_mat = (rot_mat @ sca_mat).inverted_safe().T
+            else:  # "VECTOR"
+                # no translatio
+                transform_mat = rot_mat @ sca_mat
+            transform_mat = blender_value_to_string(transform_mat)
+
+            clamp_min = blender_value_to_string(self.bl_node.min)
+            clamp_max = blender_value_to_string(self.bl_node.max)
+            use_min = 1.0 if self.bl_node.use_min else 0.0
+            use_max = 1.0 if self.bl_node.use_max else 0.0
+
+            in_arguments = list()
+            in_arguments.append(in_vec)
+            in_arguments.append(transform_mat)
+            in_arguments.append(clamp_min)
+            in_arguments.append(clamp_max)
+            in_arguments.append(use_min)
+            in_arguments.append(use_max)
+
+            self.add_function_call(function, in_arguments, [out_vec])
+
+        else:
+            loc_vec = self.in_sockets_map[self.bl_node.inputs[1]]
+            rot_vec = self.in_sockets_map[self.bl_node.inputs[2]]
+            sca_vec = self.in_sockets_map[self.bl_node.inputs[3]]
+
+            # TODO: for constant inputs, better to convert them to matrix
+            # when exporting
+            loc_mat = self.location_to_mat(loc_vec)
+            rot_mat = self.rotation_to_mat(rot_vec)
+            sca_mat = self.scale_to_mat(sca_vec)
+
+            xform_mat = self.generate_variable_id_str("xform_mat")
+            if self.bl_node.vector_type == "TEXTURE":
+                # texture inverse mapping
+                self.local_code.append("mat4 %s = inverse(%s * %s * %s)" %
+                                       (xform_mat, loc_mat, rot_mat, sca_mat))
+            elif self.bl_node.vector_type == "POINT":
+                self.local_code.append("mat4 %s = %s * %s * %s" %
+                                       (xform_mat, loc_mat, rot_mat, sca_mat))
+            elif self.bl_node.vector_type == "NORMAL":
+                # inverse transpose
+                self.local_code.append("mat4 %s = transpose(inverse(%s * %s))"
+                                       % (xform_mat, rot_mat, sca_mat))
+            else:  # "VECTOR"
+                # no translation
+                self.local_code.append("mat4 %s = %s * %s" %
+                                       (xform_mat, rot_mat, sca_mat))
+            self.local_code.append(
+                "%s = (%s * vec4(%s, 1.0)).xyz;" %
+                (out_vec, xform_mat, in_vec))
+
         self.out_sockets_map[output_socket] = out_vec
 
-        self.add_function_call(function, in_arguments, [out_vec])
         if self.bl_node.vector_type == "NORMAL":
             # need additonal normalize
+            self.local_code.append("// Normalization for NORMAL mapping")
             self.local_code.append(
                 '%s = normalize(%s)' % (out_vec, out_vec)
             )
