@@ -10,9 +10,9 @@ cache:
 matrix:
     include:
         - name: Blender 2.80
-          env: BLENDER_VERSION=2.80
+          env: BLENDER_VERSION=2.80 MAKE_OPTION=export-blends
         - name: Blender 2.81
-          env: BLENDER_VERSION=2.81
+          env: BLENDER_VERSION=2.81 MAKE_OPTION=all
 
 before_install:
     - sudo apt-get update
@@ -26,4 +26,4 @@ install:
     - source .envs
 
 script:
-    - make all BLENDER=$BLENDER_BIN PYLINT='python3 -m pylint'
+    - make ${MAKE_OPTION} BLENDER=$BLENDER_BIN PYLINT='python3 -m pylint'
