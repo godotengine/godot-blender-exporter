@@ -429,7 +429,10 @@ def export_texture(escn_file, export_settings, image):
         else:
             src_path = image.filepath_raw
         if os.path.normpath(src_path) != os.path.normpath(dst_path):
-            copyfile(src_path, dst_path)
+            if not os.path.exists(src_path):
+                logging.warning("Texture Image '%s' does not exist!", src_path)
+            else:
+                copyfile(src_path, dst_path)
 
     img_resource = ExternalResource(dst_path, "Texture")
     return escn_file.add_external_resource(img_resource, image)
