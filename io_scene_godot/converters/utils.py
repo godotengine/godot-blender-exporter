@@ -155,7 +155,7 @@ class MeshConverter:
             if triangulate:
                 triangulate_mesh(mesh)
 
-            self.has_tangents = mesh.uv_layers and mesh.polygons
+            self.has_tangents = bool(mesh.uv_layers) and bool(mesh.polygons)
             if calculate_tangents:
                 if self.has_tangents:
                     mesh.calc_tangents()
