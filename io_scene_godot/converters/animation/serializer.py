@@ -4,6 +4,7 @@ import re
 import math
 import bpy
 import mathutils
+import logging
 from ...structures import (NodeTemplate, NodePath, Array, Map,
                            InternalResource)
 
@@ -493,7 +494,11 @@ class AnimationResource(InternalResource):
         super().__init__('Animation', name)
         self['step'] = 0.1
         self['length'] = 0
-        self['loop'] = name.endswith("_loop")
+
+        suffix = (re.search("[-_]loop", name, re.IGNORECASE) or [''])[0]
+        self['loop'] = suffix == "-loop"
+        if suffix and suffix != "-loop":
+            logging.warning("Unknown suffix %s, did you mean '-loop'?", suffix)
 
         # helper attributes, not exported to ESCN
         self.tracks = collections.OrderedDict()
