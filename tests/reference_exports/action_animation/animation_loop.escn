@@ -21,7 +21,7 @@ surfaces/0 = {
 
 [sub_resource id=2 type="Animation"]
 
-resource_name = "spin_loop"
+resource_name = "spin-loop"
 step = 0.1
 length = 3.0
 loop = true
@@ -41,4 +41,4 @@ transform = Transform(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0
 [node name="AnimationPlayer" type="AnimationPlayer" parent="Cube"]
 
 root_node = NodePath("..:")
-anims/spin_loop = SubResource(2)
+anims/spin-loop = SubResource(2)
