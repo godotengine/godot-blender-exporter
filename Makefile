@@ -34,4 +34,4 @@ compare: export-blends
 
 style-test: pep8 pylint
 
-all: compare style-test
+all: style-test compare

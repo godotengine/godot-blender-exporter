@@ -2,9 +2,9 @@
 import collections
 import re
 import math
+import logging
 import bpy
 import mathutils
-import logging
 from ...structures import (NodeTemplate, NodePath, Array, Map,
                            InternalResource)
 
