@@ -9,7 +9,7 @@ import os
 import bpy
 from .script_shader import export_script_shader
 from ...structures import (
-    InternalResource, ExternalResource, gamma_correct, ValidationError)
+    InternalResource, ExternalResource, gamma_correct, ValidationError, RGBA)
 
 
 def export_image(escn_file, export_settings, image):
@@ -78,12 +78,10 @@ def export_as_spatial_material(material_rsc_name, material):
         return surf.inputs[key].default_value
 
     if surf.type == "BSDF_PRINCIPLED":
-        mat["albedo_color"] = gamma_correct([
-            *val("Base Color")[0:3], val("Alpha")
+        mat["albedo_color"] = RGBA([
+            *gamma_correct(val("Base Color"))[:3], val("Alpha")
         ])
-        # TODO: not useful until mathutils.Color supports alpha
-        # see: https://developer.blender.org/T53540
-        # mat["flags_transparent"] = val("Alpha") < 1.0
+        mat["flags_transparent"] = val("Alpha") < 1.0
 
         mat["metallic"] = val("Metallic")
         mat["metallic_specular"] = val("Specular")
