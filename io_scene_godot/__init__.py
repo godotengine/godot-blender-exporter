@@ -169,6 +169,28 @@ class ExportGodot(bpy.types.Operator, ExportHelper):
         )
 
     )
+
+    scene_mode: EnumProperty(
+        name="Scene Mode",
+        description="Configuration of how objects should be placed in scenes",
+        default="ONE",
+        items=(
+            (
+                "ONE", "One",
+                "Export all objects to one scene"
+            ),
+            (
+                "OBJECTS", "By Objects",
+                "Export all root objects with their children in a "
+                "seperate scene"
+            ),
+            (
+                "COLLECTIONS", "By Collections",
+                "Export each collection in a seperate file"
+            )
+        )
+
+    )
     material_search_paths: EnumProperty(
         name="Material Search Paths",
         description="Search for existing Godot materials with names that "
@@ -266,6 +288,7 @@ def export(filename, overrides=None):
 
     class FakeOp:
         """Fake blender operator"""
+
         def __init__(self):
             self.report = print
 

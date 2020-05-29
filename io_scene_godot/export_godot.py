@@ -222,6 +222,58 @@ class GodotExporter:
         if in_edit_mode:
             bpy.ops.object.editmode_toggle()
 
+    def export_collection(self, collection):
+        # pylint: disable-msg=too-many-branches
+        """Decide what objects to export, and export them!"""
+        logging.info("Exporting collection: %s of scene %s",
+                     collection.name, self.scene.name)
+
+        in_edit_mode = False
+        if bpy.context.object and bpy.context.object.mode == "EDIT":
+            in_edit_mode = True
+            bpy.ops.object.editmode_toggle()
+
+        # Decide what objects to export
+        for obj in collection.all_objects:
+            if obj in self.exporting_objects:
+                continue
+            if self.should_export_object(obj):
+                self.exporting_objects.add(obj)
+                # Ensure parents of current valid object is
+                # going to the exporting recursion
+                tmp = obj
+                while tmp is not None:
+                    if tmp not in self.valid_objects:
+                        self.valid_objects.add(tmp)
+                    else:
+                        break
+                    tmp = tmp.parent
+        logging.info("Exporting %d objects", len(self.valid_objects))
+
+        # Scene root
+        root_gd_node = structures.NodeTemplate(
+            collection.name,
+            "Spatial",
+            None
+        )
+        self.escn_file.add_node(root_gd_node)
+        for obj in collection.objects:
+            if obj in self.valid_objects and obj.parent is None:
+                # recursive exporting on root object
+                self.export_object(obj, root_gd_node)
+
+        if "ARMATURE" in self.config['object_types']:
+            for bl_obj in self.bl_object_gd_node_map:
+                for mod in bl_obj.modifiers:
+                    if mod.type == "ARMATURE":
+                        mesh_node = self.bl_object_gd_node_map[bl_obj]
+                        skeleton_node = self.bl_object_gd_node_map[mod.object]
+                        mesh_node['skeleton'] = NodePath(
+                            mesh_node.get_path(), skeleton_node.get_path())
+
+        if in_edit_mode:
+            bpy.ops.object.editmode_toggle()
+
     def load_supported_features(self):
         """According to `project.godot`, determine all new feature supported
         by that godot version"""
@@ -264,12 +316,44 @@ class GodotExporter:
             ))
         ))
 
-        self.export_scene()
-        self.escn_file.fix_paths(self.config)
-        with open(self.path, 'w') as out_file:
-            out_file.write(self.escn_file.to_string())
+        scene_mode = self.config["scene_mode"]
+        if scene_mode == "ONE":
+            self.export_scene()
+            self.escn_file.fix_paths(self.config)
+            with open(self.path, 'w') as out_file:
+                out_file.write(self.escn_file.to_string())
+        else:
+            ending = ""
+            if self.path.endswith(".escn"):
+                ending = ".escn"
+                self.path = self.path[:-5]
+
+            if scene_mode == "COLLECTIONS":
+                for collection in bpy.data.collections:
+                    self.export_collection(collection)
+                    self.escn_file.fix_paths(self.config)
+                    path = self.path + "_" + collection.name + ending
+                    with open(path, 'w') as out_file:
+                        out_file.write(self.escn_file.to_string())
+                    self.reset()
+            else:
+                pass
 
         return True
+
+    def reset(self):
+        """Reset Export Object for Object and Collection Export"""
+        self.valid_objects.clear()
+        self.exporting_objects.clear()
+
+        self.escn_file = structures.ESCNFile(structures.FileEntry(
+            "gd_scene",
+            collections.OrderedDict((
+                ("load_steps", 1),
+                ("format", 2)
+            ))
+        ))
+        self.bl_object_gd_node_map = {}
 
     def __init__(self, path, kwargs, operator):
         self.path = path
