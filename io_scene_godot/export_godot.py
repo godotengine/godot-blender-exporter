@@ -331,10 +331,14 @@ class GodotExporter:
             if scene_mode == "COLLECTIONS":
                 for collection in bpy.data.collections:
                     self.export_collection(collection)
-                    self.escn_file.fix_paths(self.config)
-                    path = self.path + "_" + collection.name + ending
-                    with open(path, 'w') as out_file:
-                        out_file.write(self.escn_file.to_string())
+
+                    if (len(self.escn_file.nodes) > 1 or
+                            self.config["empty_scenes"]):
+                        self.escn_file.fix_paths(self.config)
+                        path = self.path + "_" + collection.name + ending
+                        with open(path, 'w') as out_file:
+                            out_file.write(self.escn_file.to_string())
+
                     self.reset()
             else:
                 pass

@@ -191,6 +191,15 @@ class ExportGodot(bpy.types.Operator, ExportHelper):
         )
 
     )
+
+    empty_scenes: BoolProperty(
+        name="Export empty Collections",
+        description="If turned on, empty Collections will be exported "
+                    "Collections are empty if no Object matches the "
+                    "Filters above",
+        default=False
+    )
+
     material_search_paths: EnumProperty(
         name="Material Search Paths",
         description="Search for existing Godot materials with names that "
