@@ -275,8 +275,7 @@ class GodotExporter:
             bpy.ops.object.editmode_toggle()
 
     def export_object_scene(self, obj):
-        # pylint: disable-msg=too-many-branches
-        """Decide what objects to export, and export them!"""
+        """Decide wether to export object and export it!"""
         logging.info("Exporting object: %s of scene %s",
                      obj.name, self.scene.name)
 
@@ -285,14 +284,24 @@ class GodotExporter:
             in_edit_mode = True
             bpy.ops.object.editmode_toggle()
 
-        # Decide what objects to export
+        # Decide wether to export obj
+        if not self.should_export_object(obj):
+            return
 
-        if self.should_export_object(obj):
-            self.exporting_objects.add(obj)
+        self.exporting_objects.add(obj)
 
-            self.valid_objects.add(obj)
+        self.valid_objects.add(obj)
 
-        logging.info("Exporting %d objects", len(self.valid_objects))
+        # reset transformation
+        if "LOC" in self.config["reset_transform"]:
+            location = obj.location.copy()
+            obj.location = (0, 0, 0)
+        if "ROT" in self.config["reset_transform"]:
+            rotation = obj.rotation_euler.copy()
+            obj.rotation_euler = (0, 0, 0)
+        if "SCA" in self.config["reset_transform"]:
+            scale = obj.scale.copy()
+            obj.scale = (1, 1, 1)
 
         # Scene root
         root_gd_node = structures.NodeTemplate(
@@ -313,6 +322,13 @@ class GodotExporter:
                         mesh_node['skeleton'] = NodePath(
                             mesh_node.get_path(), skeleton_node.get_path())
 
+        if "LOC" in self.config["reset_transform"]:
+            obj.location = location
+        if "ROT" in self.config["reset_transform"]:
+            obj.rotation_euler = rotation
+        if "SCA" in self.config["reset_transform"]:
+            obj.scale = scale
+
         if in_edit_mode:
             bpy.ops.object.editmode_toggle()
 
@@ -328,7 +344,7 @@ class GodotExporter:
                 "Not export to Godot project dir, disable all beta features.")
 
         # minimal supported version
-        conf_versiton = 3
+        conf_version = 3
         if project_dir:
             project_file_path = os.path.join(project_dir, "project.godot")
             with open(project_file_path, "r") as proj_f:
@@ -337,18 +353,20 @@ class GodotExporter:
                         continue
 
                     _, version_str = tuple(line.split("="))
-                    conf_versiton = int(version_str)
+                    conf_version = int(version_str)
                     break
 
-        if conf_versiton < 2:
+        if conf_version < 2:
             logging.error(
                 "Godot version smaller than 3.0, not supported by this addon")
 
-        if conf_versiton >= 4:
+        if conf_version >= 4:
             # godot >=3.1
             self.config["feature_bezier_track"] = True
 
     def export(self):
+        # pylint: disable-msg=too-many-branches
+        # pylint: disable-msg=too-many-statements
         """Begin the export"""
         self.escn_file = structures.ESCNFile(structures.FileEntry(
             "gd_scene",
@@ -364,37 +382,88 @@ class GodotExporter:
             self.escn_file.fix_paths(self.config)
             with open(self.path, 'w') as out_file:
                 out_file.write(self.escn_file.to_string())
+            return True
+
+        # separate path to enable the creation of multiple files/folders
+        self.path, prefix = os.path.split(self.path)
+        self.path += os.path.sep
+
+        # remove file extension
+        if prefix.endswith(".escn"):
+            prefix = prefix[:-5]
+        prefix += "_"
+        file_prefix = ""
+        if (self.config["prefix_in_folders"] and
+                self.config["collection_folders"]):
+            file_prefix = prefix
+        if not self.config["prefix"]:
+            prefix = ""
+
+        if scene_mode == "COLLECTIONS":
+            for collection in bpy.data.collections:
+                self.export_collection_scene(collection)
+
+                # skip empty collections
+                if (len(self.escn_file.nodes) > 1 or
+                        self.config["empty_collections"]):
+                    self.escn_file.fix_paths(self.config)
+                    path = self.path + prefix + collection.name + ".escn"
+                    with open(path, 'w') as out_file:
+                        out_file.write(self.escn_file.to_string())
+
+                self.reset()
         else:
-            ending = ""
-            if self.path.endswith(".escn"):
-                ending = ".escn"
-                self.path = self.path[:-5]
-
-            if scene_mode == "COLLECTIONS":
+            # create folders for empty collections
+            if (self.config["collection_folders"] and
+                    self.config["empty_collections"]):
                 for collection in bpy.data.collections:
-                    self.export_collection_scene(collection)
+                    folder = self.path + prefix + collection.name
+                    try:
+                        os.makedirs(folder, exist_ok=True)
+                    except FileExistsError:
+                        # Can easily happen when exporting
+                        # Collections first by accident
+                        self.operator.report(
+                            {'ERROR'}, "Unable to create Folder, " +
+                            folder +
+                            "there was already a file.")
+                        return False
+            for obj in bpy.data.objects:
+                if obj.parent is None:
+                    self.export_object_scene(obj)
 
-                    if (len(self.escn_file.nodes) > 1 or
-                            self.config["empty_scenes"]):
-                        self.escn_file.fix_paths(self.config)
-                        path = self.path + "_" + collection.name + ending
-                        with open(path, 'w') as out_file:
-                            out_file.write(self.escn_file.to_string())
-
-                    self.reset()
-            else:
-                for obj in bpy.data.objects:
-                    if obj.parent is None:
-                        self.export_object_scene(obj)
-
-                        if (len(self.escn_file.nodes) > 1 or
-                                self.config["empty_scenes"]):
-                            self.escn_file.fix_paths(self.config)
-                            path = self.path + "_" + obj.name + ending
-                            with open(path, 'w') as out_file:
-                                out_file.write(self.escn_file.to_string())
-
+                    # skip empty objects
+                    if len(self.escn_file.nodes) <= 1:
                         self.reset()
+                        continue
+
+                    folder = self.path
+                    # create folder
+                    if self.config["collection_folders"]:
+                        folder += (prefix +
+                                   obj.users_collection[0].name + "/")
+                        try:
+                            os.makedirs(folder,
+                                        exist_ok=True)
+                        except FileExistsError:
+                            self.operator.report(
+                                {'ERROR'},
+                                "Unable to create Folder, " +
+                                folder +
+                                "there was already a file.")
+                            return False
+                    else:
+                        # When exporting without folder
+                        # the file gets the "normal" prefix
+                        file_prefix = prefix
+                    self.escn_file.fix_paths(self.config)
+                    path = (folder + file_prefix
+                            + obj.name + ".escn")
+                    print(path)
+
+                    with open(path, 'w') as out_file:
+                        out_file.write(self.escn_file.to_string())
+                    self.reset()
 
         return True
 
@@ -455,9 +524,11 @@ def save(operator, context, filepath="", **kwargs):
         object_types.remove("GEOMETRY")
         object_types |= {"MESH", "CURVE", "SURFACE", "META", "FONT"}
 
+    successful = False
     with GodotExporter(filepath, kwargs, operator) as exp:
-        exp.export()
+        successful = exp.export()
 
     logging.getLogger().removeHandler(exporter_log_handler)
-
-    return {"FINISHED"}
+    if successful:
+        return {"FINISHED"}
+    return {"CANCELLED"}

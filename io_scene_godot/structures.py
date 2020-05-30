@@ -26,6 +26,7 @@ class ESCNFile:
     Things appended to this file should have the method "to_string()" which is
     used when writing the file
     """
+
     def __init__(self, heading):
         self.heading = heading
         self.nodes = []
@@ -107,6 +108,7 @@ class FileEntry(collections.OrderedDict):
     that looks like [type key=val key=val...] and contents that is newline
     separated key=val pairs. This FileEntry handles the serialization of
     on entity into this form'''
+
     def __init__(self, entry_type, heading_dict=(), values_dict=()):
         self.entry_type = entry_type
         self.heading = collections.OrderedDict(heading_dict)
@@ -155,6 +157,7 @@ class NodeTemplate(FileEntry):
     This is a template node that can be used to contruct nodes of any type.
     It is not intended that other classes in the exporter inherit from this,
     but rather that all the exported nodes use this template directly."""
+
     def __init__(self, name, node_type, parent_node):
         # set child, parent relation
         self.children = []
@@ -216,6 +219,7 @@ class NodeTemplate(FileEntry):
 class ExternalResource(FileEntry):
     """External Resouces are references to external files. In the case of
     an escn export, this is mostly used for images, sounds and so on"""
+
     def __init__(self, path, resource_type):
         super().__init__(
             'ext_resource',
@@ -229,10 +233,18 @@ class ExternalResource(FileEntry):
 
     def fix_path(self, export_settings):
         """Makes the resource path relative to the exported file"""
+
+        # If collection_folders is active, scene files are one
+        # directory deeper and theirfor need one ../ more
+        subf = ""
+        if(export_settings["collection_folders"]
+           and export_settings["scene_mode"] == "OBJECTS"):
+            subf = "../"
+
         # The replace line is because godot always works in linux
         # style slashes, and python doing relpath uses the one
         # from the native OS
-        self.heading['path'] = os.path.relpath(
+        self.heading['path'] = subf + os.path.relpath(
             self.heading['path'],
             os.path.dirname(export_settings["path"]),
         ).replace('\\', '/')
@@ -241,6 +253,7 @@ class ExternalResource(FileEntry):
 class InternalResource(FileEntry):
     """ A resource stored internally to the escn file, such as the
     description of a material """
+
     def __init__(self, resource_type, name):
         super().__init__(
             'sub_resource',
@@ -264,6 +277,7 @@ class Array(list):
     Note that the constructor values parameter flattens the list using the
     add_elements method
     """
+
     def __init__(self, prefix, seperator=', ', suffix=')', values=()):
         self.prefix = prefix
         self.seperator = seperator
@@ -292,6 +306,7 @@ class Map(collections.OrderedDict):
     """An ordered dict, used to serialize to a dict to escn file. Note
     that the key should be string, but for the value will be applied
     with to_string() method"""
+
     def __init__(self):
         super().__init__()
 
@@ -308,6 +323,7 @@ class Map(collections.OrderedDict):
 class NodePath:
     """Node in scene points to other node or node's attribute,
     for example, a MeshInstane points to a Skeleton. """
+
     def __init__(self, from_here, to_there, attribute_pointed=''):
         self.relative_path = os.path.normpath(
             os.path.relpath(to_there, from_here)
