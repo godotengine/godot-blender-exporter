@@ -234,7 +234,8 @@ class GodotExporter:
             bpy.ops.object.editmode_toggle()
 
         # Decide what objects to export
-        for obj in collection.all_objects:
+        # should child collections be exported here as well?
+        for obj in collection.objects:
             if obj in self.exporting_objects:
                 continue
             if self.should_export_object(obj):
@@ -257,8 +258,8 @@ class GodotExporter:
             None
         )
         self.escn_file.add_node(root_gd_node)
-        for obj in collection.objects:
-            if obj in self.valid_objects and obj.parent is None:
+        for obj in self.valid_objects:
+            if obj.parent is None:
                 # recursive exporting on root object
                 self.export_object(obj, root_gd_node)
 
@@ -275,6 +276,7 @@ class GodotExporter:
             bpy.ops.object.editmode_toggle()
 
     def export_object_scene(self, obj):
+        # pylint: disable-msg=too-many-branches
         """Decide wether to export object and export it!"""
         logging.info("Exporting object: %s of scene %s",
                      obj.name, self.scene.name)
@@ -285,12 +287,31 @@ class GodotExporter:
             bpy.ops.object.editmode_toggle()
 
         # Decide wether to export obj
-        if not self.should_export_object(obj):
-            return
+        if self.should_export_object(obj):
+            self.exporting_objects.add(obj)
+            self.valid_objects.add(obj)
 
-        self.exporting_objects.add(obj)
+        for child in self.scene.objects:
+            if child in self.exporting_objects:
+                continue
 
-        self.valid_objects.add(obj)
+            if self.should_export_object(child):
+                parent = child
+
+                # test if child is related to obj
+                while parent.parent is not None:
+                    parent = parent.parent
+                if parent is obj:
+                    self.exporting_objects.add(child)
+                    # Ensure parents of current valid child
+                    # are going to the exporting recursion
+                    tmp = child
+                    while tmp is not None:
+                        if tmp not in self.valid_objects:
+                            self.valid_objects.add(tmp)
+                        else:
+                            break
+                        tmp = tmp.parent
 
         # reset transformation
         if "LOC" in self.config["reset_transform"]:
@@ -459,7 +480,6 @@ class GodotExporter:
                     self.escn_file.fix_paths(self.config)
                     path = (folder + file_prefix
                             + obj.name + ".escn")
-                    print(path)
 
                     with open(path, 'w') as out_file:
                         out_file.write(self.escn_file.to_string())
