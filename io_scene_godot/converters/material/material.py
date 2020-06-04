@@ -57,8 +57,6 @@ def export_material(escn_file, export_settings, bl_object, material):
 
 def export_as_spatial_material(material_rsc_name, material):
     """Export a Blender Material as Godot Spatial Material"""
-    out = material.node_tree.get_output_node("ALL")
-
     mat = InternalResource("SpatialMaterial", material_rsc_name)
 
     # basic properties we can extract from a blender Material
@@ -68,6 +66,10 @@ def export_as_spatial_material(material_rsc_name, material):
     mat['metallic_specular'] = material.specular_intensity
     mat['roughness'] = material.roughness
 
+    if not material.node_tree:
+        return mat
+
+    out = material.node_tree.get_output_node("ALL")
     if not (out and out.inputs["Surface"].links):
         logging.warning("No Surface output for %s", material.name)
         return mat
