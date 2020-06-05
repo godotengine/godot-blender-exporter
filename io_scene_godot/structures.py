@@ -333,6 +333,22 @@ class NodePath:
         )
 
 
+class RGBA:
+    """Color with an Alpha channel.
+
+    Use when you need to export a color with alpha, as mathutils.Color lacks
+    an alpha channel.
+    See https://developer.blender.org/T53540
+    """
+
+    def __init__(self, values):
+        self.values = values
+
+    def to_string(self):
+        """Convert the color to serialized form"""
+        return color_to_string(self.values)
+
+
 def fix_matrix(mtx):
     """ Shuffles a matrix to change from y-up to z-up"""
     # TODO: can this be replaced my a matrix multiplcation?

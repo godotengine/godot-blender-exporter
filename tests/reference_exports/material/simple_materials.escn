@@ -4,11 +4,17 @@
 
 resource_name = ""
 albedo_color = Color(0.138926, 0.903545, 0.0, 1.0)
+metallic = 0.0
+metallic_specular = 0.5
+roughness = 0.5
 
 [sub_resource id=2 type="SpatialMaterial"]
 
 resource_name = ""
 albedo_color = Color(0.903545, 0.903545, 0.903545, 1.0)
+metallic = 0.0
+metallic_specular = 0.5
+roughness = 0.5
 
 [sub_resource id=3 type="ArrayMesh"]
 
