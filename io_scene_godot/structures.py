@@ -86,11 +86,11 @@ class ESCNFile:
         the complexity of the other resource types"""
         self.nodes.append(item)
 
-    def fix_paths(self, export_settings):
+    def fix_paths(self, path):
         """Ensures all external resource paths are relative to the exported
         file"""
         for res in self.external_resources:
-            res.fix_path(export_settings)
+            res.fix_path(path)
 
     def to_string(self):
         """Serializes the file ready to dump out to disk"""
@@ -113,7 +113,7 @@ class FileEntry(collections.OrderedDict):
         self.entry_type = entry_type
         self.heading = collections.OrderedDict(heading_dict)
 
-        # This string is copied verbaitum, so can be used for custom writing
+        # This string is copied verbatim, so can be used for custom writing
         self.contents = ''
 
         super().__init__(values_dict)
@@ -154,7 +154,7 @@ class FileEntry(collections.OrderedDict):
 
 class NodeTemplate(FileEntry):
     """Most things inside the escn file are Nodes that make up the scene tree.
-    This is a template node that can be used to contruct nodes of any type.
+    This is a template node that can be used to construct nodes of any type.
     It is not intended that other classes in the exporter inherit from this,
     but rather that all the exported nodes use this template directly."""
 
@@ -217,7 +217,7 @@ class NodeTemplate(FileEntry):
 
 
 class ExternalResource(FileEntry):
-    """External Resouces are references to external files. In the case of
+    """External Resources are references to external files. In the case of
     an escn export, this is mostly used for images, sounds and so on"""
 
     def __init__(self, path, resource_type):
@@ -231,22 +231,15 @@ class ExternalResource(FileEntry):
             ))
         )
 
-    def fix_path(self, export_settings):
+    def fix_path(self, path):
         """Makes the resource path relative to the exported file"""
-
-        # If collection_folders is active, scene files are one
-        # directory deeper and theirfor need one ../ more
-        subf = ""
-        if(export_settings["collection_folders"]
-           and export_settings["scene_mode"] == "OBJECTS"):
-            subf = "../"
 
         # The replace line is because godot always works in linux
         # style slashes, and python doing relpath uses the one
         # from the native OS
-        self.heading['path'] = subf + os.path.relpath(
+        self.heading['path'] = os.path.relpath(
             self.heading['path'],
-            os.path.dirname(export_settings["path"]),
+            os.path.dirname(path),
         ).replace('\\', '/')
 
 
@@ -351,7 +344,7 @@ class NodePath:
 
 def fix_matrix(mtx):
     """ Shuffles a matrix to change from y-up to z-up"""
-    # TODO: can this be replaced my a matrix multiplcation?
+    # TODO: can this be replaced my a matrix multiplication?
     trans = mathutils.Matrix(mtx)
     up_axis = 2
 
@@ -404,7 +397,7 @@ def fix_bone_attachment_location(attachment_obj, location_vec):
 def gamma_correct(color):
     """Apply sRGB color space gamma correction to the given color"""
     if isinstance(color, float):
-        # seperate color channel
+        # separate color channel
         return color ** (1 / 2.2)
 
     # mathutils.Color does not support alpha yet, so just use RGB
@@ -435,8 +428,9 @@ def mat4_to_string(mtx):
 
 
 def color_to_string(rgba):
-    """Converts an RGB colors in range 0-1 into a fomat Godot can read. Accepts
-    iterables of 3 or 4 in length, but is designed for mathutils.Color"""
+    """Converts an RGB colors in range 0-1 into a format Godot can read.
+    Accepts iterables of 3 or 4 in length, but is designed for
+    mathutils.Color"""
     alpha = 1.0 if len(rgba) < 4 else rgba[3]
     col = list(rgba[0:3]) + [alpha]
     return Array('Color(', values=[col]).to_string()
