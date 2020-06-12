@@ -17,6 +17,11 @@ export process to [Godot Engine](https://godotengine.org) as straightforward as 
 If you find bugs or want to suggest improvements, please open an issue on the
 upstream [GitHub repository](https://github.com/godotengine/blender-exporter).
 
+
+## Usage
+
+See [the documentation](https://docs.godotengine.org/en/stable/getting_started/workflow/assets/escn_exporter/index.html) included in the official Godot docs).
+
 ## Development Notes
 
 This repository includes a Makefile to assist with development. Running
