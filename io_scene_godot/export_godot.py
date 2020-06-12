@@ -194,14 +194,17 @@ class GodotExporter:
 
         logging.info("Exporting %d objects", len(self.valid_objects))
 
-        # Scene root
-        root_gd_node = structures.NodeTemplate(
-            scene_name,
-            "Spatial",
-            None
-        )
+        if obj is None or not self.config["root_objects"]:
+            # Scene root
+            root_gd_node = structures.NodeTemplate(
+                scene_name,
+                "Spatial",
+                None
+            )
+            self.escn_file.add_node(root_gd_node)
+        else:
+            root_gd_node = None
 
-        self.escn_file.add_node(root_gd_node)
         for _obj in self.scene.objects:
             if _obj in self.valid_objects and _obj.parent is None:
                 # recursive exporting on root object
@@ -424,7 +427,8 @@ class GodotExporter:
                     self.export_objects(obj=obj)
 
                     # skip empty objects
-                    if len(self.escn_file.nodes) <= 1:
+                    if (not self.config["root_objects"] and len(self.escn_file.nodes) <= 1
+                            or len(self.escn_file.nodes) == 0):
                         self.reset()
                         continue
 

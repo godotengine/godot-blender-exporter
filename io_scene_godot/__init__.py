@@ -232,6 +232,11 @@ class ExportGodot(bpy.types.Operator, ExportHelper):
             "SCA"
         },
     )
+    root_objects: BoolProperty(
+        name="Object as Root",
+        description="If turned on Objects will be exported as the scene root",
+        default=False
+    )
     collection_folders: BoolProperty(
         name="Group in Folders by Collection",
         description="If turned on, exported Objects "
@@ -306,6 +311,7 @@ class ExportGodot(bpy.types.Operator, ExportHelper):
 
         if self.scene_mode == "OBJECTS":
             layout.prop(self, "reset_transform")
+            layout.prop(self, "root_objects")
             layout.prop(self, "collection_folders")
 
         if (self.scene_mode == "OBJECTS" and self.collection_folders):
