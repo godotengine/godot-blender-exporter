@@ -235,7 +235,7 @@ class ExportGodot(bpy.types.Operator, ExportHelper):
     collection_folders: BoolProperty(
         name="Group in Folders by Collection",
         description="If turned on, exported Objects "
-                    "are distributed to+ Folders named after the Collections",
+                    "are distributed to Folders named after the Collections",
         default=True
     )
     prefix_in_folders: BoolProperty(
