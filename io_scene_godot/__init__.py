@@ -27,8 +27,7 @@ from . import export_godot
 
 bl_info = {  # pylint: disable=invalid-name
     "name": "Godot Engine Exporter",
-    "author": "Lu Jiacheng, Geoffrey Irons, Juan Linietsky,"
-              " Roland Fredenhagen",
+    "author": "Lu Jiacheng, Geoffrey Irons, Juan Linietsky",
     "blender": (2, 80, 0),
     "location": "File > Import-Export",
     "description": ("Export Blender scenes to a format that can be "
@@ -372,7 +371,6 @@ def export(filename, overrides=None):
 
     class FakeOp:
         """Fake blender operator"""
-
         def __init__(self):
             self.report = print
 
