@@ -9,7 +9,7 @@ import os
 import bpy
 from .script_shader import export_script_shader
 from ...structures import (
-    InternalResource, ExternalResource, gamma_correct, ValidationError)
+    InternalResource, ExternalResource, gamma_correct, ValidationError, RGBA)
 
 
 def export_image(escn_file, export_settings, image):
@@ -58,7 +58,58 @@ def export_material(escn_file, export_settings, bl_object, material):
 def export_as_spatial_material(material_rsc_name, material):
     """Export a Blender Material as Godot Spatial Material"""
     mat = InternalResource("SpatialMaterial", material_rsc_name)
+
+    # basic properties we can extract from a blender Material
+    # we'll try to override these with better guesses if we can
     mat['albedo_color'] = gamma_correct(material.diffuse_color)
+    mat['metallic'] = material.metallic
+    mat['metallic_specular'] = material.specular_intensity
+    mat['roughness'] = material.roughness
+
+    if not material.node_tree:
+        return mat
+
+    out = material.node_tree.get_output_node("ALL")
+    if not (out and out.inputs["Surface"].links):
+        logging.warning("No Surface output for %s", material.name)
+        return mat
+
+    surf = out.inputs["Surface"].links[0].from_node
+
+    def val(key):
+        return surf.inputs[key].default_value
+
+    if surf.type == "BSDF_PRINCIPLED":
+        mat["albedo_color"] = RGBA([
+            *gamma_correct(val("Base Color"))[:3], val("Alpha")
+        ])
+        mat["flags_transparent"] = val("Alpha") < 1.0
+
+        mat["metallic"] = val("Metallic")
+        mat["metallic_specular"] = val("Specular")
+        mat["roughness"] = val("Roughness")
+
+        mat["anisotropy_enabled"] = val("Anisotropic") > 0
+        mat["anisotropy"] = val("Anisotropic")
+
+        mat["clearcoat_enabled"] = val("Clearcoat") > 0
+        mat["clearcoat"] = val("Clearcoat")
+        mat["clearcoat_gloss"] = 1.0 - val("Clearcoat Roughness")
+
+        mat["emission_enabled"] = any(val("Emission")[0:3])
+        mat["emission_energy"] = 1.0 * any(val("Emission")[0:3])
+        mat["emission"] = gamma_correct(val("Emission"))
+
+        mat["subsurf_scatter_enabled"] = val("Subsurface") > 0
+        mat["subsurf_scatter_strength"] = val("Subsurface")
+    elif surf.type == "EMISSION":
+        mat["emission_enabled"] = True
+        mat["emission_energy"] = val("Strength") / 100
+        mat["emission"] = gamma_correct(val("Color"))
+    elif surf.type == "BSDF_DIFFUSE":
+        mat["albedo_color"] = gamma_correct(val("Color"))
+        mat["albedo_color"] = gamma_correct(val("Roughness"))
+
     return mat
 
 

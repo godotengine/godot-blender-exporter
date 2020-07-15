@@ -27,14 +27,14 @@ from . import export_godot
 
 bl_info = {  # pylint: disable=invalid-name
     "name": "Godot Engine Exporter",
-    "author": "Juan Linietsky",
+    "author": "Lu Jiacheng, Geoffrey Irons, Juan Linietsky, Roland Fredenhagen",
     "blender": (2, 80, 0),
     "location": "File > Import-Export",
-    "description": ("Export Godot Scenes to a format that can be efficiently "
-                    "imported."),
+    "description": ("Export Blender scenes to a format that can be "
+                    "efficiently imported in Godot Engine."),
     "warning": "",
     "wiki_url": ("https://godotengine.org"),
-    "tracker_url": "https://github.com/godotengine/blender-exporter",
+    "tracker_url": "https://github.com/godotengine/godot-blender-exporter",
     "support": "OFFICIAL",
     "category": "Import-Export"
 }
@@ -167,6 +167,7 @@ class ExportGodot(bpy.types.Operator, ExportHelper):
                 "with Script Shader"
             )
         )
+
     )
     material_search_paths: EnumProperty(
         name="Material Search Paths",
@@ -370,7 +371,6 @@ def export(filename, overrides=None):
 
     class FakeOp:
         """Fake blender operator"""
-
         def __init__(self):
             self.report = print
 

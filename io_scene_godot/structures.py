@@ -26,7 +26,6 @@ class ESCNFile:
     Things appended to this file should have the method "to_string()" which is
     used when writing the file
     """
-
     def __init__(self, heading):
         self.heading = heading
         self.nodes = []
@@ -108,7 +107,6 @@ class FileEntry(collections.OrderedDict):
     that looks like [type key=val key=val...] and contents that is newline
     separated key=val pairs. This FileEntry handles the serialization of
     on entity into this form'''
-
     def __init__(self, entry_type, heading_dict=(), values_dict=()):
         self.entry_type = entry_type
         self.heading = collections.OrderedDict(heading_dict)
@@ -157,7 +155,6 @@ class NodeTemplate(FileEntry):
     This is a template node that can be used to construct nodes of any type.
     It is not intended that other classes in the exporter inherit from this,
     but rather that all the exported nodes use this template directly."""
-
     def __init__(self, name, node_type, parent_node):
         # set child, parent relation
         self.children = []
@@ -219,8 +216,7 @@ class NodeTemplate(FileEntry):
 class ExternalResource(FileEntry):
     """External Resources are references to external files. In the case of
     an escn export, this is mostly used for images, sounds and so on"""
-
-    def __init__(self, path, resource_type):
+    def __init__(self, path, resource_type):https://github.com/godotengine/godot-blender-exporter.git
         super().__init__(
             'ext_resource',
             collections.OrderedDict((
@@ -233,7 +229,6 @@ class ExternalResource(FileEntry):
 
     def fix_path(self, path):
         """Makes the resource path relative to the exported file"""
-
         # The replace line is because godot always works in linux
         # style slashes, and python doing relpath uses the one
         # from the native OS
@@ -246,7 +241,6 @@ class ExternalResource(FileEntry):
 class InternalResource(FileEntry):
     """ A resource stored internally to the escn file, such as the
     description of a material """
-
     def __init__(self, resource_type, name):
         super().__init__(
             'sub_resource',
@@ -270,7 +264,6 @@ class Array(list):
     Note that the constructor values parameter flattens the list using the
     add_elements method
     """
-
     def __init__(self, prefix, seperator=', ', suffix=')', values=()):
         self.prefix = prefix
         self.seperator = seperator
@@ -299,7 +292,6 @@ class Map(collections.OrderedDict):
     """An ordered dict, used to serialize to a dict to escn file. Note
     that the key should be string, but for the value will be applied
     with to_string() method"""
-
     def __init__(self):
         super().__init__()
 
@@ -316,7 +308,6 @@ class Map(collections.OrderedDict):
 class NodePath:
     """Node in scene points to other node or node's attribute,
     for example, a MeshInstane points to a Skeleton. """
-
     def __init__(self, from_here, to_there, attribute_pointed=''):
         self.relative_path = os.path.normpath(
             os.path.relpath(to_there, from_here)
@@ -340,6 +331,22 @@ class NodePath:
             self.relative_path,
             self.attribute_name
         )
+
+
+class RGBA:
+    """Color with an Alpha channel.
+
+    Use when you need to export a color with alpha, as mathutils.Color lacks
+    an alpha channel.
+    See https://developer.blender.org/T53540
+    """
+
+    def __init__(self, values):
+        self.values = values
+
+    def to_string(self):
+        """Convert the color to serialized form"""
+        return color_to_string(self.values)
 
 
 def fix_matrix(mtx):
