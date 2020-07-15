@@ -427,7 +427,8 @@ class GodotExporter:
                     self.export_objects(obj=obj)
 
                     # skip empty objects
-                    if (not self.config["root_objects"] and len(self.escn_file.nodes) <= 1
+                    if (not self.config["root_objects"]
+                            and len(self.escn_file.nodes) <= 1
                             or len(self.escn_file.nodes) == 0):
                         self.reset()
                         continue

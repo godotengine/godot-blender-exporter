@@ -216,7 +216,7 @@ class NodeTemplate(FileEntry):
 class ExternalResource(FileEntry):
     """External Resources are references to external files. In the case of
     an escn export, this is mostly used for images, sounds and so on"""
-    def __init__(self, path, resource_type):https://github.com/godotengine/godot-blender-exporter.git
+    def __init__(self, path, resource_type):
         super().__init__(
             'ext_resource',
             collections.OrderedDict((
