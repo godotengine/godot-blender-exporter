@@ -14,7 +14,10 @@ def export_multimesh_node(escn_file, export_settings,
     ob = context.object.evaluated_get(dg)
 
     ps = ob.particle_systems.active
-    instance_object=ps.settings.instance_collection.all_objects[0]
+    if ps.settings.instance_collection and ps.settings.instance_collection.all_objects[0]:
+        instance_object=ps.settings.instance_collection.all_objects[0]
+    elif ps.settings.instance_object:
+        instance_object=ps.settings.instance_object
 
     multimeshnode = NodeTemplate(re.sub('[^a-zA-Z0-9]','',ps.name) + 'MultiMesh',
                                    'MultiMeshInstance', parent_gd_node)
