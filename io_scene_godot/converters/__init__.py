@@ -20,6 +20,7 @@ from .mesh import export_mesh_node
 from .physics import export_physics_properties
 from .armature import export_armature_node, export_bone_attachment
 from .animation import export_animation_data
+from .multimesh import export_multimesh_node, has_particle
 
 # TODO: What about Empties which refer to group instances? (in 2.8 Collection
 # Instances)
@@ -38,3 +39,5 @@ BLENDER_TYPE_TO_EXPORTER = {
 BONE_ATTACHMENT_EXPORTER = export_bone_attachment
 
 ANIMATION_DATA_EXPORTER = export_animation_data
+
+MULTIMESH_EXPORTER = export_multimesh_node

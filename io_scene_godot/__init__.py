@@ -59,7 +59,8 @@ class ExportGodot(bpy.types.Operator, ExportHelper):
             ("CAMERA", "Camera", ""),
             ("LIGHT", "Light", ""),
             ("ARMATURE", "Armature", ""),
-            ("GEOMETRY", "Geometry", "")
+            ("GEOMETRY", "Geometry", ""),
+            ("PARTICLE", "Particle", "")
         ),
         default={
             "EMPTY",
