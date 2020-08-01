@@ -147,47 +147,19 @@ class MultiMeshConverter:
             rot=quat_a
             loc = p.location- mathutils.Vector((0,0,1))
             scl = p.size
-            print('loc',loc,'rot',rot,'size',scl)
+            
+            mat_sca_x = mathutils.Matrix.Scale(scl, 4, (1.0, 0.0, 0.0))
+            mat_sca_y = mathutils.Matrix.Scale(scl, 4, (0.0, 1.0, 0.0))
+            mat_sca_z = mathutils.Matrix.Scale(scl, 4, (0.0, 0.0, 1.0))
             
             mat_rot = rot.to_matrix()
             mat_trans = mathutils.Matrix.Translation(loc)
 
-            mat = mat_trans @ (mat_rot.to_4x4()*scl)
+            mat = mat_trans @ mat_rot.to_4x4() @ mat_sca_x @ mat_sca_y @ mat_sca_z
 
             mat4 = mat.to_4x4()
-            print(mat4)
-            
-
-            # float32array+=str(round(mat4[0][0],3))+','
-            # float32array+=str(round(mat4[2][0],3))+','
-            # float32array+=str(round(mat4[1][0],3))+','
-            # float32array+=str(round(mat4[0][3],3))+','
-            
-            # float32array+=str(round(mat4[0][2],3))+','
-            # float32array+=str(round(mat4[2][2],3))+','
-            # float32array+=str(round(mat4[1][2],3))+','
-            # float32array+=str(round(mat4[2][3],3))+','
-            
-            # float32array+=str(round(mat4[0][1],3))+','
-            # float32array+=str(round(mat4[2][1],3))+','
-            # float32array+=str(round(mat4[1][1],3))+','
-            # float32array+=str(round(-mat4[1][3],3))+','
 
             transform_array.append(mat4_to_string(mat4))
-
-            # float32array+=str(round(mat4[0][0],3))+','
-            # float32array+=str(round(mat4[0][0],3))+','
-            # float32array+=str(round(mat4[0][0],3))+','
-            # float32array+=str(round(mat4[0][0],3))+','
-            # float32array+=str(round(mat4[0][0],3))+','
-            # float32array+=str(round(mat4[0][0],3))+','
-            # float32array+=str(round(mat4[0][0],3))+','
-            # float32array+=str(round(mat4[0][0],3))+','
-            # float32array+=str(round(mat4[0][0],3))+','
-            # float32array+=str(round(mat4[0][0],3))+','
-            # float32array+=str(round(mat4[0][0],3))+','
-                    
-        # float32array=float32array[:-1]
         return ','.join(transform_array)
 
 def mat4_to_string(mtx):
