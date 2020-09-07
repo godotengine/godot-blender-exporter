@@ -143,7 +143,7 @@ def export_light_node(escn_file, export_settings, node, parent_gd_node):
     else:
         light_node = None
         logging.warning(
-            "Unknown light type. Use Point, Spot or Sun: %s", node.name
+            "%s light is not supported. Use Point, Spot or Sun", node.name
         )
 
     if light_node is not None:
