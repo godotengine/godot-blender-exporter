@@ -219,9 +219,9 @@ def export_physics_controller(escn_file, export_settings, node,
 
     phys_obj = NodeTemplate(phys_name, phys_controller, parent_gd_node)
 
-    #  OPTIONS FOR ALL PHYSICS TYPES
-    phys_obj['friction'] = rbd.friction
-    phys_obj['bounce'] = rbd.restitution
+    if phys_controller != 'KinematicBody':
+        phys_obj['friction'] = rbd.friction
+        phys_obj['bounce'] = rbd.restitution
 
     col_groups = 0
     for offset, flag in enumerate(rbd.collision_collections):
