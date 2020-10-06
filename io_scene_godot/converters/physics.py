@@ -220,8 +220,13 @@ def export_physics_controller(escn_file, export_settings, node,
     phys_obj = NodeTemplate(phys_name, phys_controller, parent_gd_node)
 
     if phys_controller != 'KinematicBody':
-        phys_obj['friction'] = rbd.friction
-        phys_obj['bounce'] = rbd.restitution
+        physics_mat = InternalResource(
+            "PhysicsMaterial", node.name + "PhysicsMaterial"
+        )
+        physics_mat['friction'] = rbd.friction
+        physics_mat['bounce'] = rbd.restitution
+        rid = escn_file.force_add_internal_resource(physics_mat)
+        phys_obj['physics_material_override'] = "SubResource({})".format(rid)
 
     col_groups = 0
     for offset, flag in enumerate(rbd.collision_collections):

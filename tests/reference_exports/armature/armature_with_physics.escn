@@ -1,11 +1,17 @@
 [gd_scene load_steps=1 format=2]
 
-[sub_resource id=1 type="ConvexPolygonShape"]
+[sub_resource id=1 type="PhysicsMaterial"]
+
+resource_name = "PhysicsPhysicsMaterial"
+friction = 0.5
+bounce = 0.0
+
+[sub_resource id=2 type="ConvexPolygonShape"]
 
 resource_name = "Cube002"
 points = PoolVector3Array(-0.8, -0.8, -1.2, -0.8, -0.8, 1.2, -0.8, 0.8, -1.2, -0.8, 0.8, 1.2, 0.8, -0.8, -1.2, 0.8, -0.8, 1.2, 0.8, 0.8, -1.2, 0.8, 0.8, 1.2)
 
-[sub_resource id=2 type="ArrayMesh"]
+[sub_resource id=3 type="ArrayMesh"]
 
 resource_name = "Cube001"
 surfaces/0 = {
@@ -28,8 +34,7 @@ surfaces/0 = {
 
 [node name="PhysicsPhysics" type="RigidBody" parent="."]
 
-friction = 0.5
-bounce = 0.0
+physics_material_override = SubResource(1)
 transform = Transform(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 1.2, 0.0)
 collision_layer = 1
 collision_mask = 1
@@ -41,7 +46,7 @@ sleeping = false
 [node name="PhysicsCollision" type="CollisionShape" parent="PhysicsPhysics"]
 
 transform = Transform(1.0, 0.0, 0.0, 0.0, -4.37114e-08, 1.0, 0.0, -1.0, -4.37114e-08, 0.0, 0.0, 0.0)
-shape = SubResource(1)
+shape = SubResource(2)
 
 [node name="Rig" type="Skeleton" parent="PhysicsPhysics/PhysicsCollision"]
 
@@ -86,7 +91,7 @@ bones/5/bound_children = []
 
 [node name="Mesh" type="MeshInstance" parent="PhysicsPhysics/PhysicsCollision/Rig"]
 
-mesh = SubResource(2)
+mesh = SubResource(3)
 visible = true
 transform = Transform(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0)
 skeleton = NodePath("..:")

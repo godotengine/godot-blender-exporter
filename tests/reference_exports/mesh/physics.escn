@@ -1,11 +1,17 @@
 [gd_scene load_steps=1 format=2]
 
-[sub_resource id=1 type="ConvexPolygonShape"]
+[sub_resource id=1 type="PhysicsMaterial"]
+
+resource_name = "ConvexPhysicsMaterial"
+friction = 0.5
+bounce = 0.0
+
+[sub_resource id=2 type="ConvexPolygonShape"]
 
 resource_name = "Cube002"
 points = PoolVector3Array(-4.0, -4.0, -0.3, -4.0, -4.0, 0.3, -4.0, 4.0, -0.3, -4.0, 4.0, 0.3, 4.0, -4.0, -0.3, 4.0, -4.0, 0.3, 4.0, 4.0, -0.3, 4.0, 4.0, 0.3, -4.0, 1.33333, -0.3, -4.0, -1.33333, -0.3, -4.0, -1.33333, 0.3, -4.0, 1.33333, 0.3, 1.33333, 4.0, -0.3, -1.33333, 4.0, -0.3, -1.33333, 4.0, 0.3, 1.33333, 4.0, 0.3, 4.0, -1.33333, -0.3, 4.0, 1.33333, -0.3, 4.0, 1.33333, 0.3, 4.0, -1.33333, 0.3, -1.33333, -4.0, -0.3, 1.33333, -4.0, -0.3, 1.33333, -4.0, 0.3, -1.33333, -4.0, 0.3, 1.33333, 1.33333, 0.3, 1.33333, -1.33333, 0.3, -1.33333, 1.33333, 0.3, -1.33333, -1.33333, 0.3, -1.33333, 1.33333, -0.3, -1.33333, -1.33333, -0.3, 1.33333, 1.33333, -0.3, 1.33333, -1.33333, -0.3)
 
-[sub_resource id=2 type="ArrayMesh"]
+[sub_resource id=3 type="ArrayMesh"]
 
 resource_name = "Cube002"
 surfaces/0 = {
@@ -24,18 +30,30 @@ surfaces/0 = {
 	"morph_arrays":[]
 }
 
-[sub_resource id=3 type="ConcavePolygonShape"]
+[sub_resource id=4 type="PhysicsMaterial"]
+
+resource_name = "ConcavePhysicsMaterial"
+friction = 0.5
+bounce = 0.0
+
+[sub_resource id=5 type="ConcavePolygonShape"]
 
 resource_name = "Cube001"
 data = PoolVector3Array(-4.0, 1.33333, -0.3, -4.0, 4.0, -0.3, -4.0, 1.33333, 0.3, 1.33333, 4.0, -0.3, 4.0, 4.0, -0.3, 1.33333, 4.0, 0.3, 4.0, -1.33333, -0.3, 4.0, -4.0, -0.3, 4.0, -1.33333, 0.3, -1.33333, -4.0, -0.3, -4.0, -4.0, -0.3, -1.33333, -4.0, 0.3, 1.33333, -1.33333, -0.3, 1.33333, -4.0, -0.3, 4.0, -1.33333, -0.3, -1.33333, -1.33333, 0.3, -1.33333, -4.0, 0.3, -4.0, -1.33333, 0.3, 4.0, -1.33333, 0.3, 4.0, -4.0, 0.3, 1.33333, -1.33333, 0.3, 1.33333, -1.33333, 0.3, 1.33333, -4.0, 0.3, -1.33333, -1.33333, 0.3, 4.0, 4.0, 0.3, 4.0, 1.33333, 0.3, 1.33333, 4.0, 0.3, 4.0, 1.33333, 0.3, 4.0, -1.33333, 0.3, 1.33333, 1.33333, 0.3, 1.33333, 4.0, 0.3, 1.33333, 1.33333, 0.3, -1.33333, 4.0, 0.3, -1.33333, -1.33333, 0.3, -1.33333, 1.33333, 0.3, -1.33333, -1.33333, -0.3, -1.33333, 4.0, 0.3, -1.33333, 1.33333, 0.3, -4.0, 4.0, 0.3, -1.33333, 1.33333, 0.3, -1.33333, -1.33333, 0.3, -4.0, 1.33333, 0.3, -4.0, -1.33333, -0.3, -4.0, -4.0, -0.3, -1.33333, -1.33333, -0.3, -1.33333, -1.33333, -0.3, -1.33333, -4.0, -0.3, 1.33333, -1.33333, -0.3, -4.0, 4.0, -0.3, -4.0, 1.33333, -0.3, -1.33333, 4.0, -0.3, -4.0, 1.33333, -0.3, -4.0, -1.33333, -0.3, -1.33333, 1.33333, -0.3, -1.33333, 4.0, -0.3, -1.33333, 1.33333, -0.3, 1.33333, 4.0, -0.3, 1.33333, -1.33333, 0.3, -1.33333, -1.33333, 0.3, 1.33333, -1.33333, -0.3, 1.33333, 4.0, -0.3, 1.33333, 1.33333, -0.3, 4.0, 4.0, -0.3, 1.33333, 1.33333, -0.3, 1.33333, -1.33333, -0.3, 4.0, 1.33333, -0.3, 4.0, -4.0, -0.3, 1.33333, -4.0, -0.3, 4.0, -4.0, 0.3, 1.33333, -4.0, -0.3, -1.33333, -4.0, -0.3, 1.33333, -4.0, 0.3, 4.0, 4.0, -0.3, 4.0, 1.33333, -0.3, 4.0, 4.0, 0.3, 4.0, 1.33333, -0.3, 4.0, -1.33333, -0.3, 4.0, 1.33333, 0.3, -4.0, 4.0, -0.3, -1.33333, 4.0, -0.3, -4.0, 4.0, 0.3, -1.33333, 4.0, -0.3, 1.33333, 4.0, -0.3, -1.33333, 4.0, 0.3, -4.0, -4.0, -0.3, -4.0, -1.33333, -0.3, -4.0, -4.0, 0.3, -4.0, -1.33333, -0.3, -4.0, 1.33333, -0.3, -4.0, -1.33333, 0.3, -1.33333, 1.33333, 0.3, 1.33333, 1.33333, 0.3, -1.33333, 1.33333, -0.3, 1.33333, 1.33333, 0.3, 1.33333, -1.33333, 0.3, 1.33333, 1.33333, -0.3, -4.0, 4.0, -0.3, -4.0, 4.0, 0.3, -4.0, 1.33333, 0.3, 4.0, 4.0, -0.3, 4.0, 4.0, 0.3, 1.33333, 4.0, 0.3, 4.0, -4.0, -0.3, 4.0, -4.0, 0.3, 4.0, -1.33333, 0.3, -4.0, -4.0, -0.3, -4.0, -4.0, 0.3, -1.33333, -4.0, 0.3, 1.33333, -4.0, -0.3, 4.0, -4.0, -0.3, 4.0, -1.33333, -0.3, -1.33333, -4.0, 0.3, -4.0, -4.0, 0.3, -4.0, -1.33333, 0.3, 4.0, -4.0, 0.3, 1.33333, -4.0, 0.3, 1.33333, -1.33333, 0.3, 1.33333, -4.0, 0.3, -1.33333, -4.0, 0.3, -1.33333, -1.33333, 0.3, 4.0, 1.33333, 0.3, 1.33333, 1.33333, 0.3, 1.33333, 4.0, 0.3, 4.0, -1.33333, 0.3, 1.33333, -1.33333, 0.3, 1.33333, 1.33333, 0.3, 1.33333, 1.33333, 0.3, -1.33333, 1.33333, 0.3, -1.33333, 4.0, 0.3, -1.33333, 1.33333, 0.3, -1.33333, 1.33333, -0.3, -1.33333, -1.33333, -0.3, -1.33333, 1.33333, 0.3, -4.0, 1.33333, 0.3, -4.0, 4.0, 0.3, -1.33333, -1.33333, 0.3, -4.0, -1.33333, 0.3, -4.0, 1.33333, 0.3, -4.0, -4.0, -0.3, -1.33333, -4.0, -0.3, -1.33333, -1.33333, -0.3, -1.33333, -4.0, -0.3, 1.33333, -4.0, -0.3, 1.33333, -1.33333, -0.3, -4.0, 1.33333, -0.3, -1.33333, 1.33333, -0.3, -1.33333, 4.0, -0.3, -4.0, -1.33333, -0.3, -1.33333, -1.33333, -0.3, -1.33333, 1.33333, -0.3, -1.33333, 1.33333, -0.3, 1.33333, 1.33333, -0.3, 1.33333, 4.0, -0.3, -1.33333, -1.33333, 0.3, -1.33333, -1.33333, -0.3, 1.33333, -1.33333, -0.3, 1.33333, 1.33333, -0.3, 4.0, 1.33333, -0.3, 4.0, 4.0, -0.3, 1.33333, -1.33333, -0.3, 4.0, -1.33333, -0.3, 4.0, 1.33333, -0.3, 1.33333, -4.0, -0.3, 1.33333, -4.0, 0.3, 4.0, -4.0, 0.3, -1.33333, -4.0, -0.3, -1.33333, -4.0, 0.3, 1.33333, -4.0, 0.3, 4.0, 1.33333, -0.3, 4.0, 1.33333, 0.3, 4.0, 4.0, 0.3, 4.0, -1.33333, -0.3, 4.0, -1.33333, 0.3, 4.0, 1.33333, 0.3, -1.33333, 4.0, -0.3, -1.33333, 4.0, 0.3, -4.0, 4.0, 0.3, 1.33333, 4.0, -0.3, 1.33333, 4.0, 0.3, -1.33333, 4.0, 0.3, -4.0, -1.33333, -0.3, -4.0, -1.33333, 0.3, -4.0, -4.0, 0.3, -4.0, 1.33333, -0.3, -4.0, 1.33333, 0.3, -4.0, -1.33333, 0.3, 1.33333, 1.33333, 0.3, 1.33333, 1.33333, -0.3, -1.33333, 1.33333, -0.3, 1.33333, -1.33333, 0.3, 1.33333, -1.33333, -0.3, 1.33333, 1.33333, -0.3)
 
-[sub_resource id=4 type="CapsuleShape"]
+[sub_resource id=6 type="PhysicsMaterial"]
+
+resource_name = "CapsulePhysicsMaterial"
+friction = 0.5
+bounce = 0.0
+
+[sub_resource id=7 type="CapsuleShape"]
 
 resource_name = "CapsuleCollision"
 radius = 0.980785
 height = 8.43843
 
-[sub_resource id=5 type="ArrayMesh"]
+[sub_resource id=8 type="ArrayMesh"]
 
 resource_name = "Capsule"
 surfaces/0 = {
@@ -54,12 +72,18 @@ surfaces/0 = {
 	"morph_arrays":[]
 }
 
-[sub_resource id=6 type="BoxShape"]
+[sub_resource id=9 type="PhysicsMaterial"]
+
+resource_name = "PlanePhysicsMaterial"
+friction = 0.5
+bounce = 0.0
+
+[sub_resource id=10 type="BoxShape"]
 
 resource_name = "PlaneCollision"
 extents = Vector3(1.005, 1.0, 0.03)
 
-[sub_resource id=7 type="ArrayMesh"]
+[sub_resource id=11 type="ArrayMesh"]
 
 resource_name = "Plane"
 surfaces/0 = {
@@ -78,12 +102,18 @@ surfaces/0 = {
 	"morph_arrays":[]
 }
 
-[sub_resource id=8 type="BoxShape"]
+[sub_resource id=12 type="PhysicsMaterial"]
+
+resource_name = "BoxPhysicsMaterial"
+friction = 0.5
+bounce = 0.0
+
+[sub_resource id=13 type="BoxShape"]
 
 resource_name = "BoxCollision"
 extents = Vector3(1.0, 1.0, 1.0)
 
-[sub_resource id=9 type="ArrayMesh"]
+[sub_resource id=14 type="ArrayMesh"]
 
 resource_name = "Cube"
 surfaces/0 = {
@@ -102,12 +132,18 @@ surfaces/0 = {
 	"morph_arrays":[]
 }
 
-[sub_resource id=10 type="SphereShape"]
+[sub_resource id=15 type="PhysicsMaterial"]
+
+resource_name = "SpherePhysicsMaterial"
+friction = 0.5
+bounce = 0.0
+
+[sub_resource id=16 type="SphereShape"]
 
 resource_name = "SphereCollision"
 radius = 1.0
 
-[sub_resource id=11 type="ArrayMesh"]
+[sub_resource id=17 type="ArrayMesh"]
 
 resource_name = "Sphere"
 surfaces/0 = {
@@ -126,12 +162,12 @@ surfaces/0 = {
 	"morph_arrays":[]
 }
 
-[sub_resource id=12 type="SphereShape"]
+[sub_resource id=18 type="SphereShape"]
 
 resource_name = "Sphere002Collision"
 radius = 0.5
 
-[sub_resource id=13 type="ArrayMesh"]
+[sub_resource id=19 type="ArrayMesh"]
 
 resource_name = "Sphere002"
 surfaces/0 = {
@@ -150,12 +186,24 @@ surfaces/0 = {
 	"morph_arrays":[]
 }
 
-[sub_resource id=14 type="SphereShape"]
+[sub_resource id=20 type="PhysicsMaterial"]
+
+resource_name = "Sphere003PhysicsMaterial"
+friction = 0.5
+bounce = 0.0
+
+[sub_resource id=21 type="SphereShape"]
 
 resource_name = "Sphere003Collision"
 radius = 0.5
 
-[sub_resource id=15 type="ArrayMesh"]
+[sub_resource id=22 type="PhysicsMaterial"]
+
+resource_name = "Shared ConvexPhysicsMaterial"
+friction = 0.5
+bounce = 0.0
+
+[sub_resource id=23 type="ArrayMesh"]
 
 resource_name = "Plane001"
 surfaces/0 = {
@@ -178,8 +226,7 @@ surfaces/0 = {
 
 [node name="ConvexPhysics" type="StaticBody" parent="."]
 
-friction = 0.5
-bounce = 0.0
+physics_material_override = SubResource(1)
 transform = Transform(0.96374, 0.265655, -0.0251599, -0.261302, 0.920405, -0.29082, -0.0541004, 0.286849, 0.956447, -1.63934, 3.4047, -4.8708)
 collision_layer = 1
 collision_mask = 1
@@ -187,18 +234,17 @@ collision_mask = 1
 [node name="ConvexCollision" type="CollisionShape" parent="ConvexPhysics"]
 
 transform = Transform(1.0, 0.0, 0.0, 0.0, -4.37114e-08, 1.0, 0.0, -1.0, -4.37114e-08, 0.0, 0.0, 0.0)
-shape = SubResource(1)
+shape = SubResource(2)
 
 [node name="Convex" type="MeshInstance" parent="ConvexPhysics/ConvexCollision"]
 
-mesh = SubResource(2)
+mesh = SubResource(3)
 visible = true
 transform = Transform(1.0, 0.0, 0.0, 0.0, -4.37114e-08, -1.0, 0.0, 1.0, -4.37114e-08, 0.0, 0.0, 0.0)
 
 [node name="ConcavePhysics" type="StaticBody" parent="."]
 
-friction = 0.5
-bounce = 0.0
+physics_material_override = SubResource(4)
 transform = Transform(0.96374, 0.265655, -0.0251599, -0.256895, 0.949182, 0.181818, 0.072182, -0.168761, 0.98301, -0.713301, 3.11838, 4.68127)
 collision_layer = 1
 collision_mask = 1
@@ -206,12 +252,11 @@ collision_mask = 1
 [node name="ConcaveCollision" type="CollisionShape" parent="ConcavePhysics"]
 
 transform = Transform(1.0, 0.0, 0.0, 0.0, -4.37114e-08, 1.0, 0.0, -1.0, -4.37114e-08, 0.0, 0.0, 0.0)
-shape = SubResource(3)
+shape = SubResource(5)
 
 [node name="CapsulePhysics" type="RigidBody" parent="."]
 
-friction = 0.5
-bounce = 0.0
+physics_material_override = SubResource(6)
 transform = Transform(0.992644, 0.118059, -0.0268381, -0.0146908, 0.337487, 0.941216, 0.120176, -0.933898, 0.336739, 5.0, 3.32659, 0.0)
 collision_layer = 1
 collision_mask = 1
@@ -223,18 +268,17 @@ sleeping = false
 [node name="CapsuleCollision" type="CollisionShape" parent="CapsulePhysics"]
 
 transform = Transform(1.0, 0.0, 0.0, 0.0, -4.37114e-08, 1.0, 0.0, -1.0, -4.37114e-08, 0.0, 0.0, 0.0)
-shape = SubResource(4)
+shape = SubResource(7)
 
 [node name="Capsule" type="MeshInstance" parent="CapsulePhysics/CapsuleCollision"]
 
-mesh = SubResource(5)
+mesh = SubResource(8)
 visible = true
 transform = Transform(1.0, 0.0, 0.0, 0.0, -4.37114e-08, -1.0, 0.0, 1.0, -4.37114e-08, 0.0, 0.0, 0.0)
 
 [node name="PlanePhysics" type="StaticBody" parent="."]
 
-friction = 0.5
-bounce = 0.0
+physics_material_override = SubResource(9)
 transform = Transform(10.0, 0.0, 0.0, 0.0, 10.0, 0.0, 0.0, 0.0, 10.0, 0.0, 0.0, 0.0)
 collision_layer = 1
 collision_mask = 1
@@ -242,18 +286,17 @@ collision_mask = 1
 [node name="PlaneCollision" type="CollisionShape" parent="PlanePhysics"]
 
 transform = Transform(1.0, 0.0, 0.0, 0.0, -4.37114e-08, 1.0, 0.0, -1.0, -4.37114e-08, 0.0, 0.0, 0.0)
-shape = SubResource(6)
+shape = SubResource(10)
 
 [node name="Plane" type="MeshInstance" parent="PlanePhysics/PlaneCollision"]
 
-mesh = SubResource(7)
+mesh = SubResource(11)
 visible = true
 transform = Transform(1.0, 0.0, 0.0, 0.0, -4.37114e-08, -1.0, 0.0, 1.0, -4.37114e-08, 0.0, 0.0, 0.0)
 
 [node name="BoxPhysics" type="RigidBody" parent="."]
 
-friction = 0.5
-bounce = 0.0
+physics_material_override = SubResource(12)
 transform = Transform(0.913362, -0.245509, 0.3248, 0.361883, 0.85509, -0.371298, -0.186577, 0.456669, 0.869852, -3.53607, 6.785, 1.71601)
 collision_layer = 1
 collision_mask = 1
@@ -265,18 +308,17 @@ sleeping = false
 [node name="BoxCollision" type="CollisionShape" parent="BoxPhysics"]
 
 transform = Transform(1.0, 0.0, 0.0, 0.0, -4.37114e-08, 1.0, 0.0, -1.0, -4.37114e-08, 0.0, 0.0, 0.0)
-shape = SubResource(8)
+shape = SubResource(13)
 
 [node name="Box" type="MeshInstance" parent="BoxPhysics/BoxCollision"]
 
-mesh = SubResource(9)
+mesh = SubResource(14)
 visible = true
 transform = Transform(1.0, 0.0, 0.0, 0.0, -4.37114e-08, -1.0, 0.0, 1.0, -4.37114e-08, 0.0, 0.0, 0.0)
 
 [node name="SpherePhysics" type="RigidBody" parent="."]
 
-friction = 0.5
-bounce = 0.0
+physics_material_override = SubResource(15)
 transform = Transform(0.571517, -0.571372, -0.588984, -0.405765, 0.427091, -0.808052, 0.713249, 0.700804, 0.0122472, -1.85855, 5.54503, 5.84148)
 collision_layer = 1
 collision_mask = 1
@@ -288,29 +330,28 @@ sleeping = false
 [node name="SphereCollision" type="CollisionShape" parent="SpherePhysics"]
 
 transform = Transform(1.0, 0.0, 0.0, 0.0, -4.37114e-08, 1.0, 0.0, -1.0, -4.37114e-08, 0.0, 0.0, 0.0)
-shape = SubResource(10)
+shape = SubResource(16)
 
 [node name="Sphere" type="MeshInstance" parent="SpherePhysics/SphereCollision"]
 
-mesh = SubResource(11)
+mesh = SubResource(17)
 visible = true
 transform = Transform(1.0, 0.0, 0.0, 0.0, -4.37114e-08, -1.0, 0.0, 1.0, -4.37114e-08, 0.0, 0.0, 0.0)
 
 [node name="Sphere002Collision" type="CollisionShape" parent="SpherePhysics"]
 
 transform = Transform(1.0, 1.30385e-08, 2.98023e-08, 1.49012e-08, -2.97416e-08, 1.0, 2.42144e-08, -1.0, -5.1162e-08, 0.565972, 0.864336, 0.166555)
-shape = SubResource(12)
+shape = SubResource(18)
 
 [node name="Sphere002" type="MeshInstance" parent="SpherePhysics/Sphere002Collision"]
 
-mesh = SubResource(13)
+mesh = SubResource(19)
 visible = true
 transform = Transform(1.0, 0.0, 0.0, 0.0, -4.37114e-08, -1.0, 0.0, 1.0, -4.37114e-08, 0.0, 0.0, 0.0)
 
 [node name="Sphere003Physics" type="RigidBody" parent="."]
 
-friction = 0.5
-bounce = 0.0
+physics_material_override = SubResource(20)
 transform = Transform(0.571517, -0.571373, -0.588984, -0.405765, 0.427091, -0.808052, 0.713249, 0.700804, 0.0122472, -3.3364, 6.55302, -6.79014)
 collision_layer = 1
 collision_mask = 1
@@ -322,11 +363,11 @@ sleeping = false
 [node name="Sphere003Collision" type="CollisionShape" parent="Sphere003Physics"]
 
 transform = Transform(1.0, 0.0, 0.0, 0.0, -4.37114e-08, 1.0, 0.0, -1.0, -4.37114e-08, 0.0, 0.0, 0.0)
-shape = SubResource(14)
+shape = SubResource(21)
 
 [node name="Sphere003" type="MeshInstance" parent="Sphere003Physics/Sphere003Collision"]
 
-mesh = SubResource(13)
+mesh = SubResource(19)
 visible = true
 transform = Transform(1.0, 0.0, 0.0, 0.0, -4.37114e-08, -1.0, 0.0, 1.0, -4.37114e-08, 0.0, 0.0, 0.0)
 
@@ -343,8 +384,7 @@ shadow_enabled = true
 
 [node name="Shared ConvexPhysics" type="StaticBody" parent="."]
 
-friction = 0.5
-bounce = 0.0
+physics_material_override = SubResource(22)
 transform = Transform(0.919077, -0.20923, -0.333948, 0.193581, 0.977827, -0.079879, 0.343256, 0.00876901, 0.939201, 12.9707, 11.1244, 0.153062)
 collision_layer = 1
 collision_mask = 1
@@ -352,10 +392,10 @@ collision_mask = 1
 [node name="Shared ConvexCollision" type="CollisionShape" parent="Shared ConvexPhysics"]
 
 transform = Transform(1.0, 0.0, 0.0, 0.0, -4.37114e-08, 1.0, 0.0, -1.0, -4.37114e-08, 0.0, 0.0, 0.0)
-shape = SubResource(1)
+shape = SubResource(2)
 
 [node name="planee" type="MeshInstance" parent="Shared ConvexPhysics/Shared ConvexCollision"]
 
-mesh = SubResource(15)
+mesh = SubResource(23)
 visible = true
 transform = Transform(3.23961, -0.00676554, -0.16824, -0.168289, -0.0256584, -3.23952, 0.00542533, 3.24388, -0.0259749, 0.00177574, 0.221902, 0.196647)

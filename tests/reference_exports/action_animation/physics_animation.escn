@@ -1,11 +1,17 @@
 [gd_scene load_steps=1 format=2]
 
-[sub_resource id=1 type="ConvexPolygonShape"]
+[sub_resource id=1 type="PhysicsMaterial"]
+
+resource_name = "CubePhysicsMaterial"
+friction = 0.5
+bounce = 0.0
+
+[sub_resource id=2 type="ConvexPolygonShape"]
 
 resource_name = "Cube"
 points = PoolVector3Array(1.0, 1.0, -1.0, 1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, 1.0, -1.0, 1.0, 0.999999, 4.09789, 0.999999, -1.0, 4.09789, -1.0, -1.0, 4.09789, -1.0, 1.0, 4.09789)
 
-[sub_resource id=2 type="ArrayMesh"]
+[sub_resource id=3 type="ArrayMesh"]
 
 resource_name = "Cube001"
 surfaces/0 = {
@@ -24,12 +30,12 @@ surfaces/0 = {
 	"morph_arrays":[]
 }
 
-[sub_resource id=3 type="ConvexPolygonShape"]
+[sub_resource id=4 type="ConvexPolygonShape"]
 
 resource_name = "Cube003"
 points = PoolVector3Array(1.0, 1.0, -1.0, 1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, 1.0, -1.0, 1.0, 0.999999, 4.09789, 0.999999, -1.0, 4.09789, -1.0, -1.0, 4.09789, -1.0, 1.0, 4.09789)
 
-[sub_resource id=4 type="Animation"]
+[sub_resource id=5 type="Animation"]
 
 resource_name = "Cube003Action001"
 step = 0.1
@@ -40,7 +46,7 @@ tracks/0/path = NodePath(".:")
 tracks/0/interp = 1
 tracks/0/keys = [0.0, 1.0, 0.0, 4.6375, 0.0, -0.707104, 0.00195601, -0.00195601, 0.707104, 0.605, 0.605, 0.605, 0.0416667, 1.0, 0.0, 4.6375, 0.0, -0.707063, 0.00786405, -0.00786405, 0.707063, 0.605, 0.605, 0.605, 0.0833333, 1.0, 0.0, 4.6375, 0.0, -0.706884, 0.0177539, -0.0177539, 0.706884, 0.605, 0.605, 0.605, 0.125, 1.0, 0.0, 4.6375, 0.0, -0.7064, 0.031604, -0.031604, 0.7064, 0.605, 0.605, 0.605, 0.166667, 1.0, 0.0, 4.6375, 0.0, -0.705384, 0.0493253, -0.0493253, 0.705384, 0.605, 0.605, 0.605, 0.208333, 1.0, 0.0, 4.6375, 0.0, -0.703559, 0.0707441, -0.0707441, 0.703559, 0.605, 0.605, 0.605, 0.25, 1.0, 0.0, 4.6375, 0.0, -0.700616, 0.0955859, -0.0955859, 0.700616, 0.605, 0.605, 0.605, 0.291667, 1.0, 0.0, 4.6375, 0.0, -0.696245, 0.123463, -0.123463, 0.696245, 0.605, 0.605, 0.605, 0.333333, 1.0, 0.0, 4.6375, 0.0, -0.690162, 0.15387, -0.15387, 0.690162, 0.605, 0.605, 0.605, 0.375, 1.0, 0.0, 4.6375, 0.0, -0.682153, 0.186191, -0.186191, 0.682153, 0.605, 0.605, 0.605, 0.416667, 1.0, 0.0, 4.6375, 0.0, -0.672104, 0.219719, -0.219719, 0.672104, 0.605, 0.605, 0.605, 0.458333, 1.0, 0.0, 4.6375, 0.0, -0.660031, 0.25369, -0.25369, 0.660031, 0.605, 0.605, 0.605, 0.5, 1.0, 0.0, 4.6375, 0.0, -0.646099, 0.287327, -0.287327, 0.646099, 0.605, 0.605, 0.605, 0.541667, 1.0, 0.0, 4.6375, 0.0, -0.630614, 0.319885, -0.319885, 0.630614, 0.605, 0.605, 0.605, 0.583333, 1.0, 0.0, 4.6375, 0.0, -0.614012, 0.350698, -0.350698, 0.614012, 0.605, 0.605, 0.605, 0.625, 1.0, 0.0, 4.6375, 0.0, -0.596821, 0.379216, -0.379216, 0.596821, 0.605, 0.605, 0.605, 0.666667, 1.0, 0.0, 4.6375, 0.0, -0.579621, 0.405018, -0.405018, 0.579621, 0.605, 0.605, 0.605, 0.708333, 1.0, 0.0, 4.6375, 0.0, -0.563, 0.427821, -0.427821, 0.563, 0.605, 0.605, 0.605, 0.75, 1.0, 0.0, 4.6375, 0.0, -0.547515, 0.447468, -0.447468, 0.547515, 0.605, 0.605, 0.605, 0.791667, 1.0, 0.0, 4.6375, 0.0, -0.53366, 0.463904, -0.463904, 0.53366, 0.605, 0.605, 0.605, 0.833333, 1.0, 0.0, 4.6375, 0.0, -0.521848, 0.477153, -0.477153, 0.521848, 0.605, 0.605, 0.605, 0.875, 1.0, 0.0, 4.6375, 0.0, -0.512396, 0.487289, -0.487289, 0.512396, 0.605, 0.605, 0.605, 0.916667, 1.0, 0.0, 4.6375, 0.0, -0.50553, 0.494408, -0.494408, 0.50553, 0.605, 0.605, 0.605, 0.958333, 1.0, 0.0, 4.6375, 0.0, -0.501381, 0.498615, -0.498615, 0.501381, 0.605, 0.605, 0.605, 1.0, 1.0, 0.0, 4.6375, 0.0, -0.5, 0.5, -0.5, 0.5, 0.605, 0.605, 0.605]
 
-[sub_resource id=5 type="ArrayMesh"]
+[sub_resource id=6 type="ArrayMesh"]
 
 resource_name = "Cube002"
 surfaces/0 = {
@@ -63,8 +69,7 @@ surfaces/0 = {
 
 [node name="CubePhysics" type="RigidBody" parent="."]
 
-friction = 0.5
-bounce = 0.0
+physics_material_override = SubResource(1)
 transform = Transform(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0)
 collision_layer = 1
 collision_mask = 1
@@ -76,26 +81,26 @@ sleeping = false
 [node name="CubeCollision" type="CollisionShape" parent="CubePhysics"]
 
 transform = Transform(1.0, 0.0, 0.0, 0.0, -4.37114e-08, 1.0, 0.0, -1.0, -4.37114e-08, 0.0, 0.0, 0.0)
-shape = SubResource(1)
+shape = SubResource(2)
 
 [node name="Cube001" type="MeshInstance" parent="CubePhysics/CubeCollision"]
 
-mesh = SubResource(2)
+mesh = SubResource(3)
 visible = true
 transform = Transform(1.0, 0.0, 0.0, 0.0, -4.37114e-08, -1.0, 0.0, 1.0, -4.37114e-08, 0.0, 0.0, 0.0)
 
 [node name="Cube003Collision" type="CollisionShape" parent="CubePhysics"]
 
 transform = Transform(0.605, 0.0, 0.0, 0.0, -2.64454e-08, 0.605, 0.0, -0.605, -2.64454e-08, 0.0, 4.6375, 0.0)
-shape = SubResource(3)
+shape = SubResource(4)
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="CubePhysics/Cube003Collision"]
 
 root_node = NodePath("..:")
-anims/Cube.003Action.001 = SubResource(4)
+anims/Cube.003Action.001 = SubResource(5)
 
 [node name="Cube002" type="MeshInstance" parent="CubePhysics/Cube003Collision"]
 
-mesh = SubResource(5)
+mesh = SubResource(6)
 visible = true
 transform = Transform(1.65289, 0.0, 0.0, 0.0, -7.22502e-08, -1.65289, 0.0, 1.65289, -7.22502e-08, 0.0, 0.0, 0.0)
