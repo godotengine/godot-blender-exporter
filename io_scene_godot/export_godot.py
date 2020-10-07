@@ -158,7 +158,8 @@ class GodotExporter:
         """Checks if a node should be exported:"""
         if obj.type not in self.config["object_types"]:
             return False
-
+        if self.config["use_included_in_render"] and obj.hide_render:
+            return False
         if self.config["use_visible_objects"]:
             view_layer = bpy.context.view_layer
             if obj.name not in view_layer.objects:

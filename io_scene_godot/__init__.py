@@ -81,6 +81,12 @@ class ExportGodot(bpy.types.Operator, ExportHelper):
         description="Export only selected objects",
         default=False,
     )
+
+    use_included_in_render: BoolProperty(
+        name="Only Rendered Objects",
+        description="Export only objects included in render",
+        default=False,
+    )
     use_mesh_modifiers: BoolProperty(
         name="Apply Modifiers",
         description="Apply modifiers to mesh objects (on a copy!).",
