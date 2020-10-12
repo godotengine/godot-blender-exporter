@@ -156,6 +156,10 @@ class GodotExporter:
 
     def should_export_object(self, obj):
         """Checks if a node should be exported:"""
+        for dimension in obj.scale:
+            if dimension < 0:
+                logging.info("Negative scale is unsupported, Object '%s' was skipped", obj.name)
+                return False
         if obj.type not in self.config["object_types"]:
             return False
 
