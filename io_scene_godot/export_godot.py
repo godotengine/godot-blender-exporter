@@ -133,7 +133,7 @@ class GodotExporter:
         # CollisionShape node has different direction in blender
         # and godot, so it has a -90 rotation around X axis,
         # here rotate its children back
-        if (exported_node.parent is not None and
+        if (hasattr(exported_node, "parent") and
                 exported_node.parent.get_type() == 'CollisionShape'):
             exported_node['transform'] = (
                 _AXIS_CORRECT.inverted() @
