@@ -3,7 +3,13 @@
 Native Godot scene format exporter for [Blender](https://www.blender.org), making the
 export process to [Godot Engine](https://godotengine.org) as straightforward as possible.
 
-*WARNING*: This exporter is experimental, and still lacks many features.
+___
+
+**Warning:** This exporter is experimental, and still lacks many features.
+If you need a full-featured import-export pipeline, consider using glTF 2.0 instead.
+(The glTF 2.0 exporter is built into Blender.)
+
+___
 
 ## Installation
 
