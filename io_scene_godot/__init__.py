@@ -28,7 +28,7 @@ from . import export_godot
 bl_info = {  # pylint: disable=invalid-name
     "name": "Godot Engine Exporter",
     "author": "Lu Jiacheng, Geoffrey Irons, Juan Linietsky",
-    "blender": (2, 80, 0),
+    "blender": (2, 90, 1),
     "location": "File > Import-Export",
     "description": ("Export Blender scenes to a format that can be "
                     "efficiently imported in Godot Engine."),
