@@ -816,6 +816,19 @@ class ImageTextureNodeConverter(NodeConverterBase):
         self.add_function_call(function, in_arguments, out_arguments)
 
 
+class VertexColorNodeConverter(NodeConverterBase):
+    """Converter for ShaderNodeVertexColor"""
+
+    def parse_node_to_fragment(self):
+        color_socket = self.bl_node.outputs['Color']
+        color_id = self.generate_socket_id_str(color_socket)
+        self.out_sockets_map[color_socket] = color_id
+
+        self.local_code.append(
+            '%s = COLOR' % color_id
+        )
+
+
 class MappingNodeConverter(NodeConverterBase):
     """Converter for ShaderNodeMapping"""
 
@@ -997,6 +1010,7 @@ class GeneralNodeConverter(NodeConverterBase):
 NODE_CONVERTERS = {
     'ShaderNodeMapping': MappingNodeConverter,
     'ShaderNodeTexImage': ImageTextureNodeConverter,
+    'ShaderNodeVertexColor': VertexColorNodeConverter,
     'ShaderNodeTexCoord': TexCoordNodeConverter,
     'ShaderNodeRGB': RgbNodeConverter,
     'ShaderNodeMixRGB': MixRgbNodeConverter,
