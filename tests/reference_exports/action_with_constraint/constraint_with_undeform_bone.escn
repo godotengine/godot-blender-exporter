@@ -19,6 +19,9 @@ tracks/1/keys = [0.0, 1.0, -0.0406364, 0.0242103, 0.0071155, 0.00671922, 0.00024
 
 resource_name = ""
 albedo_color = Color(0.903545, 0.903545, 0.903545, 1.0)
+metallic = 0.0
+metallic_specular = 0.5
+roughness = 0.5
 
 [sub_resource id=3 type="ArrayMesh"]
 
