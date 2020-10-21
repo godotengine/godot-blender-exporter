@@ -1,0 +1,26 @@
+name: Blender 2.90.1
+
+on: [push, pull_request]
+
+jobs:
+  # Set the job key. The key is displayed as the job name
+  # when a job name is not provided
+    # Name the Job
+  test:
+    name: All
+    # Set the type of machine to run on
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        blenderversion: [2.90.1]
+
+    steps:
+      # Checks out a copy of your repository on the ubuntu-latest machine
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - run: sudo apt-get install --no-install-recommends -y libsdl1.2debian libglu1 python3-pip python3-setuptools
+      - run: pip3 install wheel
+      - run: sudo pip3 install -r requirements.txt
+      - run: ./tests/install_blender.sh  ${{ matrix.blenderversion }}
+      - run: source .envs && make MAKE_OPTION=all BLENDER=$BLENDER_BIN PYLINT='python3 -m pylint'
