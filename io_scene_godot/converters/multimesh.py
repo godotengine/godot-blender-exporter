@@ -19,8 +19,7 @@ def export_multimesh_node(escn_file, export_settings,
     elif ps.settings.instance_object:
         instance_object=ps.settings.instance_object
 
-    multimeshnode = NodeTemplate(re.sub('[^a-zA-Z0-9]','',ps.name) + 'MultiMesh',
-                                   'MultiMeshInstance', parent_gd_node)
+    multimeshnode = NodeTemplate(ps.name, 'MultiMeshInstance', parent_gd_node)
 
     # Export instance mesh resource first
     instance_mesh_exporter = ArrayMeshResourceExporter(instance_object)
