@@ -17,8 +17,6 @@ def export_empty_node(escn_file, export_settings, node, parent_gd_node):
         return parent_gd_node
     empty_node = NodeTemplate(node.name, "Spatial", parent_gd_node)
     empty_node['transform'] = node.matrix_local
-    print(node.matrix_local)
-    print(len(escn_file.nodes))
     escn_file.add_node(empty_node)
 
     return empty_node

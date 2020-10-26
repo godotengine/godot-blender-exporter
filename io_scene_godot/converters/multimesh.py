@@ -8,7 +8,7 @@ from .mesh import ArrayMeshResourceExporter
 
 def export_multimesh_node(escn_file, export_settings,
                            obj, parent_gd_node):
-    """Export a blender object with parent_bone to a BoneAttachment"""
+    """Export blender particle to a MultiMeshInstance"""
     context = bpy.context
     dg = context.evaluated_depsgraph_get()
     ob = context.object.evaluated_get(dg)
@@ -40,7 +40,7 @@ def export_multimesh_node(escn_file, export_settings,
 
     multimeshid = multimeshExporter.export_multimesh(escn_file,export_settings,ps.name)
 
-    multimeshnode['multimesh'] = 'SubResource(%d)' % multimeshid
+    multimeshnode['multimesh'] = 'SubResource({})'.format(multimeshid)
     multimeshnode['visible'] = obj.visible_get()
 
     escn_file.add_node(multimeshnode)
@@ -79,9 +79,9 @@ class MultiMeshResourceExporter:
         multimesh = converter.to_multimesh()
         if multimesh is not None:
             self.mesh_resource = MultiMeshResource(particle_name)
-            self.mesh_resource['instance_count']='%d' % len(self.particle_system.particles)
-            self.mesh_resource['mesh']='SubResource(%d)' % self.instance_mesh_id
-            self.mesh_resource['transform_array']='PoolVector3Array(%s)' % converter.to_multimesh()
+            self.mesh_resource['instance_count']='{}'.format(len(self.particle_system.particles))
+            self.mesh_resource['mesh']='SubResource({})'.format(self.instance_mesh_id)
+            self.mesh_resource['transform_array']='PoolVector3Array({})'.format(converter.to_multimesh())
 
             multimesh_id = escn_file.add_internal_resource(self.mesh_resource, key)
             assert multimesh_id is not None
