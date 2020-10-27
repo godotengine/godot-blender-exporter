@@ -15,7 +15,8 @@ def export_multimesh_node(escn_file, export_settings,
     ob = context.object.evaluated_get(dg)
 
     ps = ob.particle_systems.active
-    if ps.settings.instance_collection and ps.settings.instance_collection.all_objects[0]:
+    if (ps.settings.instance_collection and
+            ps.settings.instance_collection.all_objects[0]):
         instance_object = ps.settings.instance_collection.all_objects[0]
     elif ps.settings.instance_object:
         instance_object = ps.settings.instance_object
@@ -24,15 +25,7 @@ def export_multimesh_node(escn_file, export_settings,
 
     # Export instance mesh resource first
     instance_mesh_exporter = ArrayMeshResourceExporter(instance_object)
-    # armature_obj = None
-    # if "ARMATURE" in export_settings['object_types']:
-    #     armature_obj = get_modifier_armature(obj)
-    #     if armature_obj:
-    #         instance_mesh_exporter.init_mesh_bones_data(armature_obj, export_settings)
-    #         # set armature to REST so current pose does not affect converted
-    #         # meshes.
-    #         armature_pose_position = armature_obj.data.pose_position
-    #         armature_obj.data.pose_position = "REST"
+
     mesh_id = instance_mesh_exporter.export_mesh(escn_file, export_settings)
 
     multimeshExporter = MultiMeshResourceExporter(obj, mesh_id, ps)
@@ -84,8 +77,10 @@ class MultiMeshResourceExporter:
                 len(self.particle_system.particles))
             self.mesh_resource['mesh'] = 'SubResource({})'.format(
                 self.instance_mesh_id)
-            self.mesh_resource['transform_array'] = 'PoolVector3Array({})'.format(
+            self.mesh_resource['transform_array'] = (
+                'PoolVector3Array({})'.format(
                 converter.to_multimesh())
+                )
 
             multimesh_id = escn_file.add_internal_resource(
                 self.mesh_resource, key)
@@ -132,7 +127,8 @@ class MultiMeshResource(InternalResource):
 
 
 class MultiMeshConverter:
-    """Blender Particles' mat4x4 to Godot MultiMesh resource PoolVector3Array"""
+    """Blender Particles' mat4x4 to
+    Godot MultiMesh resource PoolVector3Array"""
 
     def __init__(self, particle_system):
         self.particle_system = particle_system
@@ -164,7 +160,9 @@ class MultiMeshConverter:
             mat_rot = rot.to_matrix()
             mat_trans = mathutils.Matrix.Translation(loc)
 
-            mat = mat_trans @ mat_rot.to_4x4() @ mat_sca_x @ mat_sca_y @ mat_sca_z
+            mat = (
+            mat_trans @ mat_rot.to_4x4() @ mat_sca_x @ mat_sca_y @ mat_sca_z
+            )
 
             mat4 = mat.to_4x4()
 
