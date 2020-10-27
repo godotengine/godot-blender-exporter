@@ -79,7 +79,7 @@ class MultiMeshResourceExporter:
                 self.instance_mesh_id)
             self.mesh_resource['transform_array'] = (
                 'PoolVector3Array({})'.format(
-                converter.to_multimesh())
+                    converter.to_multimesh())
                 )
 
             multimesh_id = escn_file.add_internal_resource(
@@ -158,10 +158,10 @@ class MultiMeshConverter:
             mat_sca_z = mathutils.Matrix.Scale(scl, 4, (0.0, 0.0, 1.0))
 
             mat_rot = rot.to_matrix()
-            mat_trans = mathutils.Matrix.Translation(loc)
+            mat_trs = mathutils.Matrix.Translation(loc)
 
             mat = (
-            mat_trans @ mat_rot.to_4x4() @ mat_sca_x @ mat_sca_y @ mat_sca_z
+                mat_trs @ mat_rot.to_4x4() @ mat_sca_x @ mat_sca_y @ mat_sca_z
             )
 
             mat4 = mat.to_4x4()
