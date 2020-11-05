@@ -38,7 +38,7 @@ def export_multimesh_node(escn_file, export_settings,
         if i==ob.particle_systems.active_index:
             multimeshid_active=multimeshid
 
-    multimeshnode['multimesh'] = 'SubResource({})'.format(multimeshid)
+    multimeshnode['multimesh'] = 'SubResource({})'.format(multimeshid_active)
     multimeshnode['visible'] = obj.visible_get()
 
     escn_file.add_node(multimeshnode)
