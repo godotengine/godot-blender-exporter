@@ -158,7 +158,12 @@ class MeshConverter:
             self.has_tangents = bool(mesh.uv_layers) and bool(mesh.polygons)
             if calculate_tangents:
                 if self.has_tangents:
-                    mesh.calc_tangents()
+                    try:
+                        mesh.calc_tangents()
+                    except RuntimeError:
+                        # Mesh had n-gons; need to triangulate
+                        triangulate_mesh(mesh)
+                        mesh.calc_tangents()
                 else:
                     mesh.calc_normals_split()
 
