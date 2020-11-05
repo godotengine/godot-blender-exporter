@@ -31,12 +31,12 @@ def restore_modifier_config(obj, modifier_config_cache):
         mod.show_viewport = modifier_config_cache[i]
 
 
-def triangulate_mesh(mesh):
-    """Triangulate a mesh"""
+def triangulate_ngons(mesh):
+    """Triangulate n-gons in a mesh"""
     tri_mesh = bmesh.new()
     tri_mesh.from_mesh(mesh)
-    bmesh.ops.triangulate(
-        tri_mesh, faces=tri_mesh.faces, quad_method="ALTERNATE")
+    ngons = [face for face in tri_mesh.faces if len(face.verts) > 4]
+    bmesh.ops.triangulate(tri_mesh, faces=ngons, quad_method="ALTERNATE")
     tri_mesh.to_mesh(mesh)
     tri_mesh.free()
     if bpy.app.version[1] > 80:
@@ -159,7 +159,7 @@ class MeshConverter:
                         mesh.calc_tangents()
                     except RuntimeError:
                         # Mesh had n-gons; need to triangulate
-                        triangulate_mesh(mesh)
+                        triangulate_ngons(mesh)
                         mesh.calc_tangents()
                 else:
                     mesh.calc_normals_split()
