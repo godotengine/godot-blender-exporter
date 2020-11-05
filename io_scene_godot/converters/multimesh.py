@@ -3,7 +3,7 @@ import bpy
 import mathutils
 
 from ..structures import (
-    Array, NodeTemplate, InternalResource, fix_matrix)
+    Array, NodeTemplate, InternalResource, fix_matrix, mat4_to_string)
 from .mesh import ArrayMeshResourceExporter
 
 
@@ -14,29 +14,35 @@ def export_multimesh_node(escn_file, export_settings,
     dg = context.evaluated_depsgraph_get()
     ob = context.object.evaluated_get(dg)
 
-    ps = ob.particle_systems.active
-    if (ps.settings.instance_collection and
-            ps.settings.instance_collection.all_objects[0]):
-        instance_object = ps.settings.instance_collection.all_objects[0]
-    elif ps.settings.instance_object:
-        instance_object = ps.settings.instance_object
+    multimeshid_active=None
+    for i in ob.particle_systems:
+        ps = i
+        if (ps.settings.instance_collection and
+                ps.settings.instance_collection.all_objects[0]):
+            instance_object = ps.settings.instance_collection.all_objects[0]
+        elif ps.settings.instance_object:
+            instance_object = ps.settings.instance_object
 
-    multimeshnode = NodeTemplate(ps.name, 'MultiMeshInstance', parent_gd_node)
+        multimeshnode = NodeTemplate(ps.name, 'MultiMeshInstance', parent_gd_node)
 
-    # Export instance mesh resource first
-    instance_mesh_exporter = ArrayMeshResourceExporter(instance_object)
+        # Export instance mesh resource first
+        instance_mesh_exporter = ArrayMeshResourceExporter(instance_object)
 
-    mesh_id = instance_mesh_exporter.export_mesh(escn_file, export_settings)
+        mesh_id = instance_mesh_exporter.export_mesh(escn_file, export_settings)
 
-    multimeshExporter = MultiMeshResourceExporter(obj, mesh_id, ps)
+        multimeshExporter = MultiMeshResourceExporter(obj, mesh_id, ps)
 
-    multimeshid = multimeshExporter.export_multimesh(
-        escn_file, export_settings, ps.name)
+        multimeshid = multimeshExporter.export_multimesh(
+            escn_file, export_settings, ps.name)
+        
+        if i==ob.particle_systems.active_index:
+            multimeshid_active=multimeshid
 
     multimeshnode['multimesh'] = 'SubResource({})'.format(multimeshid)
     multimeshnode['visible'] = obj.visible_get()
 
     escn_file.add_node(multimeshnode)
+
     return multimeshnode
 
 
@@ -166,20 +172,5 @@ class MultiMeshConverter:
 
             mat4 = mat.to_4x4()
 
-            transform_array.append(mat4_to_string(mat4))
+            transform_array.append(mat4_to_string(mat4,prefix='',suffix=''))
         return ','.join(transform_array)
-
-
-def mat4_to_string(mtx):
-    """Converts a matrix to a "Transform" string that can be parsed by Godot"""
-    mtx = fix_matrix(mtx)
-    array = Array('', suffix='')
-    for row in range(3):
-        for col in range(3):
-            array.append(mtx[row][col])
-
-    # Export the basis
-    for axis in range(3):
-        array.append(mtx[axis][3])
-
-    return array.to_string()

@@ -419,10 +419,10 @@ def gamma_correct(color):
 
 
 # ------------------ Implicit Conversions of Blender Types --------------------
-def mat4_to_string(mtx):
+def mat4_to_string(mtx, prefix='Transform(', suffix=')'):
     """Converts a matrix to a "Transform" string that can be parsed by Godot"""
     mtx = fix_matrix(mtx)
-    array = Array('Transform(')
+    array = Array(prefix,suffix=suffix)
     for row in range(3):
         for col in range(3):
             array.append(mtx[row][col])
