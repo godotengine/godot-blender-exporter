@@ -117,7 +117,7 @@ class MeshConverter:
         self.use_export_shape_key = export_settings['use_export_shape_key']
         self.has_tangents = False
 
-    def to_mesh(self, triangulate=True, preserve_vertex_groups=True,
+    def to_mesh(self, preserve_vertex_groups=True,
                 calculate_tangents=True, shape_key_index=0):
         """Evaluates object & converts to final mesh, ready for export.
         The mesh is only temporary, call to_mesh_clear() afterwards."""
@@ -152,9 +152,6 @@ class MeshConverter:
         # mesh result can be none if the source geometry has no faces, so we
         # need to consider this if we want a robust exporter.
         if mesh is not None:
-            if triangulate:
-                triangulate_mesh(mesh)
-
             self.has_tangents = bool(mesh.uv_layers) and bool(mesh.polygons)
             if calculate_tangents:
                 if self.has_tangents:

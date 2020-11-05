@@ -148,7 +148,6 @@ def generate_convex_shape(escn_file, export_settings, bl_object):
     col_shape = None
     mesh_converter = MeshConverter(bl_object, export_settings)
     mesh = mesh_converter.to_mesh(
-        triangulate=False,
         preserve_vertex_groups=False,
         calculate_tangents=False
     )
@@ -178,7 +177,6 @@ def generate_concave_shape(escn_file, export_settings, bl_object):
     col_shape = None
     mesh_converter = MeshConverter(bl_object, export_settings)
     mesh = mesh_converter.to_mesh(
-        triangulate=False,
         preserve_vertex_groups=False,
         calculate_tangents=False
     )
