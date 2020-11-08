@@ -15,27 +15,35 @@ def export_multimesh_node(escn_file, export_settings,
     ob = context.object.evaluated_get(dg)
 
     multimeshid_active=None
-    for i in ob.particle_systems:
-        ps = i
+    for ps in ob.particle_systems:
+        # In Blender's particle system params, If "Render - Render As" are
+        # switched to "Collection", there maybe several objects instanced to
+        # one particle, but in Godot one MultiMeshInstance just have one
+        # object to instance, so choose the first object in Blender to display
+        # as the only one object in Godot's MultiMeshInstance's resource.
         if (ps.settings.instance_collection and
                 ps.settings.instance_collection.all_objects[0]):
             instance_object = ps.settings.instance_collection.all_objects[0]
         elif ps.settings.instance_object:
             instance_object = ps.settings.instance_object
 
-        multimeshnode = NodeTemplate(ps.name, 'MultiMeshInstance', parent_gd_node)
+        multimeshnode = NodeTemplate(
+            ps.name, 'MultiMeshInstance', parent_gd_node
+            )
 
         # Export instance mesh resource first
         instance_mesh_exporter = ArrayMeshResourceExporter(instance_object)
 
-        mesh_id = instance_mesh_exporter.export_mesh(escn_file, export_settings)
+        mesh_id = instance_mesh_exporter.export_mesh(
+            escn_file, export_settings
+            )
 
-        multimeshExporter = MultiMeshResourceExporter(obj, mesh_id, ps)
+        multimesh_exporter = MultiMeshResourceExporter(obj, mesh_id, ps)
 
-        multimeshid = multimeshExporter.export_multimesh(
+        multimeshid = multimesh_exporter.export_multimesh(
             escn_file, export_settings, ps.name)
-        
-        if i==ob.particle_systems.active_index:
+
+        if ps==ob.particle_systems.active:
             multimeshid_active=multimeshid
 
     multimeshnode['multimesh'] = 'SubResource({})'.format(multimeshid_active)
