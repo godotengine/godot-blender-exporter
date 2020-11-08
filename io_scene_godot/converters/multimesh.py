@@ -14,7 +14,7 @@ def export_multimesh_node(escn_file, export_settings,
     dg = context.evaluated_depsgraph_get()
     ob = context.object.evaluated_get(dg)
 
-    multimeshid_active=None
+    multimeshid_active = None
     for ps in ob.particle_systems:
         # In Blender's particle system params, If "Render - Render As" are
         # switched to "Collection", there maybe several objects instanced to
@@ -43,8 +43,8 @@ def export_multimesh_node(escn_file, export_settings,
         multimeshid = multimesh_exporter.export_multimesh(
             escn_file, export_settings, ps.name)
 
-        if ps==ob.particle_systems.active:
-            multimeshid_active=multimeshid
+        if ps == ob.particle_systems.active:
+            multimeshid_active = multimeshid
 
     multimeshnode['multimesh'] = 'SubResource({})'.format(multimeshid_active)
     multimeshnode['visible'] = obj.visible_get()
@@ -180,5 +180,5 @@ class MultiMeshConverter:
 
             mat4 = mat.to_4x4()
 
-            transform_array.append(mat4_to_string(mat4,prefix='',suffix=''))
+            transform_array.append(mat4_to_string(mat4, prefix='', suffix=''))
         return ','.join(transform_array)
