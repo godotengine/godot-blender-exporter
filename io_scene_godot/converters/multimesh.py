@@ -3,7 +3,7 @@ import bpy
 import mathutils
 
 from ..structures import (
-    Array, NodeTemplate, InternalResource, fix_matrix, mat4_to_string)
+    NodeTemplate, InternalResource, mat4_to_string)
 from .mesh import ArrayMeshResourceExporter
 
 
@@ -11,24 +11,24 @@ def export_multimesh_node(escn_file, export_settings,
                           obj, parent_gd_node):
     """Export blender particle to a MultiMeshInstance"""
     context = bpy.context
-    dg = context.evaluated_depsgraph_get()
-    ob = context.object.evaluated_get(dg)
+    dg_eval = context.evaluated_depsgraph_get()
+    obj_eval = context.object.evaluated_get(dg_eval)
 
     multimeshid_active = None
-    for ps in ob.particle_systems:
+    for _ps in obj_eval.particle_systems:
         # In Blender's particle system params, If "Render - Render As" are
         # switched to "Collection", there maybe several objects instanced to
         # one particle, but in Godot one MultiMeshInstance just have one
         # object to instance, so choose the first object in Blender to display
         # as the only one object in Godot's MultiMeshInstance's resource.
-        if (ps.settings.instance_collection and
-                ps.settings.instance_collection.all_objects[0]):
-            instance_object = ps.settings.instance_collection.all_objects[0]
-        elif ps.settings.instance_object:
-            instance_object = ps.settings.instance_object
+        if (_ps.settings.instance_collection and
+                _ps.settings.instance_collection.all_objects[0]):
+            instance_object = _ps.settings.instance_collection.all_objects[0]
+        elif _ps.settings.instance_object:
+            instance_object = _ps.settings.instance_object
 
         multimeshnode = NodeTemplate(
-            ps.name, 'MultiMeshInstance', parent_gd_node
+            _ps.name, 'MultiMeshInstance', parent_gd_node
             )
 
         # Export instance mesh resource first
@@ -38,12 +38,12 @@ def export_multimesh_node(escn_file, export_settings,
             escn_file, export_settings
             )
 
-        multimesh_exporter = MultiMeshResourceExporter(obj, mesh_id, ps)
+        multimesh_exporter = MultiMeshResourceExporter(obj, mesh_id, _ps)
 
         multimeshid = multimesh_exporter.export_multimesh(
-            escn_file, export_settings, ps.name)
+            escn_file, export_settings, _ps.name)
 
-        if ps == ob.particle_systems.active:
+        if _ps == obj_eval.particle_systems.active:
             multimeshid_active = multimeshid
 
     multimeshnode['multimesh'] = 'SubResource({})'.format(multimeshid_active)
@@ -148,24 +148,26 @@ class MultiMeshConverter:
         self.particle_system = particle_system
 
     def to_multimesh(self):
+        """Evaluates object & converts to final multimesh, ready for export.
+        The multimesh is only temporary."""
         transform_array = []
         float32array = ''
-        for p in self.particle_system.particles:
+        for _particle in self.particle_system.particles:
             quat_x = mathutils.Quaternion((1.0, 0.0, 0.0), math.radians(90.0))
             quat_y = mathutils.Quaternion((0.0, 1.0, 0.0), math.radians(90.0))
             quat_z = mathutils.Quaternion((0.0, 0.0, 1.0), math.radians(90.0))
-            quat_a = p.rotation.copy()
+            quat_a = _particle.rotation.copy()
             quat_a.rotate(quat_x)
             quat_a.rotate(quat_y)
             quat_a.rotate(quat_z)
             quat_a.normalize()
-            a = quat_a[1]
+            rot_tmp = quat_a[1]
             quat_a[1] = quat_a[3]
-            quat_a[3] = a
+            quat_a[3] = rot_tmp
 
             rot = quat_a
-            loc = p.location - mathutils.Vector((0, 0, 1))
-            scl = p.size
+            loc = _particle.location - mathutils.Vector((0, 0, 1))
+            scl = _particle.size
 
             mat_sca_x = mathutils.Matrix.Scale(scl, 4, (1.0, 0.0, 0.0))
             mat_sca_y = mathutils.Matrix.Scale(scl, 4, (0.0, 1.0, 0.0))
