@@ -1,3 +1,4 @@
+"""Exports particles as multimesh to Godot"""
 import math
 import bpy
 import mathutils
@@ -57,10 +58,10 @@ def export_multimesh_node(escn_file, export_settings,
 def has_particle(node):
     """Returns True if the object has particles"""
     context = bpy.context
-    dg = context.evaluated_depsgraph_get()
-    ob = context.object.evaluated_get(dg)
+    dg_eval = context.evaluated_depsgraph_get()
+    obj_eval = context.object.evaluated_get(dg_eval)
 
-    return len(ob.particle_systems) > 0
+    return len(obj_eval.particle_systems) > 0
 
 
 class MultiMeshResourceExporter:
