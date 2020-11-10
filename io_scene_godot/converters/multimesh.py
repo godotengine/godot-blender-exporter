@@ -78,9 +78,12 @@ class MultiMeshResourceExporter:
     def export_multimesh(self, escn_file, export_settings, particle_name):
         """Saves a mesh into the escn file"""
         converter = MultiMeshConverter(self.particle_system)
-        key = MultiMeshResourceKey(
-            'MultiMesh', self.object, export_settings, particle_name)
-        # Check if mesh resource exists so we don't bother to export it twice,
+        # Due the missing instance particle support in Godot,
+        # we export one MultiMeshResource from each ParticleSystem.
+        # For now it is safe to use bpy ParticleSystem object as
+        # the hash key.
+        key = self.particle_system
+        # Check if multi-mesh resource exists so we don't bother to export it twice,
         multimesh_id = escn_file.get_internal_resource(key)
         if multimesh_id is not None:
             return multimesh_id
@@ -102,30 +105,6 @@ class MultiMeshResourceExporter:
             assert multimesh_id is not None
 
         return multimesh_id
-
-
-class MultiMeshResourceKey:
-    """Produces a key based on an mesh object's data, every different
-    Mesh Resource would have a unique key"""
-
-    def __init__(self, rsc_type, obj, export_settings, particle_name):
-        mesh_data = obj.data
-
-        # Resource type included because same blender mesh may be used as
-        # MeshResource or CollisionShape, but they are different resources
-        gd_rsc_type = rsc_type
-
-        # Precalculate the hash now for better efficiency later
-        self._data = tuple([obj.name, particle_name, gd_rsc_type])
-        self._hash = hash(self._data)
-
-    def __hash__(self):
-        return self._hash
-
-    def __eq__(self, other):
-        # pylint: disable=protected-access
-        return (self.__class__ == other.__class__ and
-                self._data == other._data)
 
 
 class MultiMeshResource(InternalResource):
