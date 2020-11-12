@@ -83,7 +83,8 @@ class MultiMeshResourceExporter:
         # For now it is safe to use bpy ParticleSystem object as
         # the hash key.
         key = self.particle_system
-        # Check if multi-mesh resource exists so we don't bother to export it twice,
+        # Check if multi-mesh resource exists so we don't bother to export
+        # it twice,
         multimesh_id = escn_file.get_internal_resource(key)
         if multimesh_id is not None:
             return multimesh_id
