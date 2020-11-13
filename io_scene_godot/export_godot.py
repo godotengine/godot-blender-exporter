@@ -115,6 +115,14 @@ class GodotExporter:
                 obj,
                 parent_gd_node
             )
+        if ("PARTICLE" in self.config['object_types'] and
+                converters.has_particle(obj)):
+            converters.MULTIMESH_EXPORTER(
+                self.escn_file,
+                self.config,
+                obj,
+                parent_gd_node
+            )
 
         # Perform the export, note that `exported_node.parent` not
         # always the same as `parent_gd_node`, as sometimes, one
