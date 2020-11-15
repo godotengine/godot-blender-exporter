@@ -3,12 +3,15 @@ Any exporters that can be written in a single function can go in here.
 Anything more complex should go in it's own file
 """
 
-import math
 import logging
+import math
+import mathutils
 from ..structures import (
-    NodeTemplate, fix_directional_transform, gamma_correct
+    NodeTemplate, fix_directional_transform, gamma_correct, InternalResource,
+    Map, Array
 )
 from .animation import export_animation_data, AttributeConvertInfo
+from .mesh import export_mesh_node
 
 
 def export_empty_node(escn_file, export_settings, node, parent_gd_node):
@@ -165,3 +168,68 @@ def export_light_node(escn_file, export_settings, node, parent_gd_node):
                           light_node, node.data, 'light')
 
     return light_node
+
+
+def export_curve_node(escn_file, export_settings, node, parent_gd_node):
+    """Export a curve to a Path node, with a child mesh."""
+    splines = node.data.splines
+    if len(splines) == 0:
+        logging.warning("Curve %s has no splines", node.name)
+        return None
+
+    spline = splines[0]
+
+    if spline.type != "BEZIER":
+        return export_mesh_node(
+            escn_file, export_settings, node, parent_gd_node
+        )
+
+    if len(splines) > 1:
+        logging.warning(
+            "Bezier %s has >1 splines, only first will be exported", node.name
+        )
+
+    points = Array("PoolVector3Array(")
+    tilts = Array("PoolRealArray(")
+    axis_correct = mathutils.Matrix((
+        (1, 0, 0),  # X in blender is  X in Godot
+        (0, 0, -1),  # Y in blender is -Z in Godot
+        (0, 1, 0),  # Z in blender is  Y in Godot
+    )).normalized()
+
+    src_points = spline.bezier_points
+    if spline.use_cyclic_u:
+        # Godot fakes a closed path by adding the start point at the end
+        # https://github.com/godotengine/godot-proposals/issues/527
+        src_points = [*src_points, src_points[0]]
+
+    for point in src_points:
+        # blender handles are absolute
+        # godot handles are relative to the control point
+        points.extend((point.handle_left - point.co) @ axis_correct)
+        points.extend((point.handle_right - point.co) @ axis_correct)
+        points.extend(point.co @ axis_correct)
+        tilts.append(point.tilt)
+
+    data = Map()
+    data["points"] = points
+    data["tilts"] = tilts
+
+    curve_resource = InternalResource("Curve3D", node.data.name)
+    curve_resource["_data"] = data
+    curve_id = escn_file.get_internal_resource(spline)
+    if curve_id is None:
+        curve_id = escn_file.add_internal_resource(curve_resource, spline)
+
+    path_node = NodeTemplate(node.name, "Path", parent_gd_node)
+    path_node["curve"] = "SubResource({})".format(curve_id)
+    path_node['transform'] = node.matrix_local
+
+    escn_file.add_node(path_node)
+
+    # A child MeshInstance renders the bevel
+    mesh_node = export_mesh_node(escn_file, export_settings, node, path_node)
+    # The transform is already set on the path, don't duplicate it
+    mesh_node['transform'] = mathutils.Matrix.Identity(4)
+
+    return path_node

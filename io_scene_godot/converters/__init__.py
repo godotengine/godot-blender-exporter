@@ -30,7 +30,7 @@ BLENDER_TYPE_TO_EXPORTER = {
     "CAMERA": export_camera_node,
     "LIGHT": export_light_node,
     "EMPTY": export_empty_node,
-    "CURVE": export_mesh_node,
+    "CURVE": export_curve_node,
     "SURFACE": export_mesh_node,
     "META": export_mesh_node,
     "FONT": export_mesh_node
