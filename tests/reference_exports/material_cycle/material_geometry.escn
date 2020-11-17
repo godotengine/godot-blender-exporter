@@ -45,7 +45,7 @@ void node_combine_rgb(float r, float g, float b, out vec4 color) {
 
 
 void node_math_greater_than_no_clamp(float value1, float value2,
-        out float result) {
+        float unused, out float result) {
     result = float(value1 > value2);
 }
 
@@ -108,11 +108,12 @@ void fragment () {
 	// input sockets handling
 	float node2_in0_value = node1_out0_x;
 	float node2_in1_value = float(0.0);
+	float node2_in2_value = float(0.0);
 	// output sockets definitions
 	float node2_out0_value;
 	
 	node_math_greater_than_no_clamp(node2_in0_value, node2_in1_value,
-		node2_out0_value);
+		node2_in2_value, node2_out0_value);
 	
 	
 	// node: 'Combine RGB'
