@@ -197,6 +197,73 @@ class ExportGodot(bpy.types.Operator, ExportHelper):
             ),
         )
     )
+    scene_mode: EnumProperty(
+        name="Scene Mode",
+        description="How should objects be distributed to scenes",
+        default="ONE",
+        items=(
+            (
+                "ONE", "One",
+                "Export all objects to one scene"
+            ),
+            (
+                "OBJECTS", "By Objects",
+                "Export all root objects with their children in a "
+                "separate scene"
+            ),
+            (
+                "COLLECTIONS", "By Collections",
+                "Export each collection in a separate file"
+            )
+        )
+    )
+    prefix: BoolProperty(
+        name="Use file name as Prefix",
+        description="If turned on, exported files/folders use "
+                    "file name as prefix",
+        default=True
+    )
+    reset_transform: EnumProperty(
+        name="Reset Transformation",
+        description="If turned on, exported Objects "
+                    "will be scaled to 1 and rotated, "
+                    "translated to 0",
+        options={"ENUM_FLAG"},
+        items=(
+            ("LOC", "Loc", ""),
+            ("ROT", "Rot", ""),
+            ("SCA", "Scale", "")
+        ),
+        default={
+            "LOC",
+            "ROT",
+            "SCA"
+        },
+    )
+    root_objects: BoolProperty(
+        name="Object as Root",
+        description="If turned on Objects will be exported as the scene root",
+        default=False
+    )
+    collection_folders: BoolProperty(
+        name="Group in Folders by Collection",
+        description="If turned on, exported Objects "
+                    "are distributed to Folders named after the Collections",
+        default=True
+    )
+    prefix_in_folders: BoolProperty(
+        name="Use Prefix in Collection folders",
+        description="If turned on, exported Object files use "
+                    "file name as prefix in Collection folders",
+        default=False
+    )
+    empty_collections: BoolProperty(
+        name="Empty Collections",
+        description="If turned on, empty Collections will be exported "
+                    "Collections are empty if no Object matches the "
+                    "Filters above",
+        default=False
+    )
 
     @property
     def check_extension(self):
@@ -223,6 +290,44 @@ class ExportGodot(bpy.types.Operator, ExportHelper):
         except ValidationError as error:
             self.report({'ERROR'}, str(error))
             return {'CANCELLED'}
+
+    def draw(self, context):
+        """Layouts the Properties"""
+        layout = self.layout
+        layout.use_property_split = True
+
+        col = layout.column()
+        col.prop(self, "object_types")
+
+        layout.prop(self, "use_visible_objects")
+        layout.prop(self, "use_export_selected")
+        layout.prop(self, "use_mesh_modifiers")
+        layout.prop(self, "use_exclude_ctrl_bone")
+        layout.prop(self, "use_export_animation")
+        layout.prop(self, "use_export_shape_key")
+        layout.prop(self, "use_stashed_action")
+        layout.prop(self, "use_beta_features")
+        layout.prop(self, "generate_external_material")
+        layout.prop(self, "animation_modes")
+        layout.prop(self, "material_mode")
+        layout.prop(self, "material_search_paths")
+
+        layout.prop(self, "scene_mode")
+
+        if self.scene_mode == "OBJECTS" or self.scene_mode == "COLLECTIONS":
+            layout.prop(self, "prefix")
+
+        if self.scene_mode == "OBJECTS":
+            layout.prop(self, "reset_transform")
+            layout.prop(self, "root_objects")
+            layout.prop(self, "collection_folders")
+
+        if (self.scene_mode == "OBJECTS" and self.collection_folders):
+            layout.prop(self, "prefix_in_folders")
+
+        if (self.scene_mode == "COLLECTIONS"
+                or self.scene_mode == "OBJECTS" and self.collection_folders):
+            layout.prop(self, "empty_collections")
 
 
 def menu_func(self, context):
@@ -263,7 +368,7 @@ def export(filename, overrides=None):
     for attr_name in ExportGodot.__annotations__:
         attr = ExportGodot.__annotations__[attr_name]
         # This introspection is not very robust and may break in future blende
-        # versions. This is becase for some reason you can't compare against
+        # versions. This is because for some reason you can't compare against
         # bpy.types.Property because. well, they end up not being subclasses
         # of that!!!
         if issubclass(type(attr), tuple):

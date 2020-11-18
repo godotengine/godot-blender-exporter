@@ -1,0 +1,14 @@
+[gd_scene load_steps=1 format=2]
+
+[node type="Spatial" name="Point"]
+
+[node name="Point" type="OmniLight" parent="."]
+
+light_specular = 1.0
+light_color = Color(1.0, 1.0, 1.0, 1.0)
+shadow_color = Color(0.0, 0.0, 0.0, 1.0)
+light_energy = 0.1
+omni_range = 40.0
+transform = Transform(1.0, 0.0, 0.0, 0.0, -4.37114e-08, 1.0, 0.0, -1.0, -4.37114e-08, 0.0, 10.0, -10.0)
+light_negative = false
+shadow_enabled = true

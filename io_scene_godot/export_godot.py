@@ -180,17 +180,93 @@ class GodotExporter:
 
         return True
 
-    def export_scene(self):
-        # pylint: disable-msg=too-many-branches
+    def export_objects(self, obj=None, collection=None):
         """Decide what objects to export, and export them!"""
-        logging.info("Exporting scene: %s", self.scene.name)
 
-        in_edit_mode = False
+        self.disable_edit_mode()
+        if obj:
+            logging.info("Exporting object: %s of scene %s",
+                         obj.name, self.scene.name)
+            self.select_objects_object(obj)
+            self.reset_transform(obj)
+            scene_name = obj.name
+        elif collection:
+            logging.info("Exporting collection: %s of scene %s",
+                         collection.name, self.scene.name)
+            self.select_objects_collection(collection)
+            scene_name = collection.name
+        else:
+            logging.info("Exporting scene: %s", self.scene.name)
+            self.select_objects_scene()
+            scene_name = self.scene.name
+        # Decide what objects to export
+
+        logging.info("Exporting %d objects", len(self.valid_objects))
+
+        if obj is None or not self.config["root_objects"]:
+            # Scene root
+            root_gd_node = structures.NodeTemplate(
+                scene_name,
+                "Spatial",
+                None
+            )
+            self.escn_file.add_node(root_gd_node)
+        else:
+            root_gd_node = None
+
+        for _obj in self.scene.objects:
+            if _obj in self.valid_objects and _obj.parent is None:
+                # recursive exporting on root object
+                self.export_object(_obj, root_gd_node)
+
+        if "ARMATURE" in self.config['object_types']:
+            for bl_obj in self.bl_object_gd_node_map:
+                for mod in bl_obj.modifiers:
+                    if mod.type == "ARMATURE":
+                        mesh_node = self.bl_object_gd_node_map[bl_obj]
+                        skeleton_node = self.bl_object_gd_node_map[mod.object]
+                        mesh_node['skeleton'] = NodePath(
+                            mesh_node.get_path(), skeleton_node.get_path())
+        if obj is not None:
+            self.reapply_transform(obj)
+
+    def reset_transform(self, obj):
+        """Resets transformation to pos=0, rot=0, scale=1"""
+        if "LOC" in self.config["reset_transform"]:
+            self.transform[0] = obj.location.copy()
+            obj.location = (0, 0, 0)
+        if "ROT" in self.config["reset_transform"]:
+            self.transform[1] = obj.rotation_euler.copy()
+            obj.rotation_euler = (0, 0, 0)
+        if "SCA" in self.config["reset_transform"]:
+            self.transform[2] = obj.scale.copy()
+            obj.scale = (1, 1, 1)
+
+    def reapply_transform(self, obj):
+        """Restores reset transformation"""
+        if "LOC" in self.config["reset_transform"]:
+            obj.location = self.transform[0]
+        if "ROT" in self.config["reset_transform"]:
+            obj.rotation_euler = self.transform[1]
+        if "SCA" in self.config["reset_transform"]:
+            obj.scale = self.transform[2]
+
+    def disable_edit_mode(self):
+        '''Disables edit mode, and stores the current state
+        for restore_edit_mode'''
         if bpy.context.object and bpy.context.object.mode == "EDIT":
-            in_edit_mode = True
+            self.in_edit_mode = True
             bpy.ops.object.editmode_toggle()
 
-        # Decide what objects to export
+    def restore_edit_mode(self):
+        '''Reenables edit mode, when disabled with
+        disable_edit_mode'''
+        if self.in_edit_mode:
+            bpy.ops.object.editmode_toggle()
+            self.in_edit_mode = False
+
+    def select_objects_scene(self):
+        '''Selects the objects that should be exported for scene export'''
         for obj in self.scene.objects:
             if obj in self.exporting_objects:
                 continue
@@ -205,31 +281,51 @@ class GodotExporter:
                     else:
                         break
                     tmp = tmp.parent
-        logging.info("Exporting %d objects", len(self.valid_objects))
 
-        # Scene root
-        root_gd_node = structures.NodeTemplate(
-            self.scene.name,
-            "Spatial",
-            None
-        )
-        self.escn_file.add_node(root_gd_node)
-        for obj in self.scene.objects:
-            if obj in self.valid_objects and obj.parent is None:
-                # recursive exporting on root object
-                self.export_object(obj, root_gd_node)
+    def select_objects_collection(self, collection):
+        '''Selects the objects that should be exported for collection export'''
+        for obj in collection.objects:
+            if obj in self.exporting_objects:
+                continue
+            if self.should_export_object(obj):
+                self.exporting_objects.add(obj)
+                # Ensure parents of current valid object is
+                # going to the exporting recursion
+                tmp = obj
+                while tmp is not None:
+                    if tmp not in self.valid_objects:
+                        self.valid_objects.add(tmp)
+                    else:
+                        break
+                    tmp = tmp.parent
 
-        if "ARMATURE" in self.config['object_types']:
-            for bl_obj in self.bl_object_gd_node_map:
-                for mod in bl_obj.modifiers:
-                    if mod.type == "ARMATURE":
-                        mesh_node = self.bl_object_gd_node_map[bl_obj]
-                        skeleton_node = self.bl_object_gd_node_map[mod.object]
-                        mesh_node['skeleton'] = NodePath(
-                            mesh_node.get_path(), skeleton_node.get_path())
+    def select_objects_object(self, obj):
+        '''Selects the objects that should be exported for object export'''
+        if self.should_export_object(obj) and obj.parent is None:
+            self.exporting_objects.add(obj)
+            self.valid_objects.add(obj)
 
-        if in_edit_mode:
-            bpy.ops.object.editmode_toggle()
+        for child in self.scene.objects:
+            if child in self.exporting_objects:
+                continue
+
+            if self.should_export_object(child):
+                parent = child
+
+                # test if child is related to obj
+                while parent.parent is not None:
+                    parent = parent.parent
+                if parent is obj:
+                    self.exporting_objects.add(child)
+                    # Ensure parents of current valid child
+                    # are going to the exporting recursion
+                    tmp = child
+                    while tmp is not None:
+                        if tmp not in self.valid_objects:
+                            self.valid_objects.add(tmp)
+                        else:
+                            break
+                        tmp = tmp.parent
 
     def load_supported_features(self):
         """According to `project.godot`, determine all new feature supported
@@ -243,7 +339,7 @@ class GodotExporter:
                 "Not export to Godot project dir, disable all beta features.")
 
         # minimal supported version
-        conf_versiton = 3
+        conf_version = 3
         if project_dir:
             project_file_path = os.path.join(project_dir, "project.godot")
             with open(project_file_path, "r") as proj_f:
@@ -252,16 +348,57 @@ class GodotExporter:
                         continue
 
                     _, version_str = tuple(line.split("="))
-                    conf_versiton = int(version_str)
+                    conf_version = int(version_str)
                     break
 
-        if conf_versiton < 2:
+        if conf_version < 2:
             logging.error(
                 "Godot version smaller than 3.0, not supported by this addon")
 
-        if conf_versiton >= 4:
+        if conf_version >= 4:
             # godot >=3.1
             self.config["feature_bezier_track"] = True
+
+    def get_path(self, collection, obj=None):
+        '''Returns the path for export
+        of collection and objects'''
+        path, file_name = os.path.split(self.path)
+        if file_name.endswith(".escn"):
+            file_name = file_name[:-5]
+        path += os.path.sep
+        if obj is None:
+            if self.config["prefix"]:
+                path += file_name + "_"
+            path += collection.name + ".escn"
+        else:
+            if self.config["collection_folders"]:
+                if self.config["prefix"]:
+                    path += file_name + "_"
+                path += collection.name + os.path.sep
+                if self.config["prefix_in_folders"]:
+                    path += file_name + "_"
+            else:
+                if self.config["prefix"]:
+                    path += file_name + "_"
+            path += obj.name + ".escn"
+
+        return path
+
+    def create_folder(self, collection):
+        """Creates folder for collection"""
+        folder = self.get_path(collection)[:-5]
+        print("Creating folder" + folder)
+        try:
+            os.makedirs(folder, exist_ok=True)
+            return True
+        except FileExistsError:
+            # Can easily happen when exporting
+            # Collections first by accident
+            self.operator.report(
+                {'ERROR'}, "Unable to create Folder, " +
+                folder +
+                "there was already a file.")
+            return False
 
     def export(self):
         """Begin the export"""
@@ -273,12 +410,67 @@ class GodotExporter:
             ))
         ))
 
-        self.export_scene()
-        self.escn_file.fix_paths(self.config)
-        with open(self.path, 'w') as out_file:
-            out_file.write(self.escn_file.to_string())
+        scene_mode = self.config["scene_mode"]
+        if scene_mode == "ONE":
+            self.export_objects()
+            self.save(self.path)
+
+        elif scene_mode == "COLLECTIONS":
+            for collection in bpy.data.collections:
+                self.export_objects(collection=collection)
+
+                # skip empty collections
+                if (len(self.escn_file.nodes) > 1 or
+                        self.config["empty_collections"]):
+                    self.save(self.get_path(collection))
+                self.reset()
+        else:
+            # create folders for empty collections
+            if (self.config["collection_folders"] and
+                    self.config["empty_collections"]):
+                for collection in bpy.data.collections:
+                    if not self.create_folder(collection):
+                        return False
+            for obj in bpy.data.objects:
+                if obj.parent is None:
+                    self.export_objects(obj=obj)
+
+                    # skip empty objects
+                    if (not self.config["root_objects"]
+                            and len(self.escn_file.nodes) <= 1
+                            or len(self.escn_file.nodes) == 0):
+                        self.reset()
+                        continue
+
+                    # create folder
+                    if self.config["collection_folders"]:
+                        self.create_folder(obj.users_collection[0])
+
+                    self.save(self.get_path(obj.users_collection[0], obj))
+                    self.reset()
 
         return True
+
+    def save(self, path):
+        '''Saves the scenefile to path'''
+        self.escn_file.fix_paths(path)
+        with open(path, 'w') as out_file:
+            out_file.write(self.escn_file.to_string())
+        return True
+
+    def reset(self):
+        """Reset Export Object for Object and Collection Export"""
+        self.valid_objects.clear()
+        self.exporting_objects.clear()
+
+        self.escn_file = structures.ESCNFile(structures.FileEntry(
+            "gd_scene",
+            collections.OrderedDict((
+                ("load_steps", 1),
+                ("format", 2)
+            ))
+        ))
+        self.bl_object_gd_node_map = {}
 
     def __init__(self, path, kwargs, operator):
         self.path = path
@@ -304,6 +496,9 @@ class GodotExporter:
         self.escn_file = None
         self.bl_object_gd_node_map = {}
 
+        self.in_edit_mode = False
+        self.transform = [None] * 3
+
     def __enter__(self):
         return self
 
@@ -323,9 +518,11 @@ def save(operator, context, filepath="", **kwargs):
         object_types.remove("GEOMETRY")
         object_types |= {"MESH", "CURVE", "SURFACE", "META", "FONT"}
 
+    successful = False
     with GodotExporter(filepath, kwargs, operator) as exp:
-        exp.export()
+        successful = exp.export()
 
     logging.getLogger().removeHandler(exporter_log_handler)
-
-    return {"FINISHED"}
+    if successful:
+        return {"FINISHED"}
+    return {"CANCELLED"}
