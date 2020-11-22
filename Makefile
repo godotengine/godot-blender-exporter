@@ -33,9 +33,8 @@ update-examples:
 	done;
 
 compare: export-blends
-	diff -x "*.escn.import" -r tests/godot_project/exports/ tests/reference_exports/
-
+	diff -x "*.escn.import" -rq tests/godot_project/exports/ tests/reference_exports/
 
 style-test: pep8 pylint
 
-all: style-test compare
+all: compare style-test

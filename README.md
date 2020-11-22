@@ -45,9 +45,11 @@ This repository includes a Makefile to assist with development. Running
 
 
 Current regression tests use the daily build of Blender 2.8 from Blender [official
-site](https://builder.blender.org/download/) and runs on ubuntu 16.04. If you run
-the tests with different Blender version or on different platforms, the output may
-slightly differ.
+site](https://builder.blender.org/download/) and runs on ubuntu 16.04. To fix the
+diff test failure:
+   -  You can run a `make export-blends` followed by a `make update-examples` and commit the changes made to the [reference_exports](tests/reference_exports). However, if you are running on a platform different than the one used by the TravisCI, there is a small chance that regression won't be passing because of float rounding. Then you might need to look at the TravisCI log and fix the remaining issue by hand.
+   - Or you can use the [update_scene_from_travis.sh](tests/update_scene_from_travis.sh) script, run it with the failing TravisCI job ID as the argument. The script will fetch the scene diffs from the Travis machine to your local git repository and apply it.
+
 
 
 ## License
