@@ -148,7 +148,6 @@ def generate_convex_shape(escn_file, export_settings, bl_object):
     col_shape = None
     mesh_converter = MeshConverter(bl_object, export_settings)
     mesh = mesh_converter.to_mesh(
-        triangulate=False,
         preserve_vertex_groups=False,
         calculate_tangents=False
     )
@@ -178,14 +177,14 @@ def generate_concave_shape(escn_file, export_settings, bl_object):
     col_shape = None
     mesh_converter = MeshConverter(bl_object, export_settings)
     mesh = mesh_converter.to_mesh(
-        triangulate=True,
         preserve_vertex_groups=False,
         calculate_tangents=False
     )
     if mesh is not None and mesh.polygons:
         vert_array = list()
-        for poly in mesh.polygons:
-            for vert_id in reversed(poly.vertices):
+        mesh.calc_loop_triangles()
+        for tri in mesh.loop_triangles:
+            for vert_id in reversed(tri.vertices):
                 vert_array.append(mesh.vertices[vert_id].co)
 
         col_shape = InternalResource("ConcavePolygonShape", mesh.name)

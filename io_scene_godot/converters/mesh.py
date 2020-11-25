@@ -228,16 +228,17 @@ class ArrayMeshResourceExporter:
 
             surfaces_morph_data = self.intialize_surfaces_morph_data(surfaces)
 
-            for face in shape_key_mesh.polygons:
+            shape_key_mesh.calc_loop_triangles()
+
+            for tri in shape_key_mesh.loop_triangles:
                 surface_index = self.mesh_resource.get_surface_id(
-                    face.material_index
+                    tri.material_index
                 )
 
                 surface = surfaces[surface_index]
                 morph = surfaces_morph_data[surface_index]
 
-                for loop_id in range(face.loop_total):
-                    loop_index = face.loop_start + loop_id
+                for loop_index in tri.loops:
                     new_vert = Vertex.create_from_mesh_loop(
                         shape_key_mesh,
                         loop_index,
@@ -261,24 +262,24 @@ class ArrayMeshResourceExporter:
         """
         surfaces = []
 
-        for face_index in range(len(mesh.polygons)):
-            face = mesh.polygons[face_index]
+        mesh.calc_loop_triangles()
 
+        for tri in mesh.loop_triangles:
             # Find a surface that matches the material, otherwise create a new
             # surface for it
             surface_index = self.mesh_resource.get_surface_id(
-                face.material_index
+                tri.material_index
             )
             if surface_index is None:
                 surface_index = len(surfaces)
                 self.mesh_resource.set_surface_id(
-                    face.material_index, surface_index
+                    tri.material_index, surface_index
                 )
                 surface = Surface()
                 surface.id = surface_index
                 surfaces.append(surface)
                 if mesh.materials:
-                    mat = mesh.materials[face.material_index]
+                    mat = mesh.materials[tri.material_index]
                     if (mat is not None and
                             export_settings['material_mode'] != 'NONE'):
                         surface.material = export_material(
@@ -291,9 +292,7 @@ class ArrayMeshResourceExporter:
             surface = surfaces[surface_index]
             vertex_indices = []
 
-            for loop_id in range(face.loop_total):
-                loop_index = face.loop_start + loop_id
-
+            for loop_index in tri.loops:
                 new_vert = Vertex.create_from_mesh_loop(
                     mesh,
                     loop_index,
@@ -312,8 +311,7 @@ class ArrayMeshResourceExporter:
 
                 vertex_indices.append(vertex_index)
 
-            if len(vertex_indices) > 2:  # Only triangles and above
-                surface.vertex_data.indices.append(vertex_indices)
+            surface.vertex_data.indices.append(vertex_indices)
 
         if (export_settings['use_export_shape_key'] and
                 has_shape_keys(self.object.data)):

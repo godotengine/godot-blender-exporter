@@ -1,5 +1,6 @@
 """Util functions and structs shared by multiple resource converters"""
 
+import logging
 import bpy
 import bmesh
 
@@ -31,12 +32,12 @@ def restore_modifier_config(obj, modifier_config_cache):
         mod.show_viewport = modifier_config_cache[i]
 
 
-def triangulate_mesh(mesh):
-    """Triangulate a mesh"""
+def triangulate_ngons(mesh):
+    """Triangulate n-gons in a mesh"""
     tri_mesh = bmesh.new()
     tri_mesh.from_mesh(mesh)
-    bmesh.ops.triangulate(
-        tri_mesh, faces=tri_mesh.faces, quad_method="ALTERNATE")
+    ngons = [face for face in tri_mesh.faces if len(face.verts) > 4]
+    bmesh.ops.triangulate(tri_mesh, faces=ngons, quad_method="ALTERNATE")
     tri_mesh.to_mesh(mesh)
     tri_mesh.free()
     if bpy.app.version[1] > 80:
@@ -117,7 +118,7 @@ class MeshConverter:
         self.use_export_shape_key = export_settings['use_export_shape_key']
         self.has_tangents = False
 
-    def to_mesh(self, triangulate=True, preserve_vertex_groups=True,
+    def to_mesh(self, preserve_vertex_groups=True,
                 calculate_tangents=True, shape_key_index=0):
         """Evaluates object & converts to final mesh, ready for export.
         The mesh is only temporary, call to_mesh_clear() afterwards."""
@@ -152,13 +153,19 @@ class MeshConverter:
         # mesh result can be none if the source geometry has no faces, so we
         # need to consider this if we want a robust exporter.
         if mesh is not None:
-            if triangulate:
-                triangulate_mesh(mesh)
-
             self.has_tangents = bool(mesh.uv_layers) and bool(mesh.polygons)
             if calculate_tangents:
                 if self.has_tangents:
-                    mesh.calc_tangents()
+                    try:
+                        mesh.calc_tangents()
+                    except RuntimeError:
+                        # Mesh must have n-gons
+                        logging.warning(
+                            "Mesh had n-gons and had to be triangulated to "
+                            "calculate tangents; n-gons may look wrong."
+                        )
+                        triangulate_ngons(mesh)
+                        mesh.calc_tangents()
                 else:
                     mesh.calc_normals_split()
 

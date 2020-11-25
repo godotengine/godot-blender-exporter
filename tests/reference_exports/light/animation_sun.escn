@@ -6,7 +6,7 @@ resource_name = "Plane"
 surfaces/0 = {
 	"primitive":4,
 	"arrays":[
-		Vector3Array(1.0, 0.0, 1.0, -1.0, 0.0, -1.0, -1.0, 0.0, 1.0, 1.0, 0.0, -1.0),
+		Vector3Array(-1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, -1.0, -1.0, 0.0, -1.0),
 		Vector3Array(0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0),
 		null, ; No Tangents,
 		null, ; no Vertex Colors,
@@ -14,7 +14,7 @@ surfaces/0 = {
 		null, ; No UV2,
 		null, ; No Bones,
 		null, ; No Weights,
-		IntArray(0, 2, 1, 0, 1, 3)
+		IntArray(0, 2, 1, 0, 3, 2)
 	],
 	"morph_arrays":[]
 }
