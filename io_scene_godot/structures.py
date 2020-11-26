@@ -161,7 +161,8 @@ class NodeTemplate(FileEntry):
         self.parent = parent_node
 
         # filter out special character
-        node_name = name.replace('.', '').replace('/', '').replace('\\', '')
+        invalid_chs = ('.', '\\', '/', ':')
+        node_name = ''.join(filter(lambda ch: ch not in invalid_chs, name))
 
         if parent_node is not None:
             # solve duplication
