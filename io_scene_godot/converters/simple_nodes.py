@@ -169,26 +169,7 @@ def export_light_node(escn_file, export_settings, node, parent_gd_node):
 
     return light_node
 
-
-def export_curve_node(escn_file, export_settings, node, parent_gd_node):
-    """Export a curve to a Path node, with a child mesh."""
-    splines = node.data.splines
-    if len(splines) == 0:
-        logging.warning("Curve %s has no splines", node.name)
-        return None
-
-    spline = splines[0]
-
-    if spline.type != "BEZIER":
-        return export_mesh_node(
-            escn_file, export_settings, node, parent_gd_node
-        )
-
-    if len(splines) > 1:
-        logging.warning(
-            "Bezier %s has >1 splines, only first will be exported", node.name
-        )
-
+def _export_spline(escn_file, spline, name):
     points = Array("PoolVector3Array(")
     tilts = Array("PoolRealArray(")
     axis_correct = mathutils.Matrix((
@@ -215,21 +196,32 @@ def export_curve_node(escn_file, export_settings, node, parent_gd_node):
     data["points"] = points
     data["tilts"] = tilts
 
-    curve_resource = InternalResource("Curve3D", node.data.name)
+    curve_resource = InternalResource("Curve3D", name)
     curve_resource["_data"] = data
     curve_id = escn_file.get_internal_resource(spline)
     if curve_id is None:
-        curve_id = escn_file.add_internal_resource(curve_resource, spline)
+        return escn_file.add_internal_resource(curve_resource, spline)
+    return escn_file.get_internal_resource(spline)
+
+def export_curve_node(escn_file, export_settings, node, parent_gd_node):
+    """Export a curve to a Path node, with a child mesh."""
+    splines = node.data.splines
 
     path_node = NodeTemplate(node.name, "Path", parent_gd_node)
-    path_node["curve"] = "SubResource({})".format(curve_id)
-    path_node['transform'] = node.matrix_local
-
+    path_node["transform"] = node.matrix_local
     escn_file.add_node(path_node)
 
-    # A child MeshInstance renders the bevel
-    mesh_node = export_mesh_node(escn_file, export_settings, node, path_node)
-    # The transform is already set on the path, don't duplicate it
-    mesh_node['transform'] = mathutils.Matrix.Identity(4)
+    for spline in splines:
+        # https://docs.blender.org/manual/en/latest/modeling/curves/editing/curve.html#set-spline-type
+        # Godot only supports bezier, and blender cannot convert losslessly
+        if spline.type == "BEZIER":
+            curve_id = _export_spline(escn_file, splines[0], node.data.name)
+            if spline == splines.active:
+                path_node["curve"] = "SubResource({})".format(curve_id)
+
+        # Create child MeshInstance renders the bevel for any curve type
+        mesh_node = export_mesh_node(escn_file, export_settings, node, path_node)
+        # The transform is already set on the path, don't duplicate it
+        mesh_node["transform"] = mathutils.Matrix.Identity(4)
 
     return path_node
