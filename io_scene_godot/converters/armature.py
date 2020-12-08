@@ -85,7 +85,10 @@ def generate_bones_mapping(export_settings, armature_obj):
     """Return a dict mapping blender bone name to godot bone id"""
     bone_id = 0
     bones_mapping = dict()
-    for pose_bone in armature_obj.pose.bones:
+    sorted_keys = {k: v for k, v in sorted(armature_obj.pose.bones.items(), key=lambda item: - len(item[1].children))}
+    for key in sorted_keys:
+        pose_bone = armature_obj.pose.bones[key]
+        print(pose_bone.name)
         if should_export(export_settings, armature_obj, pose_bone.bone):
             bones_mapping[pose_bone.name] = bone_id
             bone_id += 1
@@ -136,9 +139,11 @@ def export_armature_node(escn_file, export_settings,
 
     bones_mapping = generate_bones_mapping(export_settings, armature_obj)
     skeleton_node.set_bones_mapping(bones_mapping)
-
     gd_bone_list = list()
-    for pose_bone in armature_obj.pose.bones:
+    sorted_keys = {k: v for k, v in sorted(armature_obj.pose.bones.items(), key=lambda item: - len(item[1].children))}
+    for key in sorted_keys:
+        pose_bone = armature_obj.pose.bones[key]
+        print(pose_bone.name)
         if pose_bone.name in bones_mapping:
             gd_bone = export_bone(pose_bone, bones_mapping)
             gd_bone_list.append(gd_bone)
