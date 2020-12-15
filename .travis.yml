@@ -27,3 +27,9 @@ install:
 
 script:
     - make ${MAKE_OPTION} BLENDER=$BLENDER_BIN PYLINT='python3 -m pylint'
+
+after_failure:
+    - make update-examples
+    - git diff HEAD > tests_scenes_diff.patch
+    - cat tests_scenes_diff.patch
+    - echo "scene diff path ends"
