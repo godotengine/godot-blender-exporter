@@ -169,6 +169,7 @@ def export_light_node(escn_file, export_settings, node, parent_gd_node):
 
     return light_node
 
+
 def _export_spline(escn_file, spline, name):
     points = Array("PoolVector3Array(")
     tilts = Array("PoolRealArray(")
@@ -203,6 +204,7 @@ def _export_spline(escn_file, spline, name):
         return escn_file.add_internal_resource(curve_resource, spline)
     return escn_file.get_internal_resource(spline)
 
+
 def export_curve_node(escn_file, export_settings, node, parent_gd_node):
     """Export a curve to a Path node, with a child mesh."""
     splines = node.data.splines
@@ -220,7 +222,9 @@ def export_curve_node(escn_file, export_settings, node, parent_gd_node):
                 path_node["curve"] = "SubResource({})".format(curve_id)
 
         # Create child MeshInstance renders the bevel for any curve type
-        mesh_node = export_mesh_node(escn_file, export_settings, node, path_node)
+        mesh_node = export_mesh_node(
+            escn_file, export_settings, node, path_node
+        )
         # The transform is already set on the path, don't duplicate it
         mesh_node["transform"] = mathutils.Matrix.Identity(4)
 
