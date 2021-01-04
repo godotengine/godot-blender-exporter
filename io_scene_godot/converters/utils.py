@@ -161,8 +161,9 @@ class MeshConverter:
                     except RuntimeError:
                         # Mesh must have n-gons
                         logging.warning(
-                            "Mesh had n-gons and had to be triangulated to "
-                            "calculate tangents; n-gons may look wrong."
+                            "Mesh '%s' had n-gons and had to be triangulated "
+                            "to calculate tangents; n-gons may look wrong.",
+                            mesh.name
                         )
                         triangulate_ngons(mesh)
                         mesh.calc_tangents()
