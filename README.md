@@ -52,6 +52,27 @@ diff test failure:
    -  You can run a `make export-blends` followed by a `make update-examples` and commit the changes made to the [reference_exports](tests/reference_exports). However, if you are running on a platform different than the one used by the TravisCI, there is a small chance that regression won't be passing because of float rounding. Then you might need to look at the TravisCI log and fix the remaining issue by hand.
    - Or you can use the [update_scene_from_travis.sh](tests/update_scene_from_travis.sh) script, run it with the failing TravisCI job ID as the argument. The script will fetch the scene diffs from the Travis machine to your local git repository and apply it.
 
+## Docker
+
+The reference exports depend on a very specific version of Blender, and may
+produce different results with your local blender version. A Dockerfile is
+provided to help test and update examples:
+
+To build:
+```
+sudo docker build . -t godot_blender_exporter:latest
+```
+
+To test:
+```
+docker run --volume .:/tests/reference_exports godot_blender_exporter:latest compare
+```
+
+To update reference exports:
+```
+docker run --volume .:/tests/reference_exports godot_blender_exporter:latest export-blends update-examples
+```
+
 ## License
 
 This Godot exporter is distributed under the terms of the GNU General

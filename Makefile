@@ -25,12 +25,8 @@ test-import: export-blends
 
 
 update-examples:
-	mkdir -p tests/reference_exports
-	find tests/godot_project/exports/ -name *.escn | while read f; \
-	do \
-		mkdir -p "tests/reference_exports/$$(echo $$f | cut -d/ -f4)"; \
-		cp "$$f" "tests/reference_exports/$$(echo $$f | cut -d/ -f4-)"; \
-	done;
+	rm -r tests/reference_exports/*
+	cp -r tests/godot_project/exports/* tests/reference_exports/
 
 compare: export-blends
 	diff -x "*.escn.import" -rq tests/godot_project/exports/ tests/reference_exports/
