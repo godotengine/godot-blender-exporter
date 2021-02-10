@@ -19,10 +19,10 @@ without significant importing (it's the same as Godot's tscn format).
 #
 # ##### END GPL LICENSE BLOCK #####
 
+import logging
 import bpy
 from bpy.props import StringProperty, BoolProperty, FloatProperty, EnumProperty
 from bpy_extras.io_utils import ExportHelper
-import logging
 from .structures import ValidationError
 from . import export_godot
 
