@@ -228,6 +228,7 @@ class ExportGodot(bpy.types.Operator, ExportHelper):
             if exporter_log_handler:
                 logging.getLogger().removeHandler(exporter_log_handler)
 
+
 def menu_func(self, context):
     """Add to the menu"""
     self.layout.operator(ExportGodot.bl_idname, text="Godot Engine (.escn)")
