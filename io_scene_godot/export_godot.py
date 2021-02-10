@@ -313,8 +313,6 @@ class GodotExporter:
 
 def save(operator, context, filepath="", **kwargs):
     """Begin the export"""
-    exporter_log_handler = ExporterLogHandler(operator)
-    logging.getLogger().addHandler(exporter_log_handler)
 
     object_types = kwargs["object_types"]
     # GEOMETRY isn't an object type so replace it with all valid geometry based
@@ -325,7 +323,5 @@ def save(operator, context, filepath="", **kwargs):
 
     with GodotExporter(filepath, kwargs, operator) as exp:
         exp.export()
-
-    logging.getLogger().removeHandler(exporter_log_handler)
 
     return {"FINISHED"}
