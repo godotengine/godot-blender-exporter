@@ -19,6 +19,7 @@ without significant importing (it's the same as Godot's tscn format).
 #
 # ##### END GPL LICENSE BLOCK #####
 
+import logging
 import bpy
 from bpy.props import StringProperty, BoolProperty, FloatProperty, EnumProperty
 from bpy_extras.io_utils import ExportHelper
@@ -206,6 +207,7 @@ class ExportGodot(bpy.types.Operator, ExportHelper):
 
     def execute(self, context):
         """Begin the export"""
+        exporter_log_handler = export_godot.ExporterLogHandler(self)
         try:
             if not self.filepath:
                 raise Exception("filepath not set")
@@ -218,11 +220,14 @@ class ExportGodot(bpy.types.Operator, ExportHelper):
                 "filter_glob",
                 "xna_validate",
             ))
-
+            logging.getLogger().addHandler(exporter_log_handler)
             return export_godot.save(self, context, **keywords)
         except ValidationError as error:
             self.report({'ERROR'}, str(error))
             return {'CANCELLED'}
+        finally:
+            if exporter_log_handler:
+                logging.getLogger().removeHandler(exporter_log_handler)
 
 
 def menu_func(self, context):
