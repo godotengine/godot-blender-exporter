@@ -65,12 +65,12 @@ sudo docker build . -t godot_blender_exporter:latest
 
 To test:
 ```
-docker run --volume .:/tests/reference_exports godot_blender_exporter:latest compare
+docker run --volume `pwd`:/workdir godot_blender_exporter:latest compare
 ```
 
 To update reference exports:
 ```
-docker run --volume .:/tests/reference_exports godot_blender_exporter:latest export-blends update-examples
+docker run --volume `pwd`:/workdir godot_blender_exporter:latest export-blends update-examples
 ```
 
 ## License
