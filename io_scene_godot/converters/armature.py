@@ -81,11 +81,34 @@ def export_bone(pose_bone, bones_mapping):
     return bone
 
 
+def ordered_bones(bones):
+    """
+    Order bones by hierarchy of the bone structure. From this, the proper
+    index order of exported bones can be guaranteed.
+    """
+    ordered = []
+
+    def visit(bone):
+        nonlocal ordered
+        ordered.append(bone)
+
+        for child in bone.children:
+            visit(child)
+
+    for bone in bones:
+        if bone.parent is None:
+            visit(bone)
+
+    return ordered
+
+
 def generate_bones_mapping(export_settings, armature_obj):
     """Return a dict mapping blender bone name to godot bone id"""
     bone_id = 0
     bones_mapping = dict()
-    for pose_bone in armature_obj.pose.bones:
+
+    # Iterate in actual armature hierarchy order
+    for pose_bone in ordered_bones(armature_obj.pose.bones):
         if should_export(export_settings, armature_obj, pose_bone.bone):
             bones_mapping[pose_bone.name] = bone_id
             bone_id += 1
