@@ -1,0 +1,32 @@
+[gd_scene load_steps=1 format=2]
+
+[node type="Spatial" name="Scene"]
+
+[node name="Armature" type="Skeleton" parent="."]
+
+bones_in_world_transform = true
+transform = Transform(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0)
+bones/0/name = "Bone.001"
+bones/0/parent = -1
+bones/0/rest = Transform(1.0, 0.0, 0.0, 0.0, 0.0, -1.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0)
+bones/0/pose = Transform(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0)
+bones/0/enabled = true
+bones/0/bound_children = []
+bones/1/name = "Root"
+bones/1/parent = 0
+bones/1/rest = Transform(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, -1.0)
+bones/1/pose = Transform(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0)
+bones/1/enabled = true
+bones/1/bound_children = []
+bones/2/name = "Bone.003"
+bones/2/parent = 1
+bones/2/rest = Transform(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, -1.0)
+bones/2/pose = Transform(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0)
+bones/2/enabled = true
+bones/2/bound_children = []
+bones/3/name = "Bone.002"
+bones/3/parent = 2
+bones/3/rest = Transform(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, -1.0)
+bones/3/pose = Transform(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0)
+bones/3/enabled = true
+bones/3/bound_children = []
