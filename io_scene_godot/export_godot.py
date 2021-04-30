@@ -24,14 +24,15 @@ This script is an exporter to Godot Engine
 http://www.godotengine.org
 """
 
-import os
 import collections
 import functools
 import logging
+import os
+
 import bpy
 
-from . import structures
 from . import converters
+from . import structures
 from .structures import (_AXIS_CORRECT, NodePath)
 
 logging.basicConfig(level=logging.INFO, format="[%(levelname)s]: %(message)s")
@@ -136,8 +137,8 @@ class GodotExporter:
         if (exported_node.parent is not None and
                 exported_node.parent.get_type() == 'CollisionShape'):
             exported_node['transform'] = (
-                _AXIS_CORRECT.inverted() @
-                exported_node['transform'])
+                    _AXIS_CORRECT.inverted() @
+                    exported_node['transform'])
 
         # if the blender node is exported and it has animation data
         if exported_node != parent_gd_node:
@@ -158,7 +159,8 @@ class GodotExporter:
         """Checks if a node should be exported:"""
         for dimension in obj.scale:
             if dimension < 0:
-                logging.info("Negative scale is unsupported, Object '%s' was skipped", obj.name)
+                logging.warning("Negative scale is unsupported, Object '%s' was"
+                                " skipped", obj.name)
                 return False
         if obj.type not in self.config["object_types"]:
             return False
