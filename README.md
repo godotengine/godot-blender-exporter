@@ -12,7 +12,7 @@ If you need a full-featured import-export pipeline, consider using glTF 2.0 inst
 
 ## Installation
 
-1. Copy the `io_scene_godot` directory the location where Blender stores the
+1. Copy the `io_scene_godot` directory to the location where Blender stores the
    `scripts/addons` folder on your system. Copy the *entire* directory and not just its
    contents. For instance, on Linux, add-ons should be installed in
    `$HOME/.config/blender/<version>/scripts/addons` (create folders as needed).
