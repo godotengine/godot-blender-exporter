@@ -247,6 +247,41 @@ void node_combine_rgb(float r, float g, float b, out vec4 color) {
 }
 """),
 
+	ShaderFunction(code="""
+void node_hsv(float fac, float in_hue, float in_saturation, float in_value,
+						vec4 in_color, out vec4 out_color) {
+	
+	vec3 rgb = in_color.rgb;
+	vec4 K = vec4(0.0, -1.0 / 3.0, 2.0 / 3.0, -1.0);
+    vec4 p = mix(vec4(rgb.bg, K.wz), vec4(rgb.gb, K.xy), step(rgb.b, rgb.g));
+    vec4 q = mix(vec4(p.xyw, rgb.r), vec4(rgb.r, p.yzx), step(p.x, rgb.r));
+
+    float d = q.x - min(q.w, q.y);
+    float e = 1.0e-10;
+    vec3 hsv = vec3(abs(q.z + (q.w - q.y) / (6.0 * d + e)), d / (q.x + e), q.x);
+	
+	hsv.x = hsv.x + in_hue - 0.5;
+	hsv.y = clamp(hsv.y * in_saturation, 0.0, 1.0);
+	hsv.z = clamp(hsv.z * in_value, 0.0, 1.0);
+	
+	K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
+    vec3 p2 = abs(fract(hsv.xxx + K.xyz) * 6.0 - K.www);
+    rgb = hsv.z * mix(K.xxx, clamp(p2 - K.xxx, 0.0, 1.0), hsv.y);
+	
+	out_color.rgb = mix(in_color.rgb, rgb, fac);
+	out_color.a = in_color.a;
+}
+"""),
+
+	ShaderFunction(code="""
+void node_invert(float fac, vec4 in_color,
+						out vec4 out_color) {
+	
+	out_color = mix(in_color, vec4(1.0) - in_color, fac);
+	out_color.a = in_color.a;
+}
+"""),
+
     ShaderFunction(code="""
 void node_mix_rgb_mix(float fac, vec4 in_color1, vec4 in_color2,
                       out vec4 out_color) {
@@ -351,7 +386,7 @@ void node_bump(float strength, float dist, float height, vec3 normal,
     ShaderFunction(code="""
 void node_normal_map_tangent(float strength, vec4 color, vec3 normal,
         vec3 tangent, vec3 binormal, out vec3 out_normal) {
-    vec3 signed_color = vec3(2.0, -2.0, 2.0) * (color.xzy - vec3(0.5));
+    vec3 signed_color = vec3(2.0, -2.0, -2.0) * (color.xyz - vec3(0.5));
     vec3 tex_normal = signed_color.x * tangent +
                       signed_color.y * binormal +
                       signed_color.z * normal;
