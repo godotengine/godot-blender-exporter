@@ -247,38 +247,38 @@ void node_combine_rgb(float r, float g, float b, out vec4 color) {
 }
 """),
 
-	ShaderFunction(code="""
+    ShaderFunction(code="""
 void node_hsv(float fac, float in_hue, float in_saturation, float in_value,
-						vec4 in_color, out vec4 out_color) {
-	
-	vec3 rgb = in_color.rgb;
-	vec4 K = vec4(0.0, -1.0 / 3.0, 2.0 / 3.0, -1.0);
+                        vec4 in_color, out vec4 out_color) {
+    
+    vec3 rgb = in_color.rgb;
+    vec4 K = vec4(0.0, -1.0 / 3.0, 2.0 / 3.0, -1.0);
     vec4 p = mix(vec4(rgb.bg, K.wz), vec4(rgb.gb, K.xy), step(rgb.b, rgb.g));
     vec4 q = mix(vec4(p.xyw, rgb.r), vec4(rgb.r, p.yzx), step(p.x, rgb.r));
 
     float d = q.x - min(q.w, q.y);
     float e = 1.0e-10;
     vec3 hsv = vec3(abs(q.z + (q.w - q.y) / (6.0 * d + e)), d / (q.x + e), q.x);
-	
-	hsv.x = hsv.x + in_hue - 0.5;
-	hsv.y = clamp(hsv.y * in_saturation, 0.0, 1.0);
-	hsv.z = clamp(hsv.z * in_value, 0.0, 1.0);
-	
-	K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
+    
+    hsv.x = hsv.x + in_hue - 0.5;
+    hsv.y = clamp(hsv.y * in_saturation, 0.0, 1.0);
+    hsv.z = clamp(hsv.z * in_value, 0.0, 1.0);
+    
+    K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
     vec3 p2 = abs(fract(hsv.xxx + K.xyz) * 6.0 - K.www);
     rgb = hsv.z * mix(K.xxx, clamp(p2 - K.xxx, 0.0, 1.0), hsv.y);
-	
-	out_color.rgb = mix(in_color.rgb, rgb, fac);
-	out_color.a = in_color.a;
+    
+    out_color.rgb = mix(in_color.rgb, rgb, fac);
+    out_color.a = in_color.a;
 }
 """),
 
-	ShaderFunction(code="""
+    ShaderFunction(code="""
 void node_invert(float fac, vec4 in_color,
-						out vec4 out_color) {
-	
-	out_color = mix(in_color, vec4(1.0) - in_color, fac);
-	out_color.a = in_color.a;
+                        out vec4 out_color) {
+    
+    out_color = mix(in_color, vec4(1.0) - in_color, fac);
+    out_color.a = in_color.a;
 }
 """),
 
