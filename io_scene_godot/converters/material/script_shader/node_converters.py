@@ -58,6 +58,26 @@ def filter_id_illegal_char(string):
     to lower case"""
     return re.sub(r'\W', '', string).lower()
 
+def is_albedo_texture(image_texture_node):
+    """check whether the texture in a TexImage node is albedo texture"""
+    assert image_texture_node.bl_idname == 'ShaderNodeTexImage'
+    node_queue = deque()
+    for link in image_texture_node.outputs['Color'].links:
+        node_queue.append((link.to_node, link.to_socket))
+
+    while node_queue:
+        node, socket = node_queue.popleft()
+        if ((socket.name == 'Base Color' and
+                node.bl_idname == 'ShaderNodeBsdfPrincipled') or
+            (socket.name == 'Color' and
+                node.bl_idname == 'ShaderNodeBsdfDiffuse'
+            )):
+            return True
+        for sock in node.outputs:
+            for link in sock.links:
+                node_queue.append((link.to_node, link.to_socket))
+
+    return False
 
 def is_normal_texture(image_texture_node):
     """check whether the texture in a TexImage node is normal texture"""
@@ -80,20 +100,27 @@ def is_normal_texture(image_texture_node):
 
 class Texture:
     """A texture"""
+    
+    class Hint:
+        NONE   = 0
+        ALBEDO = 1
+        NORMAL = 2
 
-    def __init__(self, bl_image, identifier, hint_normal):
+    def __init__(self, bl_image, identifier, **kwargs):
         # note that image could be None, it need to be safely handled
         self.image = bl_image
-        self.hint_normal = hint_normal
         # identifier is the variable name in scripts
         self.tmp_identifier = identifier
+        self.hint = kwargs.get("hint", self.Hint.NONE)
 
     def __hash__(self):
-        return hash((self.image, self.hint_normal))
+        return hash((self.image, self.hint))
 
     def hint_str(self):
         """form all the hints into a string"""
-        if self.hint_normal:
+        if self.hint == self.Hint.ALBEDO:
+            return ": hint_albedo"
+        elif self.hint == self.Hint.NORMAL:
             return ": hint_normal"
         return ""
 
@@ -795,12 +822,14 @@ class ImageTextureNodeConverter(NodeConverterBase):
             self.local_code.append("%s = vec3(UV, 0.0)" % tex_coord)
 
         tex_var = self.generate_tmp_texture_id(self.bl_node.name)
-        if self.bl_node.image is not None:
-            is_normal = is_normal_texture(self.bl_node)
-        else:
-            is_normal = False
+        texture_hint = Texture.Hint.NONE
+        if is_normal_texture(self.bl_node):
+            texture_hint = Texture.Hint.NORMAL
+        elif is_albedo_texture(self.bl_node):
+            texture_hint = Texture.Hint.ALBEDO
+
         self.textures.append(
-            Texture(self.bl_node.image, tex_var, is_normal)
+            Texture(self.bl_node.image, tex_var, hint=texture_hint)
         )
 
         in_arguments.append(tex_coord)
@@ -973,6 +1002,54 @@ class GeometryNodeConverter(NodeConverterBase):
         self._convert('Tangent', 'TANGENT', True)
 
 
+class HueSaturationNodeConverter(NodeConverterBase):
+    """Converter for ShaderNodeHueSaturation"""
+
+    def parse_node_to_fragment(self):
+        hue_socket = self.bl_node.inputs['Hue']
+        saturation_socket = self.bl_node.inputs['Saturation']
+        value_socket = self.bl_node.inputs['Value']
+        fac_socket = self.bl_node.inputs['Fac']
+        color_socket = self.bl_node.inputs['Color']
+
+        hue_id = self.in_sockets_map[hue_socket]
+        saturation_id = self.in_sockets_map[saturation_socket]
+        value_id = self.in_sockets_map[value_socket]
+        fac_id = self.in_sockets_map[fac_socket]
+        color_id = self.in_sockets_map[color_socket]
+
+        function = find_function_by_name('node_hsv')
+
+        out_color_socket = self.bl_node.outputs['Color']
+        out_color_id = self.generate_socket_id_str(out_color_socket)
+
+        in_args = (fac_id, hue_id, saturation_id, value_id, color_id)
+        out_args = (out_color_id,)
+        self.add_function_call(function, in_args, out_args)
+
+        self.out_sockets_map[out_color_socket] = out_color_id
+
+class InvertNodeConverter(NodeConverterBase):
+    """Converter for ShaderNodeInvert"""
+
+    def parse_node_to_fragment(self):
+        fac_socket = self.bl_node.inputs['Fac']
+        color_socket = self.bl_node.inputs['Color']
+        
+        fac_id = self.in_sockets_map[fac_socket]
+        color_id = self.in_sockets_map[color_socket]
+
+        function = find_function_by_name('node_invert')
+
+        out_color_socket = self.bl_node.outputs['Color']
+        out_color_id = self.generate_socket_id_str(out_color_socket)
+
+        in_args = (fac_id, color_id)
+        out_args = (out_color_id,)
+        self.add_function_call(function, in_args, out_args)
+
+        self.out_sockets_map[out_color_socket] = out_color_id
+
 class GeneralNodeConverter(NodeConverterBase):
     """Converter for general converter node, they all use functions"""
 
@@ -1009,6 +1086,8 @@ NODE_CONVERTERS = {
     'ShaderNodeUVMap': UvmapNodeConverter,
     'ShaderNodeValue': ValueNodeConverter,
     'ShaderNodeNewGeometry': GeometryNodeConverter,
+    'ShaderNodeHueSaturation': HueSaturationNodeConverter,
+    'ShaderNodeInvert': InvertNodeConverter,
 }
 
 
