@@ -812,6 +812,13 @@ void node_vector_math_cross_product(vec3 v1, vec3 v2, out vec3 outvec,
 """),
 
     ShaderFunction(code="""
+void node_vector_math_multiply(vec3 v1, vec3 v2, vec3 unused, float unused2,
+        out vec3 outvec, out float outval) {
+    outvec = vec3(v1.x*v2.x, v1.y*v2.y, v1.z*v2.z);
+}
+"""),
+
+    ShaderFunction(code="""
 void node_vector_math_normalize(vec3 v, out vec3 outvec, out float outval) {
   outval = length(v);
   outvec = normalize(v);
