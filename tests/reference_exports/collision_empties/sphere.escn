@@ -1,0 +1,8 @@
+[gd_scene load_steps=1 format=2]
+
+[node type="Spatial" name="Scene"]
+
+[node name="sphere-colonly" type="Spatial" parent="."]
+
+transform = Transform(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0)
+__meta__ = { "empty_draw_type": "SPHERE" }
