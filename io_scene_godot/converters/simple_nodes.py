@@ -20,6 +20,10 @@ def export_empty_node(escn_file, export_settings, node, parent_gd_node):
         return parent_gd_node
     empty_node = NodeTemplate(node.name, "Spatial", parent_gd_node)
     empty_node['transform'] = node.matrix_local
+    if node.name.endswith('-colonly') or node.name.endswith('-convcolonly'):
+        # For empties marked as collision shapes (name ending in -colonly/-convcolonly) Godot uses the draw/display type to pick a
+        # collision shape
+        empty_node['__meta__'] = '{{ "empty_draw_type": "{}" }}'.format(node.empty_display_type)
     escn_file.add_node(empty_node)
 
     return empty_node
