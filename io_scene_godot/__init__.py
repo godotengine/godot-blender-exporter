@@ -26,6 +26,15 @@ from bpy_extras.io_utils import ExportHelper
 from .structures import ValidationError
 from . import export_godot
 
+
+try:
+    # Seems to work for Blender 3.0 (instead of old `tuple` check for
+    # operator properties)
+    from bpy.props import _PropertyDeferred
+except (ImportError, ):
+    pass
+
+
 bl_info = {  # pylint: disable=invalid-name
     "name": "Godot Engine Exporter",
     "author": "Lu Jiacheng, Geoffrey Irons, Juan Linietsky",
@@ -267,12 +276,18 @@ def export(filename, overrides=None):
     default_settings = dict()
     for attr_name in ExportGodot.__annotations__:
         attr = ExportGodot.__annotations__[attr_name]
-        # This introspection is not very robust and may break in future blende
-        # versions. This is becase for some reason you can't compare against
+        # This introspection is not very robust and may break in future blender
+        # versions. This is because for some reason you can't compare against
         # bpy.types.Property because. well, they end up not being subclasses
         # of that!!!
         if issubclass(type(attr), tuple):
             default_settings[attr_name] = attr[1]['default']
+
+        # Alternate check (for Blender 3.0)
+        if bpy.app.version[0] > 2:
+            if isinstance(attr, _PropertyDeferred):
+                default_settings[attr_name] = attr.keywords['default']
+
     if overrides is not None:
         default_settings.update(overrides)
 

@@ -40,7 +40,8 @@ def triangulate_ngons(mesh):
     bmesh.ops.triangulate(tri_mesh, faces=ngons, quad_method="ALTERNATE")
     tri_mesh.to_mesh(mesh)
     tri_mesh.free()
-    if bpy.app.version[1] > 80:
+
+    if bpy.app.version[0] > 2 or bpy.app.version[1] > 80:
         mesh.update()
     else:
         mesh.update(calc_loop_triangles=True)
