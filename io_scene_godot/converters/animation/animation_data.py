@@ -60,7 +60,8 @@ class ObjectAnimationExporter:
             if isinstance(self.blender_object.data, bpy.types.Armature):
                 for rbone in self.blender_object.data.bones:
                     if (rbone.use_inherit_rotation is False or
-                            rbone.use_inherit_scale is False):
+                            rbone.inherit_scale == 'NONE' or 
+                            rbone.inherit_scale == 'NONE_LEGACY'):
                         has_non_inherit_bone = True
                         break
             self.need_baking = (
